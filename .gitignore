@@ -1,0 +1,35 @@
+# Dependências
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+dist-ssr/
+
+# Ambiente — NUNCA commitar
+.env
+.env.local
+.env.*.local
+
+# Supabase
+.supabase/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
