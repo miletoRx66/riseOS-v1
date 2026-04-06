@@ -32,18 +32,11 @@ const statusLabels = {
   "pausado": "Pausado",
 };
 
-const departamentoLabels = {
-  "marketing": "Marketing",
-  "ops": "Operações",
-  "comercial": "Comercial",
-  "produto": "Produto",
-};
-
 export function TaskCard({ id, titulo, departamento, status, prioridade, responsavel, prazo, descricao }: TaskCardProps) {
   const statusColor = statusColors[status as keyof typeof statusColors] || "#6B8AFF";
   const prioridadeColor = prioridadeColors[prioridade as keyof typeof prioridadeColors] || "#6B8AFF";
   const statusLabel = statusLabels[status as keyof typeof statusLabels] || status;
-  const departamentoLabel = departamentoLabels[departamento as keyof typeof departamentoLabels] || departamento;
+  const departamentoLabel = departamento;
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);

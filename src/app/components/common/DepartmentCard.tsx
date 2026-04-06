@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Megaphone, Settings, TrendingUp, Package, Users, CheckSquare, FileText, DollarSign } from "lucide-react";
+import { Megaphone, Settings, TrendingUp, Package, Users, CheckSquare, FileText, DollarSign, Briefcase, Lightbulb, HeadphonesIcon } from "lucide-react";
 
 interface DepartmentCardProps {
   id: string;
@@ -11,12 +11,26 @@ interface DepartmentCardProps {
   documentos: number;
 }
 
-const iconMap = {
+// Suporta kebab-case (novos) e PascalCase (departamentos existentes no banco)
+const iconMap: Record<string, React.ElementType> = {
   megaphone: Megaphone,
+  Megaphone: Megaphone,
   settings: Settings,
+  Settings: Settings,
   "trending-up": TrendingUp,
+  TrendingUp: TrendingUp,
   package: Package,
+  Package: Package,
   "dollar-sign": DollarSign,
+  DollarSign: DollarSign,
+  briefcase: Briefcase,
+  Briefcase: Briefcase,
+  lightbulb: Lightbulb,
+  Lightbulb: Lightbulb,
+  headphones: HeadphonesIcon,
+  HeadphonesIcon: HeadphonesIcon,
+  users: Users,
+  Users: Users,
 };
 
 export function DepartmentCard({ id, nome, cor, icon, membros, tarefasAbertas, documentos }: DepartmentCardProps) {

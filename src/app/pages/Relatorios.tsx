@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
-import { departamentos, kpisDepartamento, tarefas } from "../data/mockData";
+
+import { getDepartamentosComStats, type DepartamentoComStats } from "../../lib/services/departamentos";
+import { getTarefas, type TarefaDB } from "../../lib/services/tarefas";
+import { getOkrs, type OkrDB } from "../../lib/services/okrs";
 import {
   BarChart3,
   Download,
@@ -18,11 +21,20 @@ import { exportarRelatorioGeral } from "../utils/pdfGenerator";
 export default function Relatorios() {
   const [selectedPeriod, setSelectedPeriod] = useState<string>("mes");
   const [exportando, setExportando] = useState(false);
+  const [departamentos, setDepartamentos] = useState<DepartamentoComStats[]>([]);
+  const [tarefas, setTarefas] = useState<TarefaDB[]>([]);
+  const [okrs, setOkrs] = useState<OkrDB[]>([]);
+
+  useEffect(() => {
+    getDepartamentosComStats().then(setDepartamentos).catch(console.error);
+    getTarefas().then(setTarefas).catch(console.error);
+    getOkrs().then(setOkrs).catch(console.error);
+  }, []);
 
   const handleExportar = () => {
     setExportando(true);
     setTimeout(() => {
-      exportarRelatorioGeral();
+      exportarRelatorioGeral(departamentos, tarefas, okrs);
       setExportando(false);
     }, 500);
   };
@@ -44,7 +56,7 @@ export default function Relatorios() {
 
   const getDeptPerformance = () => {
     return departamentos.map((dept) => {
-      const deptTasks = tarefas.filter((t) => t.departamento === dept.id);
+      const deptTasks = tarefas.filter((t) => t.departamento_id === dept.id);
       const completed = deptTasks.filter((t) => t.status === "concluido").length;
       const total = deptTasks.length;
       const completion = total > 0 ? ((completed / total) * 100).toFixed(1) : "0";
@@ -58,14 +70,6 @@ export default function Relatorios() {
   };
 
   const deptPerformance = getDeptPerformance();
-
-  // OKRs por departamento
-  const okrsPorDepartamento = {
-    marketing: { objetivo: "Aumentar Brand Awareness", progresso: 78 },
-    ops: { objetivo: "Otimizar Processos Internos", progresso: 65 },
-    comercial: { objetivo: "Expandir Base de Parceiros", progresso: 82 },
-    produto: { objetivo: "Lançar 3 Features Principais", progresso: 91 },
-  };
 
   // Calcular métricas consolidadas
   const totalTarefas = tarefas.length;
@@ -395,12 +399,7 @@ export default function Relatorios() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {departamentos.map((dept) => {
-              const kpis = kpisDepartamento[dept.id as keyof typeof kpisDepartamento];
-              if (!kpis) return null;
-
-              const firstKPI = Object.entries(kpis)[0];
-              const secondKPI = Object.entries(kpis)[1];
-              const okr = okrsPorDepartamento[dept.id as keyof typeof okrsPorDepartamento];
+              const deptTasksCount = tarefas.filter((t) => t.departamento_id === dept.id).length;
 
               return (
                 <Link
@@ -437,37 +436,12 @@ export default function Relatorios() {
                   <div className="space-y-3">
                     <div>
                       <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[11px] mb-1 uppercase tracking-wider">
-                        {firstKPI[0]}
+                        Tarefas
                       </p>
                       <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[20px]">
-                        {firstKPI[1]}
+                        {deptTasksCount}
                       </p>
                     </div>
-
-                    {okr && (
-                      <div className="pt-3 border-t border-[#333]">
-                        <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[11px] mb-2 uppercase tracking-wider">
-                          OKR Q1 2026
-                        </p>
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="flex-1 bg-[#1a1a1a] rounded-full h-2">
-                            <div
-                              className="h-2 rounded-full transition-all"
-                              style={{
-                                width: `${okr.progresso}%`,
-                                backgroundColor: dept.cor,
-                              }}
-                            />
-                          </div>
-                          <span className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[13px]">
-                            {okr.progresso}%
-                          </span>
-                        </div>
-                        <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px] line-clamp-1">
-                          {okr.objetivo}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </Link>
               );

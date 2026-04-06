@@ -12,9 +12,16 @@ interface Usuario {
   permissoes: string[];
 }
 
+interface SignupResult {
+  success: boolean;
+  requiresConfirmation: boolean;
+  message: string;
+}
+
 interface AuthContextType {
   usuario: Usuario | null;
   login: (email: string, senha: string) => Promise<{ success: boolean; message: string }>;
+  signup: (nome: string, email: string, senha: string) => Promise<SignupResult>;
   logout: () => Promise<void>;
   podeEditar: (departamento: string) => boolean;
   podeVisualizar: () => boolean;
@@ -27,42 +34,65 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const DEPARTAMENTOS = ["marketing", "ops", "comercial", "produto", "financeiro"];
 
 async function buildUsuario(user: User): Promise<Usuario | null> {
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*, departamentos(*), permissoes(*)")
-    .eq("id", user.id)
-    .single();
+  // Tenta até 2 vezes para cobrir race condition do trigger handle_new_user
+  for (let tentativa = 0; tentativa < 2; tentativa++) {
+    if (tentativa > 0) {
+      await new Promise((r) => setTimeout(r, 800));
+    }
 
-  if (!profile) return null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*, departamentos(*), permissoes(*)")
+      .eq("id", user.id)
+      .single() as { data: any };
 
-  // Converte permissoes do banco para o formato legado de strings
-  const perms: string[] = [];
-  const dbPerms: Array<{ tipo: string; departamento_id: string | null }> = profile.permissoes ?? [];
+    if (!profile) continue;
 
-  const isAdmin = dbPerms.some((p) => p.tipo === "admin" && !p.departamento_id);
+    const perms: string[] = [];
+    const dbPerms: Array<{ tipo: string; departamento_id: string | null }> =
+      profile.permissoes ?? [];
 
-  if (isAdmin) {
-    perms.push("admin", "visualizar-todos");
-    DEPARTAMENTOS.forEach((d) => perms.push(`editar-${d}`));
-  } else {
-    perms.push("visualizar-todos");
-    for (const p of dbPerms) {
-      if ((p.tipo === "manager" || p.tipo === "member") && p.departamento_id) {
-        perms.push(`editar-${p.departamento_id}`);
+    const isAdmin = dbPerms.some((p) => p.tipo === "admin" && !p.departamento_id);
+
+    if (isAdmin) {
+      perms.push("admin", "visualizar-todos");
+      DEPARTAMENTOS.forEach((d) => perms.push(`editar-${d}`));
+    } else {
+      perms.push("visualizar-todos");
+      for (const p of dbPerms) {
+        if ((p.tipo === "manager" || p.tipo === "member") && p.departamento_id) {
+          perms.push(`editar-${p.departamento_id}`);
+        }
       }
     }
+
+    return {
+      id: profile.id,
+      nome: profile.nome ?? user.email?.split("@")[0] ?? "Usuário",
+      email: user.email ?? "",
+      cargo: profile.cargo ?? "",
+      departamento: profile.departamento_id ?? "",
+      avatar:
+        profile.avatar_url ??
+        `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(profile.nome ?? user.id)}`,
+      permissoes: perms,
+    };
   }
 
+  // Fallback: profile ainda não existe (trigger atrasado) — retorna usuário mínimo
+  // para não deixar o usuário preso no loop de redirect
   return {
-    id: profile.id,
-    nome: profile.nome ?? user.email?.split("@")[0] ?? "Usuário",
+    id: user.id,
+    nome:
+      user.user_metadata?.nome ??
+      user.email?.split("@")[0] ??
+      "Usuário",
     email: user.email ?? "",
-    cargo: profile.cargo ?? "",
-    departamento: profile.departamento_id ?? "",
-    avatar:
-      profile.avatar_url ??
-      `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(profile.nome ?? user.id)}`,
-    permissoes: perms,
+    cargo: "",
+    departamento: "",
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.id)}`,
+    permissoes: ["visualizar-todos"],
   };
 }
 
@@ -71,7 +101,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Sessão inicial
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const u = await buildUsuario(session.user);
@@ -80,7 +109,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     });
 
-    // Escuta mudanças de auth (login, logout, refresh)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -103,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, message: "Preencha todos os campos" };
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: senha,
     });
@@ -116,12 +144,86 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, message: "Email ou senha incorretos" };
       }
       if (error.message.includes("Email not confirmed")) {
-        return { success: false, message: "Confirme seu email antes de entrar" };
+        return {
+          success: false,
+          message: "Confirme seu email antes de entrar. Verifique sua caixa de entrada.",
+        };
       }
       return { success: false, message: "Erro ao fazer login. Tente novamente." };
     }
 
+    // Popula usuario imediatamente — evita race condition com onAuthStateChange
+    if (data.session && data.user) {
+      const u = await buildUsuario(data.user);
+      setUsuario(u);
+    }
+
     return { success: true, message: "Login realizado com sucesso!" };
+  };
+
+  const signup = async (
+    nome: string,
+    email: string,
+    senha: string
+  ): Promise<SignupResult> => {
+    if (!nome.trim() || !email || !senha) {
+      return { success: false, requiresConfirmation: false, message: "Preencha todos os campos" };
+    }
+    if (senha.length < 8) {
+      return {
+        success: false,
+        requiresConfirmation: false,
+        message: "A senha deve ter pelo menos 8 caracteres",
+      };
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: senha,
+      options: {
+        data: { nome: nome.trim() },
+      },
+    });
+
+    if (error) {
+      if (error.message.includes("User already registered")) {
+        return {
+          success: false,
+          requiresConfirmation: false,
+          message: "Este email já possui uma conta. Faça login.",
+        };
+      }
+      if (error.message.includes("Password should be")) {
+        return {
+          success: false,
+          requiresConfirmation: false,
+          message: "A senha deve ter pelo menos 8 caracteres",
+        };
+      }
+      return {
+        success: false,
+        requiresConfirmation: false,
+        message: "Erro ao criar conta. Tente novamente.",
+      };
+    }
+
+    // Supabase retorna session=null quando confirmação de email é exigida
+    const requiresConfirmation = !data.session;
+
+    // Se já há sessão ativa (sem confirmação de email), popula o usuario
+    // ANTES de retornar — evita race condition com onAuthStateChange
+    if (data.session && data.user) {
+      const u = await buildUsuario(data.user);
+      setUsuario(u);
+    }
+
+    return {
+      success: true,
+      requiresConfirmation,
+      message: requiresConfirmation
+        ? "Conta criada! Verifique seu email para confirmar o cadastro."
+        : "Conta criada com sucesso!",
+    };
   };
 
   const logout = async () => {
@@ -149,7 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ usuario, login, logout, podeEditar, podeVisualizar, isLoading, trocarUsuarioDemo }}
+      value={{ usuario, login, signup, logout, podeEditar, podeVisualizar, isLoading, trocarUsuarioDemo }}
     >
       {children}
     </AuthContext.Provider>

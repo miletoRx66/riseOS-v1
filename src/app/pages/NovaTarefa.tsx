@@ -1,19 +1,30 @@
-import { useState, FormEvent } from "react";
+import React, { useState, useEffect, FormEvent } from "react";
 import { useNavigate, Link } from "react-router";
-import { departamentos } from "../data/mockData";
+import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
+import { criarTarefa, criarTarefaLinks } from "../../lib/services/tarefas";
+import { getUsuarios, type UsuarioDB } from "../../lib/services/usuarios";
+import { useAuth } from "../context/AuthContext";
 import { TarefaLink } from "../types";
 import { ArrowLeft, Save, X, Plus, ExternalLink, Trash2 } from "lucide-react";
 
 export default function NovaTarefa() {
   const navigate = useNavigate();
-  
+  const { usuario } = useAuth();
+  const [departamentos, setDepartamentos] = useState<DepartamentoDB[]>([]);
+  const [usuarios, setUsuarios] = useState<UsuarioDB[]>([]);
+
+  useEffect(() => {
+    getDepartamentos().then(setDepartamentos).catch(console.error);
+    getUsuarios().then(setUsuarios).catch(console.error);
+  }, []);
+
   const [formData, setFormData] = useState({
     titulo: "",
     descricao: "",
     departamento: "",
     status: "planejamento",
     prioridade: "media",
-    responsavel: "",
+    responsavel_id: "",
     prazo: "",
     tags: "",
     tipo: "outro",
@@ -35,10 +46,6 @@ export default function NovaTarefa() {
       newErrors.departamento = "Selecione um departamento";
     }
 
-    if (!formData.responsavel.trim()) {
-      newErrors.responsavel = "Responsável é obrigatório";
-    }
-
     if (!formData.prazo) {
       newErrors.prazo = "Data de prazo é obrigatória";
     }
@@ -47,11 +54,34 @@ export default function NovaTarefa() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (validateForm()) {
+    if (!validateForm() || !usuario) return;
+
+    try {
+      const tarefa = await criarTarefa({
+        titulo: formData.titulo,
+        descricao: formData.descricao || undefined,
+        departamento_id: formData.departamento,
+        status: formData.status,
+        prioridade: formData.prioridade,
+        responsavel_id: formData.responsavel_id || undefined,
+        prazo: formData.prazo || undefined,
+        tags: formData.tags ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+        tipo: formData.tipo,
+        visibilidade: formData.visibilidade,
+        criado_por: usuario.id,
+      });
+
+      // Salva os links no banco após criar a tarefa
+      if (links.length > 0) {
+        await criarTarefaLinks(tarefa.id, links);
+      }
+
       navigate("/tarefas");
+    } catch (err) {
+      console.error("Erro ao criar tarefa:", err);
     }
   };
 
@@ -201,22 +231,18 @@ export default function NovaTarefa() {
 
                 <div>
                   <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
-                    Responsável *
+                    Responsável
                   </label>
-                  <input
-                    type="text"
-                    value={formData.responsavel}
-                    onChange={(e) => handleChange("responsavel", e.target.value)}
-                    placeholder="Nome do responsável"
-                    className={`w-full bg-[#1a1a1a] border ${
-                      errors.responsavel ? "border-[#ff6b6b]" : "border-[#333]"
-                    } rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none`}
-                  />
-                  {errors.responsavel && (
-                    <p className="text-[#ff6b6b] text-[12px] font-['Inter:Regular',sans-serif] mt-1">
-                      {errors.responsavel}
-                    </p>
-                  )}
+                  <select
+                    value={formData.responsavel_id}
+                    onChange={(e) => handleChange("responsavel_id", e.target.value)}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                  >
+                    <option value="">Sem responsável</option>
+                    {usuarios.map((u) => (
+                      <option key={u.id} value={u.id}>{u.nome}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

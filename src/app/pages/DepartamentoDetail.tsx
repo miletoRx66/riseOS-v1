@@ -1,19 +1,50 @@
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router";
-import { departamentos, tarefas, documentos, kpisDepartamento, okrs } from "../data/mockData";
-import { ArrowLeft, Users, CheckSquare, FileText, TrendingUp, Target, Calendar, User } from "lucide-react";
+import { getDepartamentosComStats, type DepartamentoComStats } from "../../lib/services/departamentos";
+import { getTarefas, type TarefaDB } from "../../lib/services/tarefas";
+import { getOkrs, type OkrDB } from "../../lib/services/okrs";
+import { documentos } from "../data/mockData";
+import { ArrowLeft, Users, CheckSquare, FileText, Target, Calendar, User } from "lucide-react";
 import { TaskCard } from "../components/common/TaskCard";
 import { ParceirosB2B } from "../components/common/ParceirosB2B";
 import DepartamentoFinanceiro from "./DepartamentoFinanceiro";
 
 export default function DepartamentoDetail() {
   const { id } = useParams();
-  
+
+  const [departamento, setDepartamento] = useState<DepartamentoComStats | null>(null);
+  const [tarefas, setTarefas] = useState<TarefaDB[]>([]);
+  const [okrs, setOkrs] = useState<OkrDB[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    Promise.all([
+      getDepartamentosComStats(),
+      getTarefas({ departamento_id: id }),
+      getOkrs(id),
+    ])
+      .then(([depts, t, o]) => {
+        setDepartamento(depts.find((d) => d.id === id) ?? null);
+        setTarefas(t);
+        setOkrs(o);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] p-8 flex items-center justify-center">
+        <p className="text-[#bdbdbd] text-[16px]">Carregando...</p>
+      </div>
+    );
+  }
+
   // Se for o departamento financeiro, renderizar o componente especial
-  if (id === "financeiro") {
+  if (departamento?.nome?.toLowerCase() === "financeiro") {
     return <DepartamentoFinanceiro />;
   }
-  
-  const departamento = departamentos.find((d) => d.id === id);
 
   if (!departamento) {
     return (
@@ -23,12 +54,21 @@ export default function DepartamentoDetail() {
     );
   }
 
-  const deptTasks = tarefas.filter((t) => t.departamento === id);
-  const deptDocs = documentos.filter((d) => d.departamento === id);
-  const kpis = kpisDepartamento[id as keyof typeof kpisDepartamento];
+  // Documentos mock filtrados por departamento (sem tabela no DB)
+  const deptDocs = documentos.filter((d) => (d as any).departamento === id);
 
-  // Filtrar OKRs do departamento
-  const deptOkrs = okrs.filter((okr) => okr.departamento === id);
+  // KPIs calculados a partir de dados reais
+  const total = tarefas.length;
+  const concluidas = tarefas.filter((t) => t.status === "concluido").length;
+  const emAndamento = tarefas.filter((t) => t.status === "em-andamento").length;
+  const atrasadas = tarefas.filter((t) => {
+    if (!t.prazo || t.status === "concluido") return false;
+    return new Date(t.prazo) < new Date();
+  }).length;
+  const taxaConclusao = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+  const progressoMedioOkrs = okrs.length > 0
+    ? Math.round(okrs.reduce((acc, o) => acc + o.progresso, 0) / okrs.length)
+    : 0;
 
   const formatarData = (data: string) => {
     const date = new Date(data);
@@ -39,60 +79,16 @@ export default function DepartamentoDetail() {
     });
   };
 
-  const renderKPIs = () => {
-    if (!kpis) return null;
-
-    const kpiEntries = Object.entries(kpis);
-    const kpiLabels: Record<string, string> = {
-      // Marketing
-      leads: "Leads Gerados",
-      conversao: "Taxa de Conversão",
-      roi: "ROI",
-      engajamento: "Engajamento",
-      // Ops
-      eficiencia: "Eficiência",
-      tempoMedio: "Tempo Médio (h)",
-      satisfacao: "Satisfação",
-      automacao: "Automação",
-      // Comercial
-      vendas: "Vendas (R$)",
-      ticket: "Ticket Médio (R$)",
-      pipeline: "Pipeline (R$)",
-      // Produto
-      usuarios: "Usuários Ativos",
-      retencao: "Retenção",
-      nps: "NPS",
-      features: "Features Lançadas",
-    };
-
-    return kpiEntries.map(([key, value]) => {
-      const label = kpiLabels[key] || key;
-      let displayValue = value;
-
-      if (key === "vendas" || key === "pipeline") {
-        displayValue = `R$ ${Number(value).toLocaleString('pt-BR')}`;
-      } else if (key === "ticket") {
-        displayValue = `R$ ${Number(value).toLocaleString('pt-BR')}`;
-      } else if (key === "conversao" || key === "eficiencia" || key === "retencao") {
-        displayValue = `${value}%`;
-      } else if (key === "roi") {
-        displayValue = `${value}x`;
-      } else if (key === "automacao") {
-        displayValue = `${value}%`;
-      }
-
-      return (
-        <div key={key} className="bg-[#0f0f0f] border border-[#333] rounded-lg p-4">
-          <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px] mb-2">
-            {label}
-          </p>
-          <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px]">
-            {displayValue}
-          </p>
-        </div>
-      );
-    });
-  };
+  const kpiCards = [
+    { label: "Total de Tarefas", value: total },
+    { label: "Concluídas", value: concluidas },
+    { label: "Taxa de Conclusão", value: `${taxaConclusao}%` },
+    { label: "Em Andamento", value: emAndamento },
+    { label: "Atrasadas", value: atrasadas },
+    { label: "OKRs Ativos", value: okrs.length },
+    { label: "Progresso Médio OKRs", value: `${progressoMedioOkrs}%` },
+    { label: "Membros", value: departamento.membros },
+  ];
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] p-8">
@@ -142,19 +138,26 @@ export default function DepartamentoDetail() {
         </div>
 
         {/* KPIs */}
-        {kpis && (
-          <div className="mb-8">
-            <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[20px] mb-4">
-              KPIs do Departamento
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {renderKPIs()}
-            </div>
+        <div className="mb-8">
+          <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[20px] mb-4">
+            KPIs do Departamento
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {kpiCards.map(({ label, value }) => (
+              <div key={label} className="bg-[#0f0f0f] border border-[#333] rounded-lg p-4">
+                <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px] mb-2">
+                  {label}
+                </p>
+                <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px]">
+                  {value}
+                </p>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
         {/* OKRs do Departamento */}
-        {deptOkrs.length > 0 && (
+        {okrs.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[20px] flex items-center gap-2">
@@ -169,7 +172,7 @@ export default function DepartamentoDetail() {
               </Link>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {deptOkrs.map((okr) => (
+              {okrs.map((okr) => (
                 <Link key={okr.id} to="/okrs" className="block">
                   <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6 hover:border-[#14E9BC] transition-all cursor-pointer">
                     {/* Header */}
@@ -186,7 +189,7 @@ export default function DepartamentoDetail() {
                           <div className="flex items-center gap-1">
                             <User size={14} className="text-[#666]" />
                             <span className="text-[#bdbdbd] text-[13px] font-['Inter:Regular',sans-serif]">
-                              {okr.responsavel}
+                              {okr.responsavel?.nome ?? "—"}
                             </span>
                           </div>
                         </div>
@@ -212,12 +215,12 @@ export default function DepartamentoDetail() {
                     </div>
 
                     {/* Key Results */}
-                    {okr.keyResults && okr.keyResults.length > 0 && (
+                    {okr.key_results && okr.key_results.length > 0 && (
                       <div className="space-y-3 mb-4 pb-4 border-b border-[#333]">
                         <p className="text-[#bdbdbd] text-[12px] font-['Inter:Medium',sans-serif] uppercase tracking-wide">
                           Key Results
                         </p>
-                        {okr.keyResults.map((kr) => (
+                        {okr.key_results.map((kr) => (
                           <div key={kr.id} className="bg-[#1a1a1a] rounded-lg p-3">
                             <div className="flex items-start justify-between mb-2">
                               <p className="text-[#eee] text-[13px] font-['Inter:Regular',sans-serif] flex-1 pr-2">
@@ -238,7 +241,7 @@ export default function DepartamentoDetail() {
                                 {kr.metrica}
                               </p>
                               <p className="text-[#bdbdbd] text-[11px] font-['Inter:Regular',sans-serif]">
-                                {kr.valorAtual.toLocaleString('pt-BR')} / {kr.valorMeta.toLocaleString('pt-BR')} {kr.unidade}
+                                {kr.valor_atual.toLocaleString("pt-BR")} / {kr.valor_meta.toLocaleString("pt-BR")} {kr.unidade}
                               </p>
                             </div>
                           </div>
@@ -246,18 +249,12 @@ export default function DepartamentoDetail() {
                       </div>
                     )}
 
-                    {/* Footer - Tarefas Vinculadas e Datas */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CheckSquare size={14} className="text-[#14E9BC]" />
-                        <span className="text-[#bdbdbd] text-[12px] font-['Inter:Regular',sans-serif]">
-                          {okr.tarefasVinculadas?.length || 0} {okr.tarefasVinculadas?.length === 1 ? 'tarefa vinculada' : 'tarefas vinculadas'}
-                        </span>
-                      </div>
+                    {/* Footer - Datas */}
+                    <div className="flex items-center justify-end">
                       <div className="flex items-center gap-2">
                         <Calendar size={14} className="text-[#666]" />
                         <span className="text-[#666] text-[11px] font-['Inter:Regular',sans-serif]">
-                          {formatarData(okr.dataInicio)} - {formatarData(okr.dataFim)}
+                          {formatarData(okr.data_inicio)} - {formatarData(okr.data_fim)}
                         </span>
                       </div>
                     </div>
@@ -269,7 +266,7 @@ export default function DepartamentoDetail() {
         )}
 
         {/* Parceiros B2B - Exclusivo para Comercial */}
-        {id === 'comercial' && <ParceirosB2B />}
+        {departamento.nome.toLowerCase() === "comercial" && <ParceirosB2B />}
 
         {/* Tasks and Documents */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -278,10 +275,20 @@ export default function DepartamentoDetail() {
             <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[20px] mb-4">
               Tarefas
             </h2>
-            {deptTasks.length > 0 ? (
+            {tarefas.length > 0 ? (
               <div className="space-y-3">
-                {deptTasks.map((task) => (
-                  <TaskCard key={task.id} {...task} />
+                {tarefas.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    id={task.id}
+                    titulo={task.titulo}
+                    departamento={departamento.nome}
+                    status={task.status}
+                    prioridade={task.prioridade}
+                    responsavel={task.responsavel?.nome ?? "—"}
+                    prazo={task.prazo ?? ""}
+                    descricao={task.descricao ?? undefined}
+                  />
                 ))}
               </div>
             ) : (
@@ -331,7 +338,7 @@ export default function DepartamentoDetail() {
                   Nenhum documento encontrado
                 </p>
               </div>
-            )}\
+            )}
           </div>
         </div>
       </div>

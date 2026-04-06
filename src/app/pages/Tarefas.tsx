@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
-import { tarefas as initialTarefas, departamentos } from "../data/mockData";
+import { getTarefas, criarTarefa, type TarefaDB } from "../../lib/services/tarefas";
+import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
 import { TaskCard } from "../components/common/TaskCard";
 import { Plus, Filter, LayoutGrid, List, Upload, X, CheckCircle, AlertCircle, FileSpreadsheet, Search, User } from "lucide-react";
 import Papa from "papaparse";
@@ -18,7 +19,13 @@ interface CSVTarefa {
 
 export default function Tarefas() {
   const { usuario } = useAuth();
-  const [tarefas, setTarefas] = useState(initialTarefas);
+  const [tarefas, setTarefas] = useState<TarefaDB[]>([]);
+  const [departamentos, setDepartamentos] = useState<DepartamentoDB[]>([]);
+
+  useEffect(() => {
+    getTarefas().then(setTarefas).catch(console.error);
+    getDepartamentos().then(setDepartamentos).catch(console.error);
+  }, []);
   const [activeTab, setActiveTab] = useState<"todas" | "minhas">("todas");
   const [selectedDept, setSelectedDept] = useState<string>("todos");
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");
@@ -31,15 +38,16 @@ export default function Tarefas() {
   const [parsedData, setParsedData] = useState<CSVTarefa[]>([]);
   const [importStep, setImportStep] = useState<"upload" | "preview" | "success">("upload");
   const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [importando, setImportando] = useState(false);
+  const [importCount, setImportCount] = useState(0);
 
   const filteredTasks = tarefas.filter((task) => {
     if (activeTab === "minhas" && usuario) {
-      const nomeUsuario = usuario.nome.toLowerCase();
-      const isResponsavel = task.responsavel.toLowerCase().includes(nomeUsuario) || nomeUsuario.includes(task.responsavel.toLowerCase());
+      const isResponsavel = task.responsavel_id === usuario.id;
       const isPessoal = task.visibilidade === "pessoal";
       if (!isResponsavel && !isPessoal) return false;
     }
-    if (selectedDept !== "todos" && task.departamento !== selectedDept) return false;
+    if (selectedDept !== "todos" && task.departamento_id !== selectedDept) return false;
     if (selectedStatus !== "todos" && task.status !== selectedStatus) return false;
     if (selectedPrioridade !== "todos" && task.prioridade !== selectedPrioridade) return false;
     if (selectedTipo !== "todos" && task.tipo !== selectedTipo) return false;
@@ -47,7 +55,7 @@ export default function Tarefas() {
       const q = busca.toLowerCase();
       const matches =
         task.titulo.toLowerCase().includes(q) ||
-        task.responsavel.toLowerCase().includes(q) ||
+        task.responsavel?.nome.toLowerCase().includes(q) ||
         task.tags?.some((tag) => tag.toLowerCase().includes(q));
       if (!matches) return false;
     }
@@ -191,39 +199,48 @@ export default function Tarefas() {
     });
   };
 
-  const handleConfirmImport = () => {
-    const novasTarefas = parsedData.map((task, index) => ({
-      id: `imported-${Date.now()}-${index}`,
-      titulo: task.titulo,
-      departamento: task.departamento,
-      status: task.status as "planejamento" | "em-andamento" | "concluido",
-      prioridade: task.prioridade as "baixa" | "media" | "alta",
-      responsavel: task.responsavel,
-      prazo: task.prazo,
-      descricao: task.descricao || "",
-      dataCriacao: new Date().toISOString().split("T")[0],
-      tags: [],
-      progresso: task.status === "concluido" ? 100 : task.status === "em-andamento" ? 50 : 0,
-      subtarefas: [],
-      comentarios: [],
-      anexos: [],
-      atividades: [
-        {
-          id: `at-${Date.now()}-${index}`,
-          tipo: "criacao",
-          descricao: "Tarefa importada via CSV",
-          usuario: "Sistema",
-          data: new Date().toISOString(),
-        },
-      ],
-    }));
+  const handleConfirmImport = async () => {
+    if (!usuario) return;
+    setImportando(true);
+    setImportCount(0);
 
-    setTarefas([...novasTarefas, ...tarefas]);
-    setImportStep("success");
+    const erros: string[] = [];
+    let salvos = 0;
 
-    setTimeout(() => {
-      handleCloseImportModal();
-    }, 2500);
+    for (const task of parsedData) {
+      try {
+        await criarTarefa({
+          titulo: task.titulo,
+          descricao: task.descricao || undefined,
+          departamento_id: task.departamento,
+          status: task.status,
+          prioridade: task.prioridade,
+          prazo: task.prazo || undefined,
+          tags: [],
+          tipo: "outro",
+          visibilidade: "departamento",
+          criado_por: usuario.id,
+        });
+        salvos++;
+        setImportCount(salvos);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Erro desconhecido";
+        erros.push(`"${task.titulo}": ${msg}`);
+      }
+    }
+
+    setImportando(false);
+
+    if (erros.length > 0) {
+      setImportErrors(erros);
+      setImportStep("upload");
+    } else {
+      // Recarrega a lista do banco após importar tudo
+      const novas = await getTarefas();
+      setTarefas(novas);
+      setImportStep("success");
+      setTimeout(() => handleCloseImportModal(), 2500);
+    }
   };
 
   const downloadExemploCSV = () => {
@@ -242,13 +259,6 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const departamentoLabels: Record<string, string> = {
-    marketing: "Marketing",
-    ops: "Operações",
-    comercial: "Comercial",
-    produto: "Produto",
   };
 
   const statusLabels: Record<string, string> = {
@@ -468,9 +478,22 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
         {/* Tasks Grid */}
         {filteredTasks.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredTasks.map((task) => (
-              <TaskCard key={task.id} {...task} />
-            ))}
+            {filteredTasks.map((task) => {
+              const dept = departamentos.find((d) => d.id === task.departamento_id);
+              return (
+                <TaskCard
+                  key={task.id}
+                  id={task.id}
+                  titulo={task.titulo}
+                  departamento={dept?.nome ?? task.departamento_id}
+                  status={task.status}
+                  prioridade={task.prioridade}
+                  responsavel={task.responsavel?.nome ?? "—"}
+                  prazo={task.prazo ?? ""}
+                  descricao={task.descricao ?? undefined}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-12 text-center">
@@ -641,17 +664,20 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
                               {task.titulo}
                             </td>
                             <td className="px-4 py-3">
-                              <span
-                                className="px-2 py-1 rounded text-[11px] font-['Inter:Medium',sans-serif]"
-                                style={{
-                                  backgroundColor: `${
-                                    departamentos.find((d) => d.id === task.departamento)?.cor
-                                  }20`,
-                                  color: departamentos.find((d) => d.id === task.departamento)?.cor,
-                                }}
-                              >
-                                {departamentoLabels[task.departamento]}
-                              </span>
+                              {(() => {
+                                const dept = departamentos.find((d) => d.id === task.departamento);
+                                return (
+                                  <span
+                                    className="px-2 py-1 rounded text-[11px] font-['Inter:Medium',sans-serif]"
+                                    style={{
+                                      backgroundColor: `${dept?.cor ?? "#14E9BC"}20`,
+                                      color: dept?.cor ?? "#14E9BC",
+                                    }}
+                                  >
+                                    {dept?.nome ?? task.departamento}
+                                  </span>
+                                );
+                              })()}
                             </td>
                             <td className="px-4 py-3">
                               <span className="px-2 py-1 rounded bg-[#1a1a1a] text-[#bdbdbd] text-[11px] font-['Inter:Regular',sans-serif]">
@@ -722,9 +748,12 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
                 {importStep === "preview" && (
                   <button
                     onClick={handleConfirmImport}
-                    className="px-5 py-2.5 rounded-lg bg-[#14E9BC] text-[#000] font-['Inter:Semi_Bold',sans-serif] text-[14px] hover:bg-[#12d4a8] transition-colors"
+                    disabled={importando}
+                    className="px-5 py-2.5 rounded-lg bg-[#14E9BC] text-[#000] font-['Inter:Semi_Bold',sans-serif] text-[14px] hover:bg-[#12d4a8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Confirmar Importação
+                    {importando
+                      ? `Importando... (${importCount}/${parsedData.length})`
+                      : `Importar ${parsedData.length} tarefa${parsedData.length !== 1 ? "s" : ""}`}
                   </button>
                 )}
               </div>

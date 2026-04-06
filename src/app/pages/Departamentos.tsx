@@ -1,10 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { DepartmentCard } from "../components/common/DepartmentCard";
-import { departamentos } from "../data/mockData";
-import { Plus, X, Megaphone, Settings, TrendingUp, Package, Users, Briefcase, Lightbulb, HeadphonesIcon, DollarSign } from "lucide-react";
+import { getDepartamentosComStats, criarDepartamento, atualizarDepartamento, type DepartamentoComStats } from "../../lib/services/departamentos";
+import { Plus, X, Megaphone, Settings, TrendingUp, Package, Users, Briefcase, Lightbulb, HeadphonesIcon, DollarSign, Pencil } from "lucide-react";
 
 export default function Departamentos() {
+  const [departamentos, setDepartamentos] = useState<DepartamentoComStats[]>([]);
+  const [carregando, setCarregando] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [salvando, setSalvando] = useState(false);
+  const [erroForm, setErroForm] = useState<string | null>(null);
+
+  useEffect(() => {
+    getDepartamentosComStats()
+      .then(setDepartamentos)
+      .catch(console.error)
+      .finally(() => setCarregando(false));
+  }, []);
   const [formData, setFormData] = useState({
     nome: "",
     cor: "#14E9BC",
@@ -36,19 +48,35 @@ export default function Departamentos() {
     "#06b6d4", // Cyan
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAbrirEdicao = (dept: DepartamentoComStats) => {
+    setEditandoId(dept.id);
+    setFormData({ nome: dept.nome, cor: dept.cor, icon: dept.icon, membros: dept.membros, descricao: "" });
+    setErroForm(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // Aqui você pode adicionar a lógica para salvar o novo departamento
-    console.log("Novo departamento:", formData);
-    // Fechar modal e resetar form
-    setIsModalOpen(false);
-    setFormData({
-      nome: "",
-      cor: "#14E9BC",
-      icon: "briefcase",
-      membros: 0,
-      descricao: "",
-    });
+    setSalvando(true);
+    setErroForm(null);
+    try {
+      if (editandoId) {
+        const atualizado = await atualizarDepartamento(editandoId, { nome: formData.nome, cor: formData.cor, icon: formData.icon });
+        setDepartamentos((prev) => prev.map((d) => d.id === editandoId ? { ...d, ...atualizado } : d));
+      } else {
+        const novo = await criarDepartamento({ nome: formData.nome, cor: formData.cor, icon: formData.icon });
+        setDepartamentos((prev) => [...prev, { ...novo, membros: 0, tarefasAbertas: 0, documentos: 0 }]);
+      }
+      setIsModalOpen(false);
+      setEditandoId(null);
+      setFormData({ nome: "", cor: "#14E9BC", icon: "briefcase", membros: 0, descricao: "" });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erro desconhecido";
+      setErroForm(`Falha ao ${editandoId ? "atualizar" : "criar"} departamento: ${msg}`);
+      console.error("Erro ao salvar departamento:", err);
+    } finally {
+      setSalvando(false);
+    }
   };
 
   return (
@@ -76,7 +104,16 @@ export default function Departamentos() {
         {/* Departments Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {departamentos.map((dept) => (
-            <DepartmentCard key={dept.id} {...dept} />
+            <div key={dept.id} className="relative group/card">
+              <DepartmentCard {...dept} />
+              <button
+                onClick={() => handleAbrirEdicao(dept)}
+                className="absolute top-3 right-3 w-8 h-8 bg-[#1a1a1a] border border-[#333] rounded-lg flex items-center justify-center text-[#bdbdbd] hover:text-[#eee] hover:border-[#555] transition-all opacity-0 group-hover/card:opacity-100"
+                title="Editar departamento"
+              >
+                <Pencil size={14} />
+              </button>
+            </div>
           ))}
         </div>
 
@@ -129,10 +166,10 @@ export default function Departamentos() {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-[#333]">
               <h2 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[24px]">
-                Novo Departamento
+                {editandoId ? "Editar Departamento" : "Novo Departamento"}
               </h2>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => { setIsModalOpen(false); setEditandoId(null); setErroForm(null); }}
                 className="text-[#bdbdbd] hover:text-[#eee] transition-colors"
               >
                 <X size={24} />
@@ -270,20 +307,28 @@ export default function Departamentos() {
               </div>
 
               {/* Modal Footer */}
-              <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-[#333]">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-3 rounded-lg font-['Inter:Semi_Bold',sans-serif] text-[14px] text-[#bdbdbd] hover:text-[#eee] hover:bg-[#1a1a1a] transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="bg-[#14E9BC] text-[#000] px-6 py-3 rounded-lg font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] hover:bg-[#12d4a8] transition-colors"
-                >
-                  Criar Departamento
-                </button>
+              <div className="mt-8 pt-6 border-t border-[#333]">
+                {erroForm && (
+                  <p className="text-[#ec5d5e] text-[13px] font-['Inter:Regular',sans-serif] mb-4 p-3 bg-[#ec5d5e]/10 border border-[#ec5d5e]/30 rounded-lg">
+                    {erroForm}
+                  </p>
+                )}
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setIsModalOpen(false); setEditandoId(null); setErroForm(null); }}
+                    className="px-6 py-3 rounded-lg font-['Inter:Semi_Bold',sans-serif] text-[14px] text-[#bdbdbd] hover:text-[#eee] hover:bg-[#1a1a1a] transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={salvando}
+                    className="bg-[#14E9BC] text-[#000] px-6 py-3 rounded-lg font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] hover:bg-[#12d4a8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {salvando ? (editandoId ? "Salvando..." : "Criando...") : (editandoId ? "Salvar Alterações" : "Criar Departamento")}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

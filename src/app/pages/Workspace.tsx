@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router";
-import { departamentos } from "../data/mockData";
+import { getDepartamentosComStats, type DepartamentoComStats } from "../../lib/services/departamentos";
 import { useAuth } from "../context/AuthContext";
 import {
   ArrowLeft,
@@ -26,14 +26,30 @@ export default function Workspace() {
   const navigate = useNavigate();
   const { usuario, podeEditar, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("overview");
+  const [departamento, setDepartamento] = useState<DepartamentoComStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const departamento = departamentos.find((d) => d.id === id);
+  useEffect(() => {
+    getDepartamentosComStats()
+      .then((depts) => setDepartamento(depts.find((d) => d.id === id) ?? null))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [id]);
+
   const temPermissao = podeEditar(id || "");
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] p-8 flex items-center justify-center">
+        <p className="text-[#bdbdbd] text-[16px]">Carregando...</p>
+      </div>
+    );
+  }
 
   if (!departamento) {
     return (

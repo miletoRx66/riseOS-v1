@@ -1,14 +1,18 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useParams, useNavigate, Link } from "react-router";
-import { tarefas, departamentos } from "../data/mockData";
+import { getTarefaById, atualizarTarefa, type TarefaDB } from "../../lib/services/tarefas";
+import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
+import { getUsuarios, type UsuarioDB } from "../../lib/services/usuarios";
 import { TarefaLink } from "../types";
 import { ArrowLeft, Save, X, Plus, ExternalLink, Trash2 } from "lucide-react";
 
 export default function EditarTarefa() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  const tarefa = tarefas.find((t) => t.id === id);
+
+  const [tarefa, setTarefa] = useState<TarefaDB | null>(null);
+  const [departamentos, setDepartamentos] = useState<DepartamentoDB[]>([]);
+  const [usuarios, setUsuarios] = useState<UsuarioDB[]>([]);
 
   const [formData, setFormData] = useState({
     titulo: "",
@@ -16,7 +20,7 @@ export default function EditarTarefa() {
     departamento: "",
     status: "planejamento",
     prioridade: "media",
-    responsavel: "",
+    responsavel_id: "",
     prazo: "",
     tags: "",
     progresso: 0,
@@ -29,23 +33,29 @@ export default function EditarTarefa() {
   const [novoLink, setNovoLink] = useState({ titulo: "", url: "", tipo: "outro" as TarefaLink["tipo"] });
 
   useEffect(() => {
-    if (tarefa) {
-      setLinks(tarefa.links ?? []);
-      setFormData({
-        titulo: tarefa.titulo,
-        descricao: tarefa.descricao || "",
-        departamento: tarefa.departamento,
-        status: tarefa.status,
-        prioridade: tarefa.prioridade,
-        responsavel: tarefa.responsavel,
-        prazo: tarefa.prazo,
-        tags: tarefa.tags?.join(", ") || "",
-        progresso: tarefa.progresso || 0,
-        tipo: tarefa.tipo || "outro",
-        visibilidade: tarefa.visibilidade || "departamento",
-      });
+    getDepartamentos().then(setDepartamentos).catch(console.error);
+    getUsuarios().then(setUsuarios).catch(console.error);
+    if (id) {
+      getTarefaById(id).then((t) => {
+        if (t) {
+          setTarefa(t);
+          setFormData({
+            titulo: t.titulo,
+            descricao: t.descricao || "",
+            departamento: t.departamento_id,
+            status: t.status,
+            prioridade: t.prioridade,
+            responsavel_id: t.responsavel_id ?? "",
+            prazo: t.prazo ?? "",
+            tags: t.tags?.join(", ") || "",
+            progresso: t.progresso || 0,
+            tipo: t.tipo || "outro",
+            visibilidade: t.visibilidade || "departamento",
+          });
+        }
+      }).catch(console.error);
     }
-  }, [tarefa]);
+  }, [id]);
 
   if (!tarefa) {
     return (
@@ -78,8 +88,8 @@ export default function EditarTarefa() {
       newErrors.departamento = "Selecione um departamento";
     }
 
-    if (!formData.responsavel.trim()) {
-      newErrors.responsavel = "Responsável é obrigatório";
+    if (!formData.responsavel_id) {
+      newErrors.responsavel_id = "Responsável é obrigatório";
     }
 
     if (!formData.prazo) {
@@ -90,11 +100,25 @@ export default function EditarTarefa() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
-    if (validateForm()) {
+    if (!validateForm() || !id) return;
+    try {
+      await atualizarTarefa(id, {
+        titulo: formData.titulo,
+        descricao: formData.descricao || undefined,
+        departamento_id: formData.departamento,
+        status: formData.status,
+        prioridade: formData.prioridade,
+        responsavel_id: formData.responsavel_id || undefined,
+        prazo: formData.prazo || undefined,
+        tags: formData.tags ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+        tipo: formData.tipo,
+        visibilidade: formData.visibilidade,
+      });
       navigate(`/tarefas/${id}`);
+    } catch (err) {
+      console.error("Erro ao atualizar tarefa:", err);
     }
   };
 
@@ -246,18 +270,21 @@ export default function EditarTarefa() {
                   <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
                     Responsável *
                   </label>
-                  <input
-                    type="text"
-                    value={formData.responsavel}
-                    onChange={(e) => handleChange("responsavel", e.target.value)}
-                    placeholder="Nome do responsável"
+                  <select
+                    value={formData.responsavel_id}
+                    onChange={(e) => handleChange("responsavel_id", e.target.value)}
                     className={`w-full bg-[#1a1a1a] border ${
-                      errors.responsavel ? "border-[#ff6b6b]" : "border-[#333]"
+                      errors.responsavel_id ? "border-[#ff6b6b]" : "border-[#333]"
                     } rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none`}
-                  />
-                  {errors.responsavel && (
+                  >
+                    <option value="">Selecione o responsável</option>
+                    {usuarios.map((u) => (
+                      <option key={u.id} value={u.id}>{u.nome}</option>
+                    ))}
+                  </select>
+                  {errors.responsavel_id && (
                     <p className="text-[#ff6b6b] text-[12px] font-['Inter:Regular',sans-serif] mt-1">
-                      {errors.responsavel}
+                      {errors.responsavel_id}
                     </p>
                   )}
                 </div>

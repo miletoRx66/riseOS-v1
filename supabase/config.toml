@@ -1,7 +1,7 @@
 # Supabase CLI config — RiseOS
 # Documentação: https://supabase.com/docs/reference/cli/config
 
-project_id = "kmxqvcknhakhhquplmpi"
+project_id = "oaqasiaorraprtfzjlfo"
 
 [api]
 enabled = true
@@ -31,8 +31,14 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "http://127.0.0.1:5173"
-additional_redirect_urls = ["https://localhost:5173"]
+site_url = "https://rise-os-v1.vercel.app"
+additional_redirect_urls = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
+  "http://localhost:3000",
+]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10

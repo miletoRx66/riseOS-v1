@@ -1,6 +1,9 @@
 import { createBrowserRouter } from "react-router";
 import { ProtectedLayout } from "./components/layout/ProtectedLayout";
 import Login from "./pages/Login";
+import EsqueceuSenha from "./pages/EsqueceuSenha";
+import RedefinirSenha from "./pages/RedefinirSenha";
+import CriarConta from "./pages/CriarConta";
 import Dashboard from "./pages/Dashboard";
 import Departamentos from "./pages/Departamentos";
 import DepartamentoDetail from "./pages/DepartamentoDetail";
@@ -11,6 +14,7 @@ import TarefaDetail from "./pages/TarefaDetail";
 import NovaTarefa from "./pages/NovaTarefa";
 import EditarTarefa from "./pages/EditarTarefa";
 import OKRs from "./pages/OKRs";
+import OKRDetail from "./pages/OKRDetail";
 import Messages from "./pages/Messages";
 import Documentos from "./pages/Documentos";
 import Relatorios from "./pages/Relatorios";
@@ -44,6 +48,18 @@ export const router = createBrowserRouter([
     Component: Login,
   },
   {
+    path: "/esqueceu-senha",
+    Component: EsqueceuSenha,
+  },
+  {
+    path: "/redefinir-senha",
+    Component: RedefinirSenha,
+  },
+  {
+    path: "/criar-conta",
+    Component: CriarConta,
+  },
+  {
     path: "/",
     Component: ProtectedLayout,
     children: [
@@ -57,6 +73,7 @@ export const router = createBrowserRouter([
       { path: "tarefas/:id", Component: TarefaDetail },
       { path: "tarefas/:id/editar", Component: EditarTarefa },
       { path: "okrs", Component: OKRs },
+      { path: "okrs/:id", Component: OKRDetail },
       { path: "mensagens", Component: Messages },
       { path: "documentos", Component: Documentos },
       { path: "relatorios", Component: Relatorios },

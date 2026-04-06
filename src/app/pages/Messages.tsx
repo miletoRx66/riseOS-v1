@@ -1,12 +1,22 @@
 import { useState } from "react";
 import {
-  usuarios,
   conversasP2P,
   mensagensP2P,
   canaisDepartamento,
   mensagensCanais,
   departamentos,
 } from "../data/mockData";
+
+const usuarios = [
+  { id: "user-1", nome: "Ana Silva", cargo: "Diretora de Marketing", email: "ana@empresa.com", departamento: "marketing", avatar: "AS", status: "online" },
+  { id: "user-2", nome: "Carlos Mendes", cargo: "Head de Operações", email: "carlos@empresa.com", departamento: "ops", avatar: "CM", status: "online" },
+  { id: "user-3", nome: "Maria Oliveira", cargo: "Executiva Comercial", email: "maria@empresa.com", departamento: "comercial", avatar: "MO", status: "away" },
+  { id: "user-4", nome: "Pedro Costa", cargo: "Designer Sênior", email: "pedro@empresa.com", departamento: "marketing", avatar: "PC", status: "online" },
+  { id: "user-5", nome: "Julia Santos", cargo: "Analista de Conteúdo", email: "julia@empresa.com", departamento: "marketing", avatar: "JS", status: "offline" },
+  { id: "user-6", nome: "Rafael Lima", cargo: "Analista de Operações", email: "rafael@empresa.com", departamento: "ops", avatar: "RL", status: "online" },
+  { id: "user-7", nome: "Fernanda Rocha", cargo: "Analista Financeiro", email: "fernanda@empresa.com", departamento: "financeiro", avatar: "FR", status: "away" },
+  { id: "user-8", nome: "Lucas Alves", cargo: "Executivo de Vendas", email: "lucas@empresa.com", departamento: "comercial", avatar: "LA", status: "online" },
+];
 import {
   MessageSquare,
   Hash,

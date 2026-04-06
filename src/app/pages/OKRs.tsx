@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, FormEvent, MouseEvent } from "react";
 import { Link } from "react-router";
-import { departamentos, okrs, tarefas } from "../data/mockData";
-import { Target, TrendingUp, Calendar, User, CheckSquare, Plus, Filter, X, Trash2, LayoutList, CalendarDays, LayoutGrid, ChevronDown, ChevronUp } from "lucide-react";
+import { getOkrs, criarOkr, criarKeyResult, deletarOkr, atualizarProgresso, type OkrDB } from "../../lib/services/okrs";
+import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
+import { getUsuarios, type UsuarioDB } from "../../lib/services/usuarios";
+import { Target, TrendingUp, Calendar, User, Plus, Filter, X, Trash2, LayoutList, CalendarDays, LayoutGrid, ChevronDown, ChevronUp } from "lucide-react";
 
 interface KeyResult {
   id: string;
@@ -13,16 +15,25 @@ interface KeyResult {
 }
 
 export default function OKRs() {
+  const [okrs, setOkrs] = useState<OkrDB[]>([]);
+  const [departamentos, setDepartamentos] = useState<DepartamentoDB[]>([]);
+  const [usuarios, setUsuarios] = useState<UsuarioDB[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("todos");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("Q1 2026");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<string>("lista");
   const [expandedOKRs, setExpandedOKRs] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    getOkrs().then(setOkrs).catch(console.error);
+    getDepartamentos().then(setDepartamentos).catch(console.error);
+    getUsuarios().then(setUsuarios).catch(console.error);
+  }, []);
   const [formData, setFormData] = useState({
     titulo: "",
     departamento: "",
     periodo: "Q1 2026",
-    responsavel: "",
+    responsavel_id: "",
     dataInicio: "",
     dataFim: "",
   });
@@ -38,7 +49,7 @@ export default function OKRs() {
   ]);
 
   const filteredOKRs = okrs.filter((okr) => {
-    const matchDept = selectedDepartment === "todos" || okr.departamento === selectedDepartment;
+    const matchDept = selectedDepartment === "todos" || okr.departamento_id === selectedDepartment;
     const matchPeriod = selectedPeriod === "todos" || okr.periodo === selectedPeriod;
     return matchDept && matchPeriod;
   });
@@ -81,51 +92,83 @@ export default function OKRs() {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setFormData({ titulo: "", departamento: "", periodo: "Q1 2026", responsavel_id: "", dataInicio: "", dataFim: "" });
+    setKeyResults([{ id: "kr-temp-1", descricao: "", metrica: "", valorInicial: 0, valorMeta: 0, unidade: "" }]);
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // Aqui você pode adicionar a lógica para salvar o novo OKR
-    // Fechar modal e resetar form
-    setIsModalOpen(false);
-    setFormData({
-      titulo: "",
-      departamento: "",
-      periodo: "Q1 2026",
-      responsavel: "",
-      dataInicio: "",
-      dataFim: "",
-    });
-    setKeyResults([
-      {
-        id: "kr-temp-1",
-        descricao: "",
-        metrica: "",
-        valorInicial: 0,
-        valorMeta: 0,
-        unidade: "",
-      },
-    ]);
+    try {
+      const okr = await criarOkr({
+        titulo: formData.titulo,
+        departamento_id: formData.departamento,
+        periodo: formData.periodo,
+        responsavel_id: formData.responsavel_id,
+        data_inicio: formData.dataInicio || undefined,
+        data_fim: formData.dataFim || undefined,
+      });
+      await Promise.all(
+        keyResults.map((kr) =>
+          criarKeyResult({
+            okr_id: okr.id,
+            descricao: kr.descricao,
+            metrica: kr.metrica || undefined,
+            valor_inicial: kr.valorInicial,
+            valor_meta: kr.valorMeta,
+            unidade: kr.unidade || undefined,
+          })
+        )
+      );
+      setOkrs((prev) => [...prev, { ...okr, key_results: [] }]);
+      setIsModalOpen(false);
+      resetForm();
+    } catch (err) {
+      console.error("Erro ao criar OKR:", err);
+    }
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setFormData({
-      titulo: "",
-      departamento: "",
-      periodo: "Q1 2026",
-      responsavel: "",
-      dataInicio: "",
-      dataFim: "",
-    });
-    setKeyResults([
-      {
-        id: "kr-temp-1",
-        descricao: "",
-        metrica: "",
-        valorInicial: 0,
-        valorMeta: 0,
-        unidade: "",
-      },
-    ]);
+    resetForm();
+  };
+
+  const [editingKr, setEditingKr] = useState<{ okrId: string; krId: string; valor: number } | null>(null);
+  const [salvandoKr, setSalvandoKr] = useState(false);
+
+  const handleSalvarProgresso = async (okrId: string, krId: string, valorMeta: number) => {
+    if (!editingKr) return;
+    setSalvandoKr(true);
+    try {
+      const novoProgresso = Math.min(100, Math.round((editingKr.valor / valorMeta) * 100));
+      await atualizarProgresso(krId, editingKr.valor, novoProgresso);
+      setOkrs((prev) => prev.map((o) => {
+        if (o.id !== okrId) return o;
+        const krs = (o.key_results ?? []).map((kr) =>
+          kr.id === krId ? { ...kr, valor_atual: editingKr.valor, progresso: novoProgresso } : kr
+        );
+        const progressoOkr = krs.length > 0
+          ? Math.round(krs.reduce((acc, kr) => acc + kr.progresso, 0) / krs.length)
+          : o.progresso;
+        return { ...o, key_results: krs, progresso: progressoOkr };
+      }));
+      setEditingKr(null);
+    } catch (err) {
+      console.error("Erro ao atualizar progresso:", err);
+    } finally {
+      setSalvandoKr(false);
+    }
+  };
+
+  const handleExcluirOkr = async (e: MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!window.confirm("Tem certeza que deseja excluir este OKR? Esta ação não pode ser desfeita.")) return;
+    try {
+      await deletarOkr(id);
+      setOkrs((prev) => prev.filter((o) => o.id !== id));
+    } catch (err) {
+      console.error("Erro ao excluir OKR:", err);
+    }
   };
 
   const toggleOKR = (id: string) => {
@@ -297,10 +340,9 @@ export default function OKRs() {
         {/* Lista de OKRs */}
         <div className="space-y-6">
           {filteredOKRs.map((okr) => {
-            const dept = departamentos.find((d) => d.id === okr.departamento);
+            const dept = departamentos.find((d) => d.id === okr.departamento_id);
             if (!dept) return null;
 
-            const tarefasVinculadas = tarefas.filter((t) => okr.tarefasVinculadas.includes(t.id));
             const isExpanded = expandedOKRs.has(okr.id);
 
             return (
@@ -322,9 +364,13 @@ export default function OKRs() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <h2 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[20px]">
+                        <Link
+                          to={`/okrs/${okr.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[20px] hover:text-[#14E9BC] transition-colors"
+                        >
                           {okr.titulo}
-                        </h2>
+                        </Link>
                         <span
                           className="px-3 py-1 rounded-full text-[11px] font-['Inter:Medium',sans-serif]"
                           style={{
@@ -350,13 +396,13 @@ export default function OKRs() {
                         <div className="flex items-center gap-2">
                           <User size={14} />
                           <span className="font-['Inter:Regular',sans-serif]">
-                            {okr.responsavel}
+                            {okr.responsavel?.nome ?? "—"}
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-6 flex-shrink-0">
+                  <div className="flex items-center gap-4 flex-shrink-0">
                     <div className="text-right">
                       <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px] mb-1">
                         Progresso Geral
@@ -365,6 +411,13 @@ export default function OKRs() {
                         {okr.progresso}%
                       </p>
                     </div>
+                    <button
+                      onClick={(e) => handleExcluirOkr(e, okr.id)}
+                      className="text-[#bdbdbd] hover:text-[#ec5d5e] transition-colors p-1"
+                      title="Excluir OKR"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -399,99 +452,81 @@ export default function OKRs() {
                         Key Results
                       </h3>
                       <div className="space-y-4">
-                        {okr.keyResults.map((kr) => (
-                          <div
-                            key={kr.id}
-                            className="border-l-2 pl-4 py-2"
-                            style={{ borderColor: dept.cor }}
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <p className="font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] flex-1">
-                                {kr.descricao}
-                              </p>
-                              <div className="text-right ml-4">
-                                <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px]">
-                                  {kr.progresso}%
+                        {okr.key_results.map((kr) => {
+                          const isEditingThis = editingKr?.krId === kr.id;
+                          return (
+                            <div
+                              key={kr.id}
+                              className="border-l-2 pl-4 py-2"
+                              style={{ borderColor: dept.cor }}
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <p className="font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] flex-1">
+                                  {kr.descricao}
+                                </p>
+                                <div className="text-right ml-4">
+                                  <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px]">
+                                    {kr.progresso}%
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="flex-1 bg-[#1a1a1a] rounded-full h-2">
+                                  <div
+                                    className="h-2 rounded-full transition-all"
+                                    style={{ width: `${kr.progresso}%`, backgroundColor: dept.cor }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px]">
+                                  {kr.valor_atual.toLocaleString()} / {kr.valor_meta.toLocaleString()}{" "}
+                                  {kr.unidade}
+                                </p>
+                                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px]">
+                                  {kr.metrica}
                                 </p>
                               </div>
+                              {/* Inline progress update */}
+                              {isEditingThis ? (
+                                <div className="mt-3 flex items-center gap-2">
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={kr.valor_meta}
+                                    value={editingKr.valor}
+                                    onChange={(e) => setEditingKr({ ...editingKr, valor: parseFloat(e.target.value) || 0 })}
+                                    className="w-28 bg-[#1a1a1a] border border-[#333] rounded px-3 py-1.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                                  />
+                                  <span className="text-[#bdbdbd] text-[12px]">/ {kr.valor_meta} {kr.unidade}</span>
+                                  <button
+                                    onClick={() => handleSalvarProgresso(okr.id, kr.id, kr.valor_meta)}
+                                    disabled={salvandoKr}
+                                    className="bg-[#14E9BC] text-[#000] px-3 py-1.5 rounded text-[12px] font-semibold hover:bg-[#12d4a8] transition-colors disabled:opacity-50"
+                                  >
+                                    {salvandoKr ? "..." : "Salvar"}
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingKr(null)}
+                                    className="text-[#bdbdbd] hover:text-[#eee] px-2 py-1.5 text-[12px] transition-colors"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setEditingKr({ okrId: okr.id, krId: kr.id, valor: kr.valor_atual })}
+                                  className="mt-2 text-[#14E9BC] text-[12px] font-['Inter:Medium',sans-serif] hover:underline"
+                                >
+                                  Atualizar progresso
+                                </button>
+                              )}
                             </div>
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="flex-1 bg-[#1a1a1a] rounded-full h-2">
-                                <div
-                                  className="h-2 rounded-full"
-                                  style={{
-                                    width: `${kr.progresso}%`,
-                                    backgroundColor: dept.cor,
-                                  }}
-                                />
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px]">
-                                {kr.valorAtual.toLocaleString()} / {kr.valorMeta.toLocaleString()}{" "}
-                                {kr.unidade}
-                              </p>
-                              <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px]">
-                                {kr.metrica}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
-                    {/* Tarefas Vinculadas */}
-                    <div className="border-t border-[#333] pt-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px] flex items-center gap-2">
-                          <CheckSquare size={16} />
-                          Tarefas Vinculadas ({tarefasVinculadas.length})
-                        </h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {tarefasVinculadas.map((tarefa) => (
-                          <Link
-                            key={tarefa.id}
-                            to={`/tarefas/${tarefa.id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center justify-between p-3 border border-[#333] rounded-lg hover:border-[#555] hover:bg-[#1a1a1a] transition-all group"
-                          >
-                            <div className="flex items-center gap-3 flex-1">
-                              <div
-                                className="w-2 h-2 rounded-full"
-                                style={{
-                                  backgroundColor:
-                                    tarefa.status === "concluido"
-                                      ? "#bdbdbd"
-                                      : tarefa.status === "em-andamento"
-                                      ? "#28d939"
-                                      : "#6B8AFF",
-                                }}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-['Inter:Medium',sans-serif] text-[#eee] text-[13px] group-hover:text-[#14E9BC] transition-colors truncate">
-                                  {tarefa.titulo}
-                                </h4>
-                                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[11px]">
-                                  {tarefa.responsavel}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="ml-3">
-                              <div className="w-12 bg-[#1a1a1a] rounded-full h-1.5">
-                                <div
-                                  className="h-1.5 rounded-full"
-                                  style={{ width: `${tarefa.progresso}%`, backgroundColor: dept.cor }}
-                                />
-                              </div>
-                              <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[10px] text-right mt-1">
-                                {tarefa.progresso}%
-                              </p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
@@ -606,14 +641,17 @@ export default function OKRs() {
                     <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
                       Responsável *
                     </label>
-                    <input
-                      type="text"
+                    <select
                       required
-                      value={formData.responsavel}
-                      onChange={(e) => setFormData({ ...formData, responsavel: e.target.value })}
-                      placeholder="Nome do responsável"
+                      value={formData.responsavel_id}
+                      onChange={(e) => setFormData({ ...formData, responsavel_id: e.target.value })}
                       className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
-                    />
+                    >
+                      <option value="">Selecione o responsável</option>
+                      {usuarios.map((u) => (
+                        <option key={u.id} value={u.id}>{u.nome}</option>
+                      ))}
+                    </select>
                   </div>
 
                   {/* Data de Início */}

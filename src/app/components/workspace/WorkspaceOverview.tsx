@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import { Users, CheckSquare, FileText, TrendingUp, Target, Zap } from "lucide-react";
-import { tarefas, documentos, okrs } from "../../data/mockData";
+import { getTarefas, type TarefaDB } from "../../../lib/services/tarefas";
+import { getOkrs, type OkrDB } from "../../../lib/services/okrs";
 
 interface WorkspaceOverviewProps {
   departamento: {
@@ -14,15 +16,19 @@ interface WorkspaceOverviewProps {
 }
 
 export function WorkspaceOverview({ departamento, temPermissao }: WorkspaceOverviewProps) {
-  const tarefasDept = tarefas.filter((t) => t.departamento === departamento.id);
-  const docsDept = documentos.filter((d) => d.departamento === departamento.id);
-  const okrsDept = okrs.filter((o) => o.departamento === departamento.id);
+  const [tarefas, setTarefas] = useState<TarefaDB[]>([]);
+  const [okrs, setOkrs] = useState<OkrDB[]>([]);
 
-  const tarefasEmAndamento = tarefasDept.filter((t) => t.status === "em-andamento").length;
-  const tarefasConcluidas = tarefasDept.filter((t) => t.status === "concluido").length;
+  useEffect(() => {
+    getTarefas({ departamento_id: departamento.id }).then(setTarefas).catch(console.error);
+    getOkrs(departamento.id).then(setOkrs).catch(console.error);
+  }, [departamento.id]);
+
+  const tarefasEmAndamento = tarefas.filter((t) => t.status === "em-andamento").length;
+  const tarefasConcluidas = tarefas.filter((t) => t.status === "concluido").length;
   const progressoMedioOKRs =
-    okrsDept.length > 0
-      ? okrsDept.reduce((acc, okr) => acc + okr.progresso, 0) / okrsDept.length
+    okrs.length > 0
+      ? okrs.reduce((acc, okr) => acc + okr.progresso, 0) / okrs.length
       : 0;
 
   const stats = [
@@ -49,14 +55,14 @@ export function WorkspaceOverview({ departamento, temPermissao }: WorkspaceOverv
     },
     {
       label: "Documentos",
-      valor: docsDept.length,
+      valor: departamento.documentos,
       icon: FileText,
       cor: "#E879F9",
       descricao: "documentos disponíveis",
     },
     {
       label: "OKRs Ativos",
-      valor: okrsDept.length,
+      valor: okrs.length,
       icon: Target,
       cor: "#f59e0b",
       descricao: `${progressoMedioOKRs.toFixed(0)}% de progresso médio`,
