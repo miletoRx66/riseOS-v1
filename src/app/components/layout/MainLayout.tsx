@@ -9,7 +9,8 @@ import {
   LogOut,
   MessageSquare,
   Sun,
-  Moon
+  Moon,
+  UserCircle,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -111,8 +112,19 @@ export function MainLayout() {
           </div>
         </nav>
 
-        {/* Theme Toggle */}
-        <div className="p-4 border-t border-[#333]">
+        {/* Theme Toggle + Perfil */}
+        <div className="p-4 border-t border-[#333] space-y-1">
+          <Link
+            to="/perfil"
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              isActive("/perfil")
+                ? "bg-[#1a1a1a] text-[#14E9BC] border border-[#14E9BC]/30"
+                : "text-[#bdbdbd] hover:bg-[#1a1a1a] hover:text-[#eee]"
+            }`}
+          >
+            <UserCircle size={20} />
+            <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">Meu Perfil</span>
+          </Link>
           <button
             onClick={toggleTheme}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[#bdbdbd] hover:bg-[#1a1a1a] hover:text-[#eee] transition-colors"

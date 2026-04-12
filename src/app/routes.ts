@@ -15,6 +15,7 @@ import NovaTarefa from "./pages/NovaTarefa";
 import EditarTarefa from "./pages/EditarTarefa";
 import OKRs from "./pages/OKRs";
 import OKRDetail from "./pages/OKRDetail";
+import Perfil from "./pages/Perfil";
 import Messages from "./pages/Messages";
 import Documentos from "./pages/Documentos";
 import Relatorios from "./pages/Relatorios";
@@ -74,6 +75,7 @@ export const router = createBrowserRouter([
       { path: "tarefas/:id/editar", Component: EditarTarefa },
       { path: "okrs", Component: OKRs },
       { path: "okrs/:id", Component: OKRDetail },
+      { path: "perfil", Component: Perfil },
       { path: "mensagens", Component: Messages },
       { path: "documentos", Component: Documentos },
       { path: "relatorios", Component: Relatorios },

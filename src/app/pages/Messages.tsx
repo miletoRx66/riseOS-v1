@@ -1,671 +1,562 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, KeyboardEvent } from "react";
+import { useAuth } from "../context/AuthContext";
 import {
-  conversasP2P,
-  mensagensP2P,
-  canaisDepartamento,
-  mensagensCanais,
-  departamentos,
-} from "../data/mockData";
+  getMeusCanais,
+  getOutroParticipante,
+  getMensagens,
+  enviarMensagem,
+  iniciarConversaP2P,
+  entrarCanalDepartamento,
+  subscribeToMensagens,
+  type CanalDB,
+  type MensagemDB,
+} from "../../lib/services/mensagens";
+import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
+import { getUsuarios, type UsuarioDB } from "../../lib/services/usuarios";
+import { MessageSquare, Hash, Search, Send, Users, Plus, X, ChevronDown } from "lucide-react";
 
-const usuarios = [
-  { id: "user-1", nome: "Ana Silva", cargo: "Diretora de Marketing", email: "ana@empresa.com", departamento: "marketing", avatar: "AS", status: "online" },
-  { id: "user-2", nome: "Carlos Mendes", cargo: "Head de Operações", email: "carlos@empresa.com", departamento: "ops", avatar: "CM", status: "online" },
-  { id: "user-3", nome: "Maria Oliveira", cargo: "Executiva Comercial", email: "maria@empresa.com", departamento: "comercial", avatar: "MO", status: "away" },
-  { id: "user-4", nome: "Pedro Costa", cargo: "Designer Sênior", email: "pedro@empresa.com", departamento: "marketing", avatar: "PC", status: "online" },
-  { id: "user-5", nome: "Julia Santos", cargo: "Analista de Conteúdo", email: "julia@empresa.com", departamento: "marketing", avatar: "JS", status: "offline" },
-  { id: "user-6", nome: "Rafael Lima", cargo: "Analista de Operações", email: "rafael@empresa.com", departamento: "ops", avatar: "RL", status: "online" },
-  { id: "user-7", nome: "Fernanda Rocha", cargo: "Analista Financeiro", email: "fernanda@empresa.com", departamento: "financeiro", avatar: "FR", status: "away" },
-  { id: "user-8", nome: "Lucas Alves", cargo: "Executivo de Vendas", email: "lucas@empresa.com", departamento: "comercial", avatar: "LA", status: "online" },
-];
-import {
-  MessageSquare,
-  Hash,
-  Search,
-  Send,
-  Smile,
-  Paperclip,
-  MoreVertical,
-  Users,
-  Circle,
-  Pin,
-  Filter,
-  X,
-} from "lucide-react";
+interface CanalEnriquecido extends CanalDB {
+  outroUsuario?: { id: string; nome: string; avatar_url: string | null } | null;
+  departamentoInfo?: { id: string; nome: string; cor: string } | null;
+  ultimaMensagem?: string | null;
+}
+
+function getIniciais(nome: string): string {
+  return nome.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
+}
+
+function formatarHora(iso: string): string {
+  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatarDataRelativa(iso: string): string {
+  const d = new Date(iso);
+  const hoje = new Date();
+  const ontem = new Date(hoje);
+  ontem.setDate(ontem.getDate() - 1);
+  if (d.toDateString() === hoje.toDateString()) return formatarHora(iso);
+  if (d.toDateString() === ontem.toDateString()) return "Ontem";
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+}
+
+function formatarDataGrupo(iso: string): string {
+  const d = new Date(iso);
+  const hoje = new Date();
+  const ontem = new Date(hoje);
+  ontem.setDate(ontem.getDate() - 1);
+  if (d.toDateString() === hoje.toDateString()) return "Hoje";
+  if (d.toDateString() === ontem.toDateString()) return "Ontem";
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+}
 
 export default function Messages() {
+  const { usuario } = useAuth();
   const [activeTab, setActiveTab] = useState<"conversas" | "canais">("conversas");
-  const [conversaAtiva, setConversaAtiva] = useState<string | null>("conv-1");
-  const [canalAtivo, setCanalAtivo] = useState<string | null>(null);
+  const [canais, setCanais] = useState<CanalEnriquecido[]>([]);
+  const [canalAtivo, setCanalAtivo] = useState<CanalEnriquecido | null>(null);
+  const [mensagens, setMensagens] = useState<MensagemDB[]>([]);
   const [novaMensagem, setNovaMensagem] = useState("");
-  const [buscaUsuarios, setBuscaUsuarios] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [carregandoMsgs, setCarregandoMsgs] = useState(false);
+  const [departamentos, setDepartamentos] = useState<DepartamentoDB[]>([]);
+  const [usuarios, setUsuarios] = useState<UsuarioDB[]>([]);
+  const [buscaUsuario, setBuscaUsuario] = useState("");
+  const [mostrarNovaConversa, setMostrarNovaConversa] = useState(false);
+  const [iniciandoConversa, setIniciandoConversa] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
-  const usuarioAtual = "user-1"; // Admin atual (Ana Silva)
+  const userId = usuario?.id ?? "";
 
-  // Obter informações da conversa ativa
-  const getConversaInfo = (conversaId: string) => {
-    const conversa = conversasP2P.find((c) => c.id === conversaId);
-    if (!conversa) return null;
+  // Carregar canais, departamentos e usuários
+  useEffect(() => {
+    if (!userId) return;
 
-    const outroParticipanteId = conversa.participantes.find((p) => p !== usuarioAtual);
-    const outroParticipante = usuarios.find((u) => u.id === outroParticipanteId);
+    async function carregar() {
+      try {
+        const [depts, users] = await Promise.all([
+          getDepartamentos(),
+          getUsuarios(),
+        ]);
+        setDepartamentos(depts);
+        setUsuarios(users);
 
-    return {
-      ...conversa,
-      outroParticipante,
-    };
-  };
+        // Entrar automaticamente nos canais de departamento
+        for (const d of depts) {
+          await entrarCanalDepartamento(d.id, userId).catch(() => {});
+        }
 
-  // Obter mensagens da conversa ativa
-  const getMensagensConversa = (conversaId: string) => {
-    return mensagensP2P.filter((m) => m.conversaId === conversaId);
-  };
+        // Recarregar canais após entrar nos departamentos
+        const meusCanais = await getMeusCanais(userId);
 
-  // Obter mensagens do canal ativo
-  const getMensagensCanal = (canalId: string) => {
-    return mensagensCanais.filter((m) => m.canalId === canalId);
-  };
+        // Enriquecer canais p2p com dados do outro participante
+        const enriquecidos = await Promise.all(
+          meusCanais.map(async (c) => {
+            if (c.tipo === "p2p") {
+              const outro = await getOutroParticipante(c.id, userId);
+              return { ...c, outroUsuario: outro } as CanalEnriquecido;
+            } else if (c.tipo === "departamento") {
+              const dept = depts.find((d) => d.id === c.departamento_id);
+              return { ...c, departamentoInfo: dept ?? null } as CanalEnriquecido;
+            }
+            return c as CanalEnriquecido;
+          })
+        );
 
-  // Obter informações do canal ativo
-  const getCanalInfo = (canalId: string) => {
-    const canal = canaisDepartamento.find((c) => c.id === canalId);
-    if (!canal) return null;
+        setCanais(enriquecidos);
 
-    const dept = departamentos.find((d) => d.id === canal.departamentoId);
-    return { ...canal, departamento: dept };
-  };
-
-  // Formatar data/hora
-  const formatarHora = (dataString: string) => {
-    const data = new Date(dataString);
-    return data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  };
-
-  const formatarDataRelativa = (dataString: string) => {
-    const data = new Date(dataString);
-    const hoje = new Date();
-    const ontem = new Date(hoje);
-    ontem.setDate(ontem.getDate() - 1);
-
-    if (data.toDateString() === hoje.toDateString()) {
-      return formatarHora(dataString);
-    } else if (data.toDateString() === ontem.toDateString()) {
-      return "Ontem";
-    } else {
-      return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+        // Abrir o primeiro canal disponível
+        const primeiroP2P = enriquecidos.find((c) => c.tipo === "p2p");
+        if (primeiroP2P) {
+          selecionarCanal(primeiroP2P);
+        } else {
+          const primeiroDept = enriquecidos.find((c) => c.tipo === "departamento");
+          if (primeiroDept) {
+            setActiveTab("canais");
+            selecionarCanal(primeiroDept);
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao carregar mensagens:", err);
+      } finally {
+        setCarregando(false);
+      }
     }
-  };
 
-  const handleEnviarMensagem = () => {
-    if (novaMensagem.trim()) {
-      setNovaMensagem("");
+    carregar();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  // Scroll automático ao chegar novas mensagens
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensagens]);
+
+  function selecionarCanal(canal: CanalEnriquecido) {
+    setCanalAtivo(canal);
+    carregarMensagens(canal.id);
+
+    // Cancelar subscription anterior
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
     }
-  };
 
-  // Filtrar usuários na busca
+    // Assinar realtime do novo canal
+    unsubscribeRef.current = subscribeToMensagens(canal.id, (msg) => {
+      setMensagens((prev) => {
+        // Evitar duplicatas (pode ter chegado via envio local)
+        if (prev.find((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
+    });
+  }
+
+  async function carregarMensagens(canalId: string) {
+    setCarregandoMsgs(true);
+    try {
+      const msgs = await getMensagens(canalId);
+      setMensagens(msgs);
+    } catch (err) {
+      console.error("Erro ao carregar mensagens:", err);
+    } finally {
+      setCarregandoMsgs(false);
+    }
+  }
+
+  async function handleEnviar() {
+    if (!novaMensagem.trim() || !canalAtivo || !userId || enviando) return;
+    const texto = novaMensagem.trim();
+    setNovaMensagem("");
+    setEnviando(true);
+    try {
+      const msg = await enviarMensagem(canalAtivo.id, userId, texto);
+      setMensagens((prev) => {
+        if (prev.find((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
+    } catch (err) {
+      console.error("Erro ao enviar mensagem:", err);
+      setNovaMensagem(texto); // Restaura se falhar
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleEnviar();
+    }
+  }
+
+  async function handleIniciarConversaP2P(outroUserId: string) {
+    if (!userId || iniciandoConversa) return;
+    setIniciandoConversa(true);
+    try {
+      const canalId = await iniciarConversaP2P(userId, outroUserId);
+      // Recarregar canais
+      const meusCanais = await getMeusCanais(userId);
+      const enriquecidos = await Promise.all(
+        meusCanais.map(async (c) => {
+          if (c.tipo === "p2p") {
+            const outro = await getOutroParticipante(c.id, userId);
+            return { ...c, outroUsuario: outro } as CanalEnriquecido;
+          }
+          const dept = departamentos.find((d) => d.id === c.departamento_id);
+          return { ...c, departamentoInfo: dept ?? null } as CanalEnriquecido;
+        })
+      );
+      setCanais(enriquecidos);
+      const novoCanal = enriquecidos.find((c) => c.id === canalId);
+      if (novoCanal) {
+        setActiveTab("conversas");
+        selecionarCanal(novoCanal);
+      }
+      setMostrarNovaConversa(false);
+      setBuscaUsuario("");
+    } catch (err) {
+      console.error("Erro ao iniciar conversa:", err);
+    } finally {
+      setIniciandoConversa(false);
+    }
+  }
+
+  // Agrupar mensagens por data
+  function agruparMensagensPorData(msgs: MensagemDB[]) {
+    const grupos: { data: string; mensagens: MensagemDB[] }[] = [];
+    for (const msg of msgs) {
+      const dataLabel = formatarDataGrupo(msg.criado_em);
+      const ultimo = grupos[grupos.length - 1];
+      if (ultimo && ultimo.data === dataLabel) {
+        ultimo.mensagens.push(msg);
+      } else {
+        grupos.push({ data: dataLabel, mensagens: [msg] });
+      }
+    }
+    return grupos;
+  }
+
+  const canaisP2P = canais.filter((c) => c.tipo === "p2p");
+  const canaisDept = canais.filter((c) => c.tipo === "departamento");
   const usuariosFiltrados = usuarios.filter(
     (u) =>
-      u.id !== usuarioAtual &&
-      (u.nome.toLowerCase().includes(buscaUsuarios.toLowerCase()) ||
-        u.cargo.toLowerCase().includes(buscaUsuarios.toLowerCase()))
+      u.id !== userId &&
+      (u.nome.toLowerCase().includes(buscaUsuario.toLowerCase()) ||
+        (u.cargo ?? "").toLowerCase().includes(buscaUsuario.toLowerCase()))
   );
 
-  const conversaInfo = conversaAtiva ? getConversaInfo(conversaAtiva) : null;
-  const mensagensConversa = conversaAtiva ? getMensagensConversa(conversaAtiva) : [];
-  
-  const canalInfo = canalAtivo ? getCanalInfo(canalAtivo) : null;
-  const mensagensDoCanal = canalAtivo ? getMensagensCanal(canalAtivo) : [];
+  const nomeCanalAtivo =
+    canalAtivo?.tipo === "p2p"
+      ? canalAtivo.outroUsuario?.nome ?? "Conversa"
+      : canalAtivo?.departamentoInfo?.nome ?? canalAtivo?.nome ?? "Canal";
+
+  const corCanalAtivo = canalAtivo?.departamentoInfo?.cor ?? "#14E9BC";
+  const gruposMensagens = agruparMensagensPorData(mensagens);
 
   return (
-    <div className="h-screen bg-[#0a0a0a] flex">
-      {/* Sidebar Esquerda - Lista de Conversas/Canais */}
-      <div className="w-[320px] bg-[#0f0f0f] border-r border-[#333] flex flex-col">
-        {/* Header */}
+    <div className="h-screen bg-[#0a0a0a] flex overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-[300px] bg-[#0f0f0f] border-r border-[#333] flex flex-col flex-shrink-0">
         <div className="p-4 border-b border-[#333]">
-          <h1 className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px] mb-4">
-            Mensagens
-          </h1>
-
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="font-['Inter:Bold',sans-serif] text-[#eee] text-[22px]">Mensagens</h1>
+          </div>
           {/* Tabs */}
-          <div className="flex gap-2 bg-[#1a1a1a] rounded-lg p-1">
-            <button
-              onClick={() => {
-                setActiveTab("conversas");
-                setCanalAtivo(null);
-              }}
-              className={`flex-1 px-4 py-2 rounded-md font-['Inter:Medium',sans-serif] text-[13px] transition-all ${
-                activeTab === "conversas"
-                  ? "bg-[#14E9BC] text-[#000]"
-                  : "text-[#bdbdbd] hover:text-[#eee]"
-              }`}
-            >
-              <MessageSquare size={16} className="inline mr-2" />
-              Diretas
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("canais");
-                setConversaAtiva(null);
-              }}
-              className={`flex-1 px-4 py-2 rounded-md font-['Inter:Medium',sans-serif] text-[13px] transition-all ${
-                activeTab === "canais"
-                  ? "bg-[#14E9BC] text-[#000]"
-                  : "text-[#bdbdbd] hover:text-[#eee]"
-              }`}
-            >
-              <Hash size={16} className="inline mr-2" />
-              Canais
-            </button>
+          <div className="flex gap-1 bg-[#1a1a1a] rounded-lg p-1">
+            {(["conversas", "canais"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-1.5 rounded-md text-[13px] font-['Inter:Medium',sans-serif] transition-all ${
+                  activeTab === tab ? "bg-[#14E9BC] text-[#000]" : "text-[#bdbdbd] hover:text-[#eee]"
+                }`}
+              >
+                {tab === "conversas" ? "Diretas" : "Canais"}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Busca */}
-        <div className="p-4 border-b border-[#333]">
-          <div className="relative">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#bdbdbd]" />
-            <input
-              type="text"
-              placeholder={activeTab === "conversas" ? "Buscar pessoas..." : "Buscar canais..."}
-              value={buscaUsuarios}
-              onChange={(e) => setBuscaUsuarios(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg pl-10 pr-4 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
-            />
-          </div>
-        </div>
-
-        {/* Lista de Conversas P2P */}
-        {activeTab === "conversas" && (
-          <div className="flex-1 overflow-y-auto">
-            {conversasP2P.map((conversa) => {
-              const outroParticipanteId = conversa.participantes.find((p) => p !== usuarioAtual);
-              const outroParticipante = usuarios.find((u) => u.id === outroParticipanteId);
-              if (!outroParticipante) return null;
-
-              const isAtiva = conversaAtiva === conversa.id;
-
-              return (
+        <div className="flex-1 overflow-y-auto">
+          {carregando ? (
+            <div className="p-4 text-center text-[#555] text-[13px]">Carregando...</div>
+          ) : activeTab === "conversas" ? (
+            <div>
+              <div className="px-4 py-3 flex items-center justify-between">
+                <span className="text-[#555] text-[11px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">
+                  Mensagens Diretas
+                </span>
                 <button
-                  key={conversa.id}
-                  onClick={() => {
-                    setConversaAtiva(conversa.id);
-                    setCanalAtivo(null);
-                  }}
-                  className={`w-full p-4 border-b border-[#333] hover:bg-[#1a1a1a] transition-colors text-left ${
-                    isAtiva ? "bg-[#1a1a1a]" : ""
-                  }`}
+                  onClick={() => setMostrarNovaConversa(!mostrarNovaConversa)}
+                  className="text-[#bdbdbd] hover:text-[#14E9BC] transition-colors"
+                  title="Nova conversa"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="relative flex-shrink-0">
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center font-['Inter:Semi_Bold',sans-serif] text-[#000] text-[14px]"
-                        style={{
-                          backgroundColor:
-                            departamentos.find((d) => d.id === outroParticipante.departamento)?.cor ||
-                            "#14E9BC",
-                        }}
-                      >
-                        {outroParticipante.avatar}
-                      </div>
-                      <Circle
-                        size={12}
-                        className={`absolute bottom-0 right-0 ${
-                          outroParticipante.status === "online"
-                            ? "text-[#28d939] fill-[#28d939]"
-                            : outroParticipante.status === "away"
-                            ? "text-[#f59e0b] fill-[#f59e0b]"
-                            : "text-[#555] fill-[#555]"
-                        }`}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px] truncate">
-                          {outroParticipante.nome}
-                        </h3>
-                        <span className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[11px]">
-                          {formatarDataRelativa(conversa.dataUltimaMensagem)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[13px] truncate">
-                          {conversa.ultimaMensagem}
-                        </p>
-                        {conversa.naoLidas > 0 && (
-                          <span className="ml-2 bg-[#14E9BC] text-[#000] rounded-full px-2 py-0.5 text-[10px] font-['Inter:Semi_Bold',sans-serif] flex-shrink-0">
-                            {conversa.naoLidas}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <Plus size={16} />
                 </button>
-              );
-            })}
-          </div>
-        )}
+              </div>
 
-        {/* Lista de Canais */}
-        {activeTab === "canais" && (
-          <div className="flex-1 overflow-y-auto">
-            {canaisDepartamento.map((canal) => {
-              const dept = departamentos.find((d) => d.id === canal.departamentoId);
-              if (!dept) return null;
-
-              const isAtivo = canalAtivo === canal.id;
-
-              return (
-                <button
-                  key={canal.id}
-                  onClick={() => {
-                    setCanalAtivo(canal.id);
-                    setConversaAtiva(null);
-                  }}
-                  className={`w-full p-4 border-b border-[#333] hover:bg-[#1a1a1a] transition-colors text-left ${
-                    isAtivo ? "bg-[#1a1a1a]" : ""
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: `${dept.cor}20` }}
-                    >
-                      <Hash size={24} style={{ color: dept.cor }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px]">
-                          {canal.nome}
-                        </h3>
-                        {canal.mensagensNaoLidas > 0 && (
-                          <span className="bg-[#14E9BC] text-[#000] rounded-full px-2 py-0.5 text-[10px] font-['Inter:Semi_Bold',sans-serif]">
-                            {canal.mensagensNaoLidas}
-                          </span>
-                        )}
-                      </div>
-                      <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px] truncate">
-                        {canal.membros} membros
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Área Central - Chat */}
-      <div className="flex-1 flex flex-col">
-        {/* Header da Conversa/Canal */}
-        {(conversaInfo || canalInfo) && (
-          <div className="h-[72px] bg-[#0f0f0f] border-b border-[#333] px-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {conversaInfo && (
-                <>
+              {/* Busca de usuário para nova conversa */}
+              {mostrarNovaConversa && (
+                <div className="px-3 mb-2">
                   <div className="relative">
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center font-['Inter:Semi_Bold',sans-serif] text-[#000] text-[14px]"
-                      style={{
-                        backgroundColor:
-                          departamentos.find(
-                            (d) => d.id === conversaInfo.outroParticipante?.departamento
-                          )?.cor || "#14E9BC",
-                      }}
-                    >
-                      {conversaInfo.outroParticipante?.avatar}
-                    </div>
-                    <Circle
-                      size={12}
-                      className={`absolute bottom-0 right-0 ${
-                        conversaInfo.outroParticipante?.status === "online"
-                          ? "text-[#28d939] fill-[#28d939]"
-                          : conversaInfo.outroParticipante?.status === "away"
-                          ? "text-[#f59e0b] fill-[#f59e0b]"
-                          : "text-[#555] fill-[#555]"
-                      }`}
+                    <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]" />
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Buscar usuário..."
+                      value={buscaUsuario}
+                      onChange={(e) => setBuscaUsuario(e.target.value)}
+                      className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg pl-8 pr-3 py-2 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none"
                     />
                   </div>
-                  <div>
-                    <h2 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px]">
-                      {conversaInfo.outroParticipante?.nome}
-                    </h2>
-                    <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[13px]">
-                      {conversaInfo.outroParticipante?.cargo} •{" "}
-                      {conversaInfo.outroParticipante?.status === "online"
-                        ? "Online"
-                        : conversaInfo.outroParticipante?.status === "away"
-                        ? "Ausente"
-                        : "Offline"}
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {canalInfo && (
-                <>
-                  <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: `${canalInfo.departamento?.cor}20` }}
-                  >
-                    <Hash size={24} style={{ color: canalInfo.departamento?.cor }} />
-                  </div>
-                  <div>
-                    <h2 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px]">
-                      {canalInfo.nome}
-                    </h2>
-                    <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[13px]">
-                      {canalInfo.membros} membros • {canalInfo.descricao}
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-            <button className="text-[#bdbdbd] hover:text-[#eee] transition-colors">
-              <MoreVertical size={20} />
-            </button>
-          </div>
-        )}
-
-        {/* Área de Mensagens */}
-        {(conversaAtiva || canalAtivo) ? (
-          <>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {/* Mensagens P2P */}
-              {conversaAtiva &&
-                mensagensConversa.map((mensagem) => {
-                  const remetente = usuarios.find((u) => u.id === mensagem.remetenteId);
-                  const isMinha = mensagem.remetenteId === usuarioAtual;
-
-                  return (
-                    <div
-                      key={mensagem.id}
-                      className={`flex ${isMinha ? "justify-end" : "justify-start"}`}
-                    >
-                      <div className={`flex gap-3 max-w-[70%] ${isMinha ? "flex-row-reverse" : ""}`}>
-                        {!isMinha && (
-                          <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center font-['Inter:Semi_Bold',sans-serif] text-[#000] text-[12px] flex-shrink-0"
-                            style={{
-                              backgroundColor:
-                                departamentos.find((d) => d.id === remetente?.departamento)?.cor ||
-                                "#14E9BC",
-                            }}
-                          >
-                            {remetente?.avatar}
+                  {buscaUsuario.length > 0 && (
+                    <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden">
+                      {usuariosFiltrados.slice(0, 5).map((u) => (
+                        <button
+                          key={u.id}
+                          disabled={iniciandoConversa}
+                          onClick={() => handleIniciarConversaP2P(u.id)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#252525] transition-colors text-left"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-[#14E9BC]/20 flex items-center justify-center text-[11px] font-bold text-[#14E9BC]">
+                            {getIniciais(u.nome)}
                           </div>
-                        )}
-                        <div>
-                          {!isMinha && (
-                            <p className="font-['Inter:Medium',sans-serif] text-[#eee] text-[13px] mb-1">
-                              {remetente?.nome}
-                            </p>
-                          )}
-                          <div
-                            className={`rounded-lg px-4 py-2.5 ${
-                              isMinha
-                                ? "bg-[#14E9BC] text-[#000]"
-                                : "bg-[#1a1a1a] text-[#eee] border border-[#333]"
-                            }`}
-                          >
-                            <p className="font-['Inter:Regular',sans-serif] text-[14px]">
-                              {mensagem.conteudo}
-                            </p>
+                          <div>
+                            <p className="text-[#eee] text-[13px] font-['Inter:Medium',sans-serif]">{u.nome}</p>
+                            <p className="text-[#555] text-[11px]">{u.cargo ?? ""}</p>
                           </div>
-                          <p
-                            className={`font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[11px] mt-1 ${
-                              isMinha ? "text-right" : ""
-                            }`}
-                          >
-                            {formatarHora(mensagem.data)}
-                          </p>
-                        </div>
-                      </div>
+                        </button>
+                      ))}
+                      {usuariosFiltrados.length === 0 && (
+                        <p className="text-[#555] text-[12px] p-3 text-center">Nenhum usuário encontrado</p>
+                      )}
                     </div>
-                  );
-                })}
-
-              {/* Mensagens de Canal */}
-              {canalAtivo &&
-                mensagensDoCanal.map((mensagem) => {
-                  const autor = usuarios.find((u) => u.id === mensagem.autorId);
-                  const dept = departamentos.find((d) => d.id === autor?.departamento);
-
-                  return (
-                    <div key={mensagem.id} className="flex gap-3">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center font-['Inter:Semi_Bold',sans-serif] text-[#000] text-[12px] flex-shrink-0"
-                        style={{ backgroundColor: dept?.cor || "#14E9BC" }}
-                      >
-                        {autor?.avatar}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px]">
-                            {autor?.nome}
-                          </p>
-                          <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[11px]">
-                            {formatarHora(mensagem.data)}
-                          </p>
-                          {mensagem.fixada && (
-                            <Pin size={14} className="text-[#14E9BC]" />
-                          )}
-                        </div>
-                        <p className="font-['Inter:Regular',sans-serif] text-[#eee] text-[14px] mb-2">
-                          {mensagem.conteudo}
-                        </p>
-                        {/* Reações */}
-                        {mensagem.reacoes && mensagem.reacoes.length > 0 && (
-                          <div className="flex gap-2 flex-wrap">
-                            {mensagem.reacoes.map((reacao, idx) => (
-                              <button
-                                key={idx}
-                                className="flex items-center gap-1 bg-[#1a1a1a] border border-[#333] rounded-full px-2 py-1 hover:border-[#14E9BC] transition-colors"
-                              >
-                                <span className="text-[14px]">{reacao.emoji}</span>
-                                <span className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[11px]">
-                                  {reacao.usuarios.length}
-                                </span>
-                              </button>
-                            ))}
-                            <button className="flex items-center gap-1 bg-[#1a1a1a] border border-[#333] rounded-full px-2 py-1 hover:border-[#14E9BC] transition-colors">
-                              <Smile size={14} className="text-[#bdbdbd]" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-
-            {/* Input de Nova Mensagem */}
-            <div className="p-4 bg-[#0f0f0f] border-t border-[#333]">
-              <div className="flex items-end gap-3">
-                <div className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg p-3 focus-within:border-[#14E9BC] transition-colors">
-                  <textarea
-                    value={novaMensagem}
-                    onChange={(e) => setNovaMensagem(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleEnviarMensagem();
-                      }
-                    }}
-                    placeholder={
-                      activeTab === "conversas"
-                        ? `Mensagem para ${conversaInfo?.outroParticipante?.nome}...`
-                        : `Mensagem em #${canalInfo?.nome}...`
-                    }
-                    rows={1}
-                    className="w-full bg-transparent text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] resize-none focus:outline-none"
-                  />
-                  <div className="flex items-center gap-2 mt-2">
-                    <button className="text-[#bdbdbd] hover:text-[#14E9BC] transition-colors">
-                      <Paperclip size={18} />
-                    </button>
-                    <button className="text-[#bdbdbd] hover:text-[#14E9BC] transition-colors">
-                      <Smile size={18} />
-                    </button>
-                  </div>
+                  )}
                 </div>
-                <button
-                  onClick={handleEnviarMensagem}
-                  disabled={!novaMensagem.trim()}
-                  className="bg-[#14E9BC] text-[#000] p-3 rounded-lg hover:bg-[#12d4a8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Send size={20} />
-                </button>
+              )}
+
+              {/* Lista de conversas P2P */}
+              {canaisP2P.length === 0 ? (
+                <p className="text-[#555] text-[13px] px-4 py-3">
+                  Nenhuma conversa ainda. Clique em + para começar.
+                </p>
+              ) : (
+                canaisP2P.map((c) => {
+                  const outro = c.outroUsuario;
+                  const isAtivo = canalAtivo?.id === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => { setActiveTab("conversas"); selecionarCanal(c); }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${
+                        isAtivo ? "bg-[#14E9BC]/10 border-r-2 border-[#14E9BC]" : "hover:bg-[#1a1a1a]"
+                      }`}
+                    >
+                      <div className="w-9 h-9 rounded-full bg-[#252525] flex items-center justify-center text-[12px] font-bold text-[#14E9BC] flex-shrink-0">
+                        {outro ? getIniciais(outro.nome) : "?"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[#eee] text-[14px] font-['Inter:Medium',sans-serif] truncate">
+                          {outro?.nome ?? "Conversa"}
+                        </p>
+                      </div>
+                      <MessageSquare size={14} className="text-[#555] flex-shrink-0" />
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          ) : (
+            <div>
+              <div className="px-4 py-3">
+                <span className="text-[#555] text-[11px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">
+                  Canais de Departamento
+                </span>
               </div>
+              {canaisDept.length === 0 ? (
+                <p className="text-[#555] text-[13px] px-4 py-3">Nenhum canal disponível.</p>
+              ) : (
+                canaisDept.map((c) => {
+                  const dept = c.departamentoInfo;
+                  const isAtivo = canalAtivo?.id === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => { setActiveTab("canais"); selecionarCanal(c); }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${
+                        isAtivo ? "bg-[#14E9BC]/10 border-r-2 border-[#14E9BC]" : "hover:bg-[#1a1a1a]"
+                      }`}
+                    >
+                      <div
+                        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: `${dept?.cor ?? "#14E9BC"}20`, color: dept?.cor ?? "#14E9BC" }}
+                      >
+                        <Hash size={16} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[#eee] text-[14px] font-['Inter:Medium',sans-serif] truncate">
+                          {dept?.nome ?? "Canal"}
+                        </p>
+                      </div>
+                      <Users size={14} className="text-[#555] flex-shrink-0" />
+                    </button>
+                  );
+                })
+              )}
             </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <MessageSquare size={64} className="text-[#555] mx-auto mb-4" />
-              <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[18px] mb-2">
-                Selecione uma conversa
-              </h3>
-              <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px]">
-                Escolha uma conversa direta ou canal para começar
-              </p>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Sidebar Direita - Informações */}
-      {(conversaInfo || canalInfo) && (
-        <div className="w-[280px] bg-[#0f0f0f] border-l border-[#333] p-6">
-          {conversaInfo && (
-            <>
-              <div className="text-center mb-6">
+      {/* Área principal de chat */}
+      {canalAtivo ? (
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header do chat */}
+          <div className="h-[64px] border-b border-[#333] flex items-center px-6 gap-4 flex-shrink-0 bg-[#0f0f0f]">
+            {canalAtivo.tipo === "p2p" ? (
+              <>
+                <div className="w-9 h-9 rounded-full bg-[#14E9BC]/20 flex items-center justify-center text-[12px] font-bold text-[#14E9BC]">
+                  {getIniciais(nomeCanalAtivo)}
+                </div>
+                <div>
+                  <p className="text-[#eee] text-[15px] font-['Inter:Semi_Bold',sans-serif]">{nomeCanalAtivo}</p>
+                  <p className="text-[#555] text-[12px]">Mensagem direta</p>
+                </div>
+              </>
+            ) : (
+              <>
                 <div
-                  className="w-20 h-20 rounded-full flex items-center justify-center font-['Inter:Bold',sans-serif] text-[#000] text-[24px] mx-auto mb-3"
-                  style={{
-                    backgroundColor:
-                      departamentos.find((d) => d.id === conversaInfo.outroParticipante?.departamento)
-                        ?.cor || "#14E9BC",
-                  }}
+                  className="w-9 h-9 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: `${corCanalAtivo}20`, color: corCanalAtivo }}
                 >
-                  {conversaInfo.outroParticipante?.avatar}
+                  <Hash size={18} />
                 </div>
-                <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px] mb-1">
-                  {conversaInfo.outroParticipante?.nome}
-                </h3>
-                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[13px] mb-1">
-                  {conversaInfo.outroParticipante?.cargo}
-                </p>
-                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px]">
-                  {conversaInfo.outroParticipante?.email}
-                </p>
-              </div>
-
-              <div className="space-y-4">
                 <div>
-                  <h4 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[13px] mb-2 uppercase tracking-wider">
-                    Departamento
-                  </h4>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{
-                        backgroundColor:
-                          departamentos.find(
-                            (d) => d.id === conversaInfo.outroParticipante?.departamento
-                          )?.cor || "#14E9BC",
-                      }}
-                    />
-                    <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px]">
-                      {
-                        departamentos.find((d) => d.id === conversaInfo.outroParticipante?.departamento)
-                          ?.nome
-                      }
-                    </p>
-                  </div>
+                  <p className="text-[#eee] text-[15px] font-['Inter:Semi_Bold',sans-serif]">{nomeCanalAtivo}</p>
+                  <p className="text-[#555] text-[12px]">Canal do departamento</p>
                 </div>
+              </>
+            )}
+          </div>
 
-                <div>
-                  <h4 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[13px] mb-2 uppercase tracking-wider">
-                    Status
-                  </h4>
-                  <div className="flex items-center gap-2">
-                    <Circle
-                      size={12}
-                      className={`${
-                        conversaInfo.outroParticipante?.status === "online"
-                          ? "text-[#28d939] fill-[#28d939]"
-                          : conversaInfo.outroParticipante?.status === "away"
-                          ? "text-[#f59e0b] fill-[#f59e0b]"
-                          : "text-[#555] fill-[#555]"
-                      }`}
-                    />
-                    <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px]">
-                      {conversaInfo.outroParticipante?.status === "online"
-                        ? "Online"
-                        : conversaInfo.outroParticipante?.status === "away"
-                        ? "Ausente"
-                        : "Offline"}
-                    </p>
-                  </div>
-                </div>
+          {/* Mensagens */}
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
+            {carregandoMsgs ? (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-[#555] text-[14px]">Carregando mensagens...</p>
               </div>
-            </>
-          )}
-
-          {canalInfo && (
-            <>
-              <div className="mb-6">
+            ) : mensagens.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3">
                 <div
-                  className="w-20 h-20 rounded-lg flex items-center justify-center mx-auto mb-3"
-                  style={{ backgroundColor: `${canalInfo.departamento?.cor}20` }}
+                  className="w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${corCanalAtivo}15` }}
                 >
-                  <Hash size={40} style={{ color: canalInfo.departamento?.cor }} />
+                  <MessageSquare size={24} style={{ color: corCanalAtivo }} />
                 </div>
-                <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px] text-center mb-2">
-                  {canalInfo.nome}
-                </h3>
-                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[13px] text-center">
-                  {canalInfo.descricao}
-                </p>
+                <p className="text-[#555] text-[14px]">Nenhuma mensagem ainda. Seja o primeiro!</p>
               </div>
+            ) : (
+              gruposMensagens.map(({ data, mensagens: msgs }) => (
+                <div key={data}>
+                  {/* Separador de data */}
+                  <div className="flex items-center gap-3 my-4">
+                    <div className="flex-1 h-px bg-[#222]" />
+                    <span className="text-[#555] text-[11px] font-['Inter:Medium',sans-serif] whitespace-nowrap">
+                      {data}
+                    </span>
+                    <div className="flex-1 h-px bg-[#222]" />
+                  </div>
 
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[13px] mb-2 uppercase tracking-wider flex items-center gap-2">
-                    <Users size={16} />
-                    Membros ({canalInfo.membros})
-                  </h4>
-                  <div className="space-y-2">
-                    {usuarios
-                      .filter((u) => u.departamento === canalInfo.departamentoId)
-                      .slice(0, 5)
-                      .map((membro) => (
-                        <div key={membro.id} className="flex items-center gap-2">
+                  {msgs.map((msg, i) => {
+                    const isOwn = msg.autor_id === userId;
+                    const prevMsg = msgs[i - 1];
+                    const sameSender = prevMsg?.autor_id === msg.autor_id;
+                    const nomeAutor = msg.autor?.nome ?? "Usuário";
+
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex items-end gap-3 ${isOwn ? "flex-row-reverse" : ""} ${sameSender ? "mt-1" : "mt-4"}`}
+                      >
+                        {/* Avatar */}
+                        {!sameSender ? (
+                          <div className="w-8 h-8 rounded-full bg-[#252525] flex items-center justify-center text-[10px] font-bold text-[#14E9BC] flex-shrink-0 mb-0.5">
+                            {getIniciais(nomeAutor)}
+                          </div>
+                        ) : (
+                          <div className="w-8 flex-shrink-0" />
+                        )}
+
+                        <div className={`max-w-[65%] ${isOwn ? "items-end" : "items-start"} flex flex-col`}>
+                          {!sameSender && (
+                            <div className={`flex items-baseline gap-2 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
+                              <span className="text-[#eee] text-[13px] font-['Inter:Semi_Bold',sans-serif]">
+                                {isOwn ? "Você" : nomeAutor}
+                              </span>
+                              <span className="text-[#555] text-[11px]">{formatarHora(msg.criado_em)}</span>
+                            </div>
+                          )}
                           <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center font-['Inter:Semi_Bold',sans-serif] text-[#000] text-[11px]"
-                            style={{ backgroundColor: canalInfo.departamento?.cor }}
-                          >
-                            {membro.avatar}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-['Inter:Medium',sans-serif] text-[#eee] text-[12px] truncate">
-                              {membro.nome}
-                            </p>
-                          </div>
-                          <Circle
-                            size={8}
-                            className={`flex-shrink-0 ${
-                              membro.status === "online"
-                                ? "text-[#28d939] fill-[#28d939]"
-                                : membro.status === "away"
-                                ? "text-[#f59e0b] fill-[#f59e0b]"
-                                : "text-[#555] fill-[#555]"
+                            className={`px-4 py-2.5 rounded-2xl text-[14px] font-['Inter:Regular',sans-serif] leading-relaxed ${
+                              isOwn
+                                ? "bg-[#14E9BC] text-[#000] rounded-br-sm"
+                                : "bg-[#1a1a1a] text-[#eee] rounded-bl-sm"
                             }`}
-                          />
+                          >
+                            {msg.conteudo}
+                          </div>
+                          {sameSender && (
+                            <span className="text-[#555] text-[10px] mt-0.5 px-1">{formatarHora(msg.criado_em)}</span>
+                          )}
                         </div>
-                      ))}
-                  </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input de mensagem */}
+          <div className="border-t border-[#333] p-4 bg-[#0f0f0f] flex-shrink-0">
+            <div className="flex items-end gap-3">
+              <textarea
+                value={novaMensagem}
+                onChange={(e) => setNovaMensagem(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={`Mensagem para ${nomeCanalAtivo}...`}
+                rows={1}
+                className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-3 text-[#eee] text-[14px] placeholder-[#555] focus:border-[#14E9BC] focus:outline-none resize-none font-['Inter:Regular',sans-serif] leading-relaxed"
+                style={{ maxHeight: "120px" }}
+                onInput={(e) => {
+                  const t = e.currentTarget;
+                  t.style.height = "auto";
+                  t.style.height = Math.min(t.scrollHeight, 120) + "px";
+                }}
+              />
+              <button
+                onClick={handleEnviar}
+                disabled={!novaMensagem.trim() || enviando}
+                className="w-10 h-10 bg-[#14E9BC] rounded-xl flex items-center justify-center hover:bg-[#12d4a8] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+              >
+                <Send size={18} className="text-[#000]" />
+              </button>
+            </div>
+            <p className="text-[#555] text-[11px] mt-2 font-['Inter:Regular',sans-serif]">
+              Enter para enviar • Shift+Enter para nova linha
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center flex-col gap-4">
+          {carregando ? (
+            <p className="text-[#555] text-[14px]">Carregando...</p>
+          ) : (
+            <>
+              <MessageSquare size={48} className="text-[#333]" />
+              <p className="text-[#555] text-[16px]">Selecione uma conversa ou canal</p>
             </>
           )}
         </div>
