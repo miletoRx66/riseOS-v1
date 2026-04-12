@@ -27,15 +27,21 @@ export default function Login() {
     setSucesso(false);
     setCarregando(true);
 
-    const resultado = await login(email, senha);
+    try {
+      const resultado = await login(email, senha);
 
-    if (resultado.success) {
-      setSucesso(true);
-      navigate("/");
-    } else {
-      setErro(resultado.message);
+      if (resultado.success) {
+        setSucesso(true);
+        // NÃO navega aqui — o useEffect acima detecta quando usuario é populado
+        // pelo onAuthStateChange e faz o navigate("/") com usuario garantidamente setado.
+      } else {
+        setErro(resultado.message);
+        setCarregando(false);
+      }
+    } catch {
+      setErro("Erro inesperado ao fazer login. Tente novamente.");
+      setCarregando(false);
     }
-    setCarregando(false);
   };
 
   return (

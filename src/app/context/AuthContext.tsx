@@ -101,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Carrega sessão existente na inicialização
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const u = await buildUsuario(session.user);
@@ -109,14 +110,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     });
 
+    // onAuthStateChange é a ÚNICA fonte de verdade para mudanças de estado após a init
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        const u = await buildUsuario(session.user);
-        setUsuario(u);
-      } else {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // TOKEN_REFRESHED não requer rebuild do perfil — apenas atualiza silenciosamente
+      if (event === "TOKEN_REFRESHED") return;
+
+      if (event === "SIGNED_OUT") {
         setUsuario(null);
+        return;
+      }
+
+      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
+        if (session?.user) {
+          const u = await buildUsuario(session.user);
+          setUsuario(u);
+        }
       }
     });
 
@@ -131,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, message: "Preencha todos os campos" };
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password: senha,
     });
@@ -152,12 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, message: "Erro ao fazer login. Tente novamente." };
     }
 
-    // Popula usuario imediatamente — evita race condition com onAuthStateChange
-    if (data.session && data.user) {
-      const u = await buildUsuario(data.user);
-      setUsuario(u);
-    }
-
+    // onAuthStateChange (SIGNED_IN) cuida de buildUsuario + setUsuario.
+    // Login.tsx detecta usuario via useEffect e navega para /.
     return { success: true, message: "Login realizado com sucesso!" };
   };
 
@@ -209,13 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Supabase retorna session=null quando confirmação de email é exigida
     const requiresConfirmation = !data.session;
-
-    // Se já há sessão ativa (sem confirmação de email), popula o usuario
-    // ANTES de retornar — evita race condition com onAuthStateChange
-    if (data.session && data.user) {
-      const u = await buildUsuario(data.user);
-      setUsuario(u);
-    }
+    // onAuthStateChange (SIGNED_IN) cuida de buildUsuario + setUsuario quando não há confirmação.
 
     return {
       success: true,
