@@ -15,13 +15,26 @@ export default function RedefinirSenha() {
   const [verificando, setVerificando] = useState(true);
 
   useEffect(() => {
-    // Supabase redireciona com tokens no hash da URL após clicar no link de reset
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "PASSWORD_RECOVERY" && session) {
-        setSessaoValida(true);
+    // Supabase processa os tokens do hash e dispara PASSWORD_RECOVERY.
+    // Outros eventos (INITIAL_SESSION, TOKEN_REFRESHED) não devem encerrar a verificação.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setSessaoValida(!!session);
+        setVerificando(false);
       }
-      setVerificando(false);
     });
+
+    // Timeout de segurança: se PASSWORD_RECOVERY não disparar em 5s, o link é inválido.
+    const timeout = setTimeout(() => {
+      setVerificando(false);
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -38,15 +51,22 @@ export default function RedefinirSenha() {
     }
 
     setCarregando(true);
-    const { error } = await supabase.auth.updateUser({ password: novaSenha });
+    try {
+      const { error } = await supabase.auth.updateUser({ password: novaSenha });
 
-    if (error) {
-      setErro("Erro ao redefinir senha. O link pode ter expirado.");
-    } else {
-      setSucesso(true);
-      setTimeout(() => navigate("/"), 2500);
+      if (error) {
+        setErro("Erro ao redefinir senha. O link pode ter expirado.");
+        setCarregando(false);
+      } else {
+        setSucesso(true);
+        // Faz logout para forçar novo login com a senha atualizada
+        await supabase.auth.signOut();
+        setTimeout(() => navigate("/login"), 2500);
+      }
+    } catch {
+      setErro("Erro inesperado. Tente novamente.");
+      setCarregando(false);
     }
-    setCarregando(false);
   };
 
   if (verificando) {
@@ -81,7 +101,7 @@ export default function RedefinirSenha() {
               </div>
               <h2 className="text-[#eee] text-[22px] font-bold mb-2">Senha redefinida!</h2>
               <p className="text-[#bdbdbd] text-[14px]">
-                Redirecionando para o dashboard...
+                Redirecionando para o login...
               </p>
             </div>
           ) : !sessaoValida ? (

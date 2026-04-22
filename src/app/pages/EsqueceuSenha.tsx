@@ -15,14 +15,18 @@ export default function EsqueceuSenha() {
     setErro("");
     setCarregando(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/redefinir-senha`,
-    });
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/redefinir-senha`,
+      });
 
-    if (error) {
-      setErro("Erro ao enviar email. Verifique o endereço e tente novamente.");
-    } else {
-      setEnviado(true);
+      if (error) {
+        setErro("Erro ao enviar email. Verifique o endereço e tente novamente.");
+      } else {
+        setEnviado(true);
+      }
+    } catch {
+      setErro("Erro inesperado. Tente novamente.");
     }
     setCarregando(false);
   };
