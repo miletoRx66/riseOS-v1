@@ -101,32 +101,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Carrega sessão existente na inicialização
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const u = await buildUsuario(session.user);
-        setUsuario(u);
-      }
-      setIsLoading(false);
-    });
-
-    // onAuthStateChange é a ÚNICA fonte de verdade para mudanças de estado após a init
+    // onAuthStateChange é a ÚNICA fonte de verdade — substitui getSession() na inicialização.
+    // INITIAL_SESSION replica o estado atual no momento do subscribe, cobrindo sessões pré-existentes.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // TOKEN_REFRESHED não requer rebuild do perfil — apenas atualiza silenciosamente
       if (event === "TOKEN_REFRESHED") return;
 
       if (event === "SIGNED_OUT") {
         setUsuario(null);
+        setIsLoading(false);
         return;
       }
 
-      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
+      // PASSWORD_RECOVERY: sessão temporária para redefinição de senha.
+      // Não tratar como login — deixa RedefinirSenha gerenciar esse estado.
+      if (event === "PASSWORD_RECOVERY") {
+        setIsLoading(false);
+        return;
+      }
+
+      if (
+        event === "INITIAL_SESSION" ||
+        event === "SIGNED_IN" ||
+        event === "USER_UPDATED"
+      ) {
         if (session?.user) {
           const u = await buildUsuario(session.user);
           setUsuario(u);
+        } else {
+          setUsuario(null);
         }
+        setIsLoading(false);
       }
     });
 

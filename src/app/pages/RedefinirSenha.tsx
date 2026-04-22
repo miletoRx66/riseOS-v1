@@ -15,21 +15,33 @@ export default function RedefinirSenha() {
   const [verificando, setVerificando] = useState(true);
 
   useEffect(() => {
-    // Supabase processa os tokens do hash e dispara PASSWORD_RECOVERY.
-    // Outros eventos (INITIAL_SESSION, TOKEN_REFRESHED) não devem encerrar a verificação.
+    let resolved = false;
+
+    const finish = (valid: boolean) => {
+      if (resolved) return;
+      resolved = true;
+      setSessaoValida(valid);
+      setVerificando(false);
+    };
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
-        setSessaoValida(!!session);
-        setVerificando(false);
+        // Evento ideal: Supabase processou os tokens antes de nós nos registrarmos
+        finish(!!session);
+      } else if (event === "INITIAL_SESSION") {
+        // INITIAL_SESSION é disparado imediatamente ao se registrar com o estado atual.
+        // Se já há sessão ativa, os tokens de recovery já foram processados antes do mount.
+        if (session) {
+          finish(true);
+        }
+        // Sem sessão e sem PASSWORD_RECOVERY ainda → aguarda evento ou timeout
       }
     });
 
-    // Timeout de segurança: se PASSWORD_RECOVERY não disparar em 5s, o link é inválido.
-    const timeout = setTimeout(() => {
-      setVerificando(false);
-    }, 5000);
+    // Fallback: se nenhum evento válido chegar em 8s, o link expirou ou é inválido
+    const timeout = setTimeout(() => finish(false), 8000);
 
     return () => {
       subscription.unsubscribe();
