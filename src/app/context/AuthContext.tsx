@@ -126,13 +126,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         event === "SIGNED_IN" ||
         event === "USER_UPDATED"
       ) {
-        if (session?.user) {
-          const u = await buildUsuario(session.user);
-          setUsuario(u);
-        } else {
+        try {
+          if (session?.user) {
+            const u = await buildUsuario(session.user);
+            setUsuario(u);
+          } else {
+            setUsuario(null);
+          }
+        } catch {
+          // buildUsuario falhou (rede, RLS) — garante que isLoading seja liberado
           setUsuario(null);
+        } finally {
+          setIsLoading(false);
         }
-        setIsLoading(false);
       }
     });
 
