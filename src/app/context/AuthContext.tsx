@@ -33,26 +33,45 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const DEPARTAMENTOS = ["marketing", "ops", "comercial", "produto", "financeiro"];
 
-async function buildUsuario(user: User): Promise<Usuario | null> {
-  // Tenta até 2 vezes para cobrir race condition do trigger handle_new_user
-  for (let tentativa = 0; tentativa < 2; tentativa++) {
-    if (tentativa > 0) {
-      await new Promise((r) => setTimeout(r, 800));
-    }
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), ms)
+    ),
+  ]);
+}
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*, departamentos(*), permissoes(*)")
-      .eq("id", user.id)
-      .single() as { data: any };
+async function buildUsuario(user: User): Promise<Usuario> {
+  const fallback: Usuario = {
+    id: user.id,
+    nome: user.user_metadata?.nome ?? user.email?.split("@")[0] ?? "Usuário",
+    email: user.email ?? "",
+    cargo: "",
+    departamento: "",
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.id)}`,
+    permissoes: ["visualizar-todos"],
+  };
 
-    if (!profile) continue;
+  try {
+    // Query separadas e independentes — evita joins complexos que podem travar
+    const db = (table: string) => supabase.from(table) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    const [profileRes, permsRes] = await withTimeout(
+      Promise.all([
+        db("profiles").select("id, nome, cargo, departamento_id, avatar_url").eq("id", user.id).single(),
+        db("permissoes").select("tipo, departamento_id").eq("usuario_id", user.id),
+      ]),
+      5000 // 5s timeout — se travar, retorna fallback
+    );
+
+    const profile = profileRes.data;
+    if (!profile) return fallback;
+
+    const dbPerms: Array<{ tipo: string; departamento_id: string | null }> =
+      permsRes.data ?? [];
 
     const perms: string[] = [];
-    const dbPerms: Array<{ tipo: string; departamento_id: string | null }> =
-      profile.permissoes ?? [];
-
     const isAdmin = dbPerms.some((p) => p.tipo === "admin" && !p.departamento_id);
 
     if (isAdmin) {
@@ -69,7 +88,7 @@ async function buildUsuario(user: User): Promise<Usuario | null> {
 
     return {
       id: profile.id,
-      nome: profile.nome ?? user.email?.split("@")[0] ?? "Usuário",
+      nome: profile.nome ?? fallback.nome,
       email: user.email ?? "",
       cargo: profile.cargo ?? "",
       departamento: profile.departamento_id ?? "",
@@ -78,22 +97,10 @@ async function buildUsuario(user: User): Promise<Usuario | null> {
         `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(profile.nome ?? user.id)}`,
       permissoes: perms,
     };
+  } catch {
+    // Timeout ou falha de rede — retorna fallback para não travar o login
+    return fallback;
   }
-
-  // Fallback: profile ainda não existe (trigger atrasado) — retorna usuário mínimo
-  // para não deixar o usuário preso no loop de redirect
-  return {
-    id: user.id,
-    nome:
-      user.user_metadata?.nome ??
-      user.email?.split("@")[0] ??
-      "Usuário",
-    email: user.email ?? "",
-    cargo: "",
-    departamento: "",
-    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.id)}`,
-    permissoes: ["visualizar-todos"],
-  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
