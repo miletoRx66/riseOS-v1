@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router";
 import {
   LayoutDashboard,
@@ -14,12 +15,40 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { supabase } from "../../../lib/supabase";
 
 export function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { usuario, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [hasUnread, setHasUnread] = useState(false);
+
+  useEffect(() => {
+    if (!usuario) return;
+    const channel = supabase
+      .channel("layout-mensagens")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "mensagens" },
+        (payload: { new: { usuario_id?: string } }) => {
+          if (
+            payload.new.usuario_id !== usuario.id &&
+            !window.location.pathname.startsWith("/mensagens")
+          ) {
+            setHasUnread(true);
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [usuario]);
+
+  useEffect(() => {
+    if (location.pathname.startsWith("/mensagens")) {
+      setHasUnread(false);
+    }
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -102,7 +131,12 @@ export function MainLayout() {
                       : "text-[#bdbdbd] hover:bg-[#1a1a1a] hover:text-[#eee]"
                   }`}
                 >
-                  <Icon size={20} />
+                  <div className="relative">
+                    <Icon size={20} />
+                    {item.path === "/mensagens" && hasUnread && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#ec5d5e] rounded-full" />
+                    )}
+                  </div>
                   <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">
                     {item.label}
                   </span>

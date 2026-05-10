@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent, DragEvent } from "react";
 import { Link } from "react-router";
 import { getTarefas, criarTarefa, type TarefaDB } from "../../lib/services/tarefas";
 import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
@@ -41,6 +41,8 @@ export default function Tarefas() {
   const [importando, setImportando] = useState(false);
   const [importCount, setImportCount] = useState(0);
 
+  const today = new Date().toISOString().split("T")[0];
+
   const filteredTasks = tarefas.filter((task) => {
     if (activeTab === "minhas" && usuario) {
       const isResponsavel = task.responsavel_id === usuario.id;
@@ -48,7 +50,9 @@ export default function Tarefas() {
       if (!isResponsavel && !isPessoal) return false;
     }
     if (selectedDept !== "todos" && task.departamento_id !== selectedDept) return false;
-    if (selectedStatus !== "todos" && task.status !== selectedStatus) return false;
+    if (selectedStatus === "atrasadas") {
+      if (!task.prazo || task.prazo >= today || task.status === "concluido") return false;
+    } else if (selectedStatus !== "todos" && task.status !== selectedStatus) return false;
     if (selectedPrioridade !== "todos" && task.prioridade !== selectedPrioridade) return false;
     if (selectedTipo !== "todos" && task.tipo !== selectedTipo) return false;
     if (busca.trim()) {
@@ -66,7 +70,11 @@ export default function Tarefas() {
     planejamento: tarefas.filter((t) => t.status === "planejamento").length,
     "em-andamento": tarefas.filter((t) => t.status === "em-andamento").length,
     concluido: tarefas.filter((t) => t.status === "concluido").length,
+    atrasadas: tarefas.filter((t) => t.prazo && t.prazo < today && t.status !== "concluido").length,
   };
+
+  const toggleStatus = (status: string) =>
+    setSelectedStatus((prev) => (prev === status ? "todos" : status));
 
   const handleOpenImportModal = () => {
     setIsImportModalOpen(true);
@@ -84,7 +92,7 @@ export default function Tarefas() {
     setImportErrors([]);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
   };
@@ -93,7 +101,7 @@ export default function Tarefas() {
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
     const files = e.dataTransfer.files;
@@ -102,7 +110,7 @@ export default function Tarefas() {
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       handleFileUpload(files[0]);
@@ -340,8 +348,11 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <button
+            onClick={() => toggleStatus("planejamento")}
+            className={`bg-[#0f0f0f] border rounded-lg p-6 text-left transition-colors hover:border-[#6B8AFF]/60 ${selectedStatus === "planejamento" ? "border-[#6B8AFF]" : "border-[#333]"}`}
+          >
             <div className="flex items-center justify-between mb-2">
               <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
                 Planejamento
@@ -353,9 +364,12 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
             <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
               {statusCount.planejamento}
             </p>
-          </div>
+          </button>
 
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <button
+            onClick={() => toggleStatus("em-andamento")}
+            className={`bg-[#0f0f0f] border rounded-lg p-6 text-left transition-colors hover:border-[#28d939]/60 ${selectedStatus === "em-andamento" ? "border-[#28d939]" : "border-[#333]"}`}
+          >
             <div className="flex items-center justify-between mb-2">
               <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
                 Em Andamento
@@ -367,9 +381,12 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
             <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
               {statusCount["em-andamento"]}
             </p>
-          </div>
+          </button>
 
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <button
+            onClick={() => toggleStatus("concluido")}
+            className={`bg-[#0f0f0f] border rounded-lg p-6 text-left transition-colors hover:border-[#bdbdbd]/60 ${selectedStatus === "concluido" ? "border-[#bdbdbd]" : "border-[#333]"}`}
+          >
             <div className="flex items-center justify-between mb-2">
               <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
                 Concluídas
@@ -381,7 +398,24 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
             <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
               {statusCount.concluido}
             </p>
-          </div>
+          </button>
+
+          <button
+            onClick={() => toggleStatus("atrasadas")}
+            className={`bg-[#0f0f0f] border rounded-lg p-6 text-left transition-colors hover:border-[#ec5d5e]/60 ${selectedStatus === "atrasadas" ? "border-[#ec5d5e]" : "border-[#333]"}`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+                Atrasadas
+              </p>
+              <span className="px-2 py-1 rounded bg-[#ec5d5e]/20 text-[#ec5d5e] text-[12px] font-['Inter:Semi_Bold',sans-serif]">
+                {statusCount.atrasadas}
+              </span>
+            </div>
+            <p className="font-['Inter:Bold',sans-serif] text-[#ec5d5e] text-[28px]">
+              {statusCount.atrasadas}
+            </p>
+          </button>
         </div>
 
         {/* Filters */}
@@ -428,6 +462,7 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
               <option value="planejamento">Planejamento</option>
               <option value="em-andamento">Em Andamento</option>
               <option value="concluido">Concluído</option>
+              <option value="atrasadas">Atrasadas</option>
             </select>
 
             <select
