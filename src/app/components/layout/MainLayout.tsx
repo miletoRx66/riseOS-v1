@@ -16,6 +16,8 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { supabase } from "../../../lib/supabase";
+import { getDepartamentos } from "../../../lib/services/departamentos";
+import { entrarCanalDepartamento } from "../../../lib/services/mensagens";
 
 export function MainLayout() {
   const location = useLocation();
@@ -26,14 +28,25 @@ export function MainLayout() {
 
   useEffect(() => {
     if (!usuario) return;
+
+    // Garante que o usuário está nos canais de departamento para que o RLS
+    // do Realtime permita o envio dos eventos de INSERT em mensagens
+    getDepartamentos()
+      .then((depts) => {
+        for (const dept of depts) {
+          entrarCanalDepartamento(dept.id, usuario.id).catch(() => {});
+        }
+      })
+      .catch(() => {});
+
     const channel = supabase
       .channel("layout-mensagens")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "mensagens" },
-        (payload: { new: { usuario_id?: string } }) => {
+        (payload: { new: { autor_id?: string } }) => {
           if (
-            payload.new.usuario_id !== usuario.id &&
+            payload.new.autor_id !== usuario.id &&
             !window.location.pathname.startsWith("/mensagens")
           ) {
             setHasUnread(true);
