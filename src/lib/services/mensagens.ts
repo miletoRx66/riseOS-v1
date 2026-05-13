@@ -107,6 +107,17 @@ export async function entrarCanalDepartamento(deptId: string, uid: string): Prom
   return data as string;
 }
 
+/** Busca membros de um canal */
+export async function getMembrosCanal(
+  canalId: string
+): Promise<{ id: string; nome: string; cargo: string | null; avatar_url: string | null }[]> {
+  const { data, error } = await db("canal_membros")
+    .select("profiles(id, nome, cargo, avatar_url)")
+    .eq("canal_id", canalId);
+  if (error) throw error;
+  return (data ?? []).map((m: any) => m.profiles).filter(Boolean);
+}
+
 /** Assina realtime de um canal */
 export function subscribeToMensagens(
   canalId: string,

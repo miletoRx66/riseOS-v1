@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, KeyboardEvent } from "react";
+import { useState, useEffect, useRef, KeyboardEvent, ChangeEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 import {
   getMeusCanais,
   getOutroParticipante,
   getMensagens,
+  getMembrosCanal,
   enviarMensagem,
   iniciarConversaP2P,
   entrarCanalDepartamento,
@@ -65,7 +66,17 @@ export default function Messages() {
   const [mostrarNovaConversa, setMostrarNovaConversa] = useState(false);
   const [iniciandoConversa, setIniciandoConversa] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  // INC-003: painel de membros
+  const [mostrarMembros, setMostrarMembros] = useState(false);
+  const [membrosCanal, setMembrosCanal] = useState<{ id: string; nome: string; cargo: string | null; avatar_url: string | null }[]>([]);
+
+  // INC-004: @menção
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [mentionStart, setMentionStart] = useState(0);
 
   const userId = usuario?.id ?? "";
 
@@ -136,21 +147,57 @@ export default function Messages() {
   function selecionarCanal(canal: CanalEnriquecido) {
     setCanalAtivo(canal);
     carregarMensagens(canal.id);
+    carregarMembros(canal.id);
 
-    // Cancelar subscription anterior
     if (unsubscribeRef.current) {
       unsubscribeRef.current();
     }
 
-    // Assinar realtime do novo canal
     unsubscribeRef.current = subscribeToMensagens(canal.id, (msg) => {
       setMensagens((prev) => {
-        // Evitar duplicatas (pode ter chegado via envio local)
         if (prev.find((m) => m.id === msg.id)) return prev;
         return [...prev, msg];
       });
     });
   }
+
+  async function carregarMembros(canalId: string) {
+    try {
+      const membros = await getMembrosCanal(canalId);
+      setMembrosCanal(membros);
+    } catch {
+      setMembrosCanal([]);
+    }
+  }
+
+  function handleMensagemChange(e: ChangeEvent<HTMLTextAreaElement>) {
+    const value = e.target.value;
+    const cursorPos = e.target.selectionStart ?? value.length;
+    setNovaMensagem(value);
+
+    const textBeforeCursor = value.slice(0, cursorPos);
+    const mentionMatch = textBeforeCursor.match(/@([^\s@]*)$/);
+    if (mentionMatch) {
+      setShowMentions(true);
+      setMentionQuery(mentionMatch[1]);
+      setMentionStart(cursorPos - mentionMatch[0].length);
+    } else {
+      setShowMentions(false);
+      setMentionQuery("");
+    }
+  }
+
+  function handleSelectMention(u: UsuarioDB) {
+    const primeiroNome = u.nome.split(" ")[0];
+    const mention = `@${primeiroNome} `;
+    const before = novaMensagem.slice(0, mentionStart);
+    const after = novaMensagem.slice(mentionStart + 1 + mentionQuery.length);
+    setNovaMensagem(before + mention + after);
+    setShowMentions(false);
+    setMentionQuery("");
+    textareaRef.current?.focus();
+  }
+
 
   async function carregarMensagens(canalId: string) {
     setCarregandoMsgs(true);
@@ -184,7 +231,11 @@ export default function Messages() {
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (showMentions && e.key === "Escape") {
+      setShowMentions(false);
+      return;
+    }
+    if (e.key === "Enter" && !e.shiftKey && !showMentions) {
       e.preventDefault();
       handleEnviar();
     }
@@ -434,119 +485,206 @@ export default function Messages() {
                 </div>
                 <div>
                   <p className="text-[#eee] text-[15px] font-['Inter:Semi_Bold',sans-serif]">{nomeCanalAtivo}</p>
-                  <p className="text-[#555] text-[12px]">Canal do departamento</p>
+                  <p className="text-[#555] text-[12px]">Canal do departamento • {membrosCanal.length} membros</p>
                 </div>
               </>
             )}
+            <button
+              onClick={() => setMostrarMembros((v) => !v)}
+              className={`ml-auto flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] transition-colors ${
+                mostrarMembros
+                  ? "bg-[#14E9BC]/10 text-[#14E9BC] border border-[#14E9BC]/30"
+                  : "text-[#bdbdbd] hover:bg-[#1a1a1a] hover:text-[#eee]"
+              }`}
+              title="Ver membros"
+            >
+              <Users size={16} />
+              <span className="font-['Inter:Medium',sans-serif]">Membros</span>
+            </button>
           </div>
 
-          {/* Mensagens */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
-            {carregandoMsgs ? (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-[#555] text-[14px]">Carregando mensagens...</p>
-              </div>
-            ) : mensagens.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full gap-3">
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: `${corCanalAtivo}15` }}
-                >
-                  <MessageSquare size={24} style={{ color: corCanalAtivo }} />
-                </div>
-                <p className="text-[#555] text-[14px]">Nenhuma mensagem ainda. Seja o primeiro!</p>
-              </div>
-            ) : (
-              gruposMensagens.map(({ data, mensagens: msgs }) => (
-                <div key={data}>
-                  {/* Separador de data */}
-                  <div className="flex items-center gap-3 my-4">
-                    <div className="flex-1 h-px bg-[#222]" />
-                    <span className="text-[#555] text-[11px] font-['Inter:Medium',sans-serif] whitespace-nowrap">
-                      {data}
-                    </span>
-                    <div className="flex-1 h-px bg-[#222]" />
+          {/* Corpo: mensagens + painel de membros */}
+          <div className="flex flex-1 min-h-0">
+
+            {/* Coluna de mensagens + input */}
+            <div className="flex flex-col flex-1 min-w-0">
+              {/* Mensagens */}
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
+                {carregandoMsgs ? (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-[#555] text-[14px]">Carregando mensagens...</p>
                   </div>
+                ) : mensagens.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <div
+                      className="w-14 h-14 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${corCanalAtivo}15` }}
+                    >
+                      <MessageSquare size={24} style={{ color: corCanalAtivo }} />
+                    </div>
+                    <p className="text-[#555] text-[14px]">Nenhuma mensagem ainda. Seja o primeiro!</p>
+                  </div>
+                ) : (
+                  gruposMensagens.map(({ data, mensagens: msgs }) => (
+                    <div key={data}>
+                      <div className="flex items-center gap-3 my-4">
+                        <div className="flex-1 h-px bg-[#222]" />
+                        <span className="text-[#555] text-[11px] font-['Inter:Medium',sans-serif] whitespace-nowrap">
+                          {data}
+                        </span>
+                        <div className="flex-1 h-px bg-[#222]" />
+                      </div>
 
-                  {msgs.map((msg, i) => {
-                    const isOwn = msg.autor_id === userId;
-                    const prevMsg = msgs[i - 1];
-                    const sameSender = prevMsg?.autor_id === msg.autor_id;
-                    const nomeAutor = msg.autor?.nome ?? "Usuário";
+                      {msgs.map((msg, i) => {
+                        const isOwn = msg.autor_id === userId;
+                        const prevMsg = msgs[i - 1];
+                        const sameSender = prevMsg?.autor_id === msg.autor_id;
+                        const nomeAutor = msg.autor?.nome ?? "Usuário";
 
-                    return (
-                      <div
-                        key={msg.id}
-                        className={`flex items-end gap-3 ${isOwn ? "flex-row-reverse" : ""} ${sameSender ? "mt-1" : "mt-4"}`}
-                      >
-                        {/* Avatar */}
-                        {!sameSender ? (
-                          <div className="w-8 h-8 rounded-full bg-[#252525] flex items-center justify-center text-[10px] font-bold text-[#14E9BC] flex-shrink-0 mb-0.5">
-                            {getIniciais(nomeAutor)}
-                          </div>
-                        ) : (
-                          <div className="w-8 flex-shrink-0" />
-                        )}
-
-                        <div className={`max-w-[65%] ${isOwn ? "items-end" : "items-start"} flex flex-col`}>
-                          {!sameSender && (
-                            <div className={`flex items-baseline gap-2 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
-                              <span className="text-[#eee] text-[13px] font-['Inter:Semi_Bold',sans-serif]">
-                                {isOwn ? "Você" : nomeAutor}
-                              </span>
-                              <span className="text-[#555] text-[11px]">{formatarHora(msg.criado_em)}</span>
-                            </div>
-                          )}
+                        return (
                           <div
-                            className={`px-4 py-2.5 rounded-2xl text-[14px] font-['Inter:Regular',sans-serif] leading-relaxed ${
-                              isOwn
-                                ? "bg-[#14E9BC] text-[#000] rounded-br-sm"
-                                : "bg-[#1a1a1a] text-[#eee] rounded-bl-sm"
-                            }`}
+                            key={msg.id}
+                            className={`flex items-end gap-3 ${isOwn ? "flex-row-reverse" : ""} ${sameSender ? "mt-1" : "mt-4"}`}
                           >
-                            {msg.conteudo}
+                            {!sameSender ? (
+                              <div className="w-8 h-8 rounded-full bg-[#252525] flex items-center justify-center text-[10px] font-bold text-[#14E9BC] flex-shrink-0 mb-0.5">
+                                {getIniciais(nomeAutor)}
+                              </div>
+                            ) : (
+                              <div className="w-8 flex-shrink-0" />
+                            )}
+
+                            <div className={`max-w-[65%] ${isOwn ? "items-end" : "items-start"} flex flex-col`}>
+                              {!sameSender && (
+                                <div className={`flex items-baseline gap-2 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
+                                  <span className="text-[#eee] text-[13px] font-['Inter:Semi_Bold',sans-serif]">
+                                    {isOwn ? "Você" : nomeAutor}
+                                  </span>
+                                  <span className="text-[#555] text-[11px]">{formatarHora(msg.criado_em)}</span>
+                                </div>
+                              )}
+                              <div
+                                className={`px-4 py-2.5 rounded-2xl text-[14px] font-['Inter:Regular',sans-serif] leading-relaxed ${
+                                  isOwn
+                                    ? "bg-[#14E9BC] text-[#000] rounded-br-sm"
+                                    : "bg-[#1a1a1a] text-[#eee] rounded-bl-sm"
+                                }`}
+                              >
+                                {(msg.conteudo ?? "").split(/(@\S+)/g).map((part, pi) =>
+                                  part.startsWith("@")
+                                    ? <span key={pi} className={`font-semibold rounded px-0.5 ${isOwn ? "bg-black/10 text-[#004d40]" : "bg-[#14E9BC]/10 text-[#14E9BC]"}`}>{part}</span>
+                                    : part
+                                )}
+                              </div>
+                              {sameSender && (
+                                <span className="text-[#555] text-[10px] mt-0.5 px-1">{formatarHora(msg.criado_em)}</span>
+                              )}
+                            </div>
                           </div>
-                          {sameSender && (
-                            <span className="text-[#555] text-[10px] mt-0.5 px-1">{formatarHora(msg.criado_em)}</span>
-                          )}
+                        );
+                      })}
+                    </div>
+                  ))
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input de mensagem */}
+              <div className="border-t border-[#333] p-4 bg-[#0f0f0f] flex-shrink-0">
+                {/* Dropdown de @menção */}
+                {showMentions && (
+                  <div className="mb-2 bg-[#1a1a1a] border border-[#333] rounded-xl overflow-hidden shadow-lg">
+                    <div className="px-3 py-1.5 border-b border-[#333]">
+                      <span className="text-[#555] text-[11px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Mencionar</span>
+                    </div>
+                    {usuarios
+                      .filter((u) => u.id !== userId && (mentionQuery === "" || u.nome.toLowerCase().includes(mentionQuery.toLowerCase())))
+                      .slice(0, 5)
+                      .map((u) => (
+                        <button
+                          key={u.id}
+                          onMouseDown={(e) => { e.preventDefault(); handleSelectMention(u); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#252525] transition-colors text-left"
+                        >
+                          <div className="w-7 h-7 rounded-full bg-[#14E9BC]/20 flex items-center justify-center text-[10px] font-bold text-[#14E9BC] flex-shrink-0">
+                            {getIniciais(u.nome)}
+                          </div>
+                          <div>
+                            <p className="text-[#eee] text-[13px] font-['Inter:Medium',sans-serif]">{u.nome}</p>
+                            {u.cargo && <p className="text-[#555] text-[11px]">{u.cargo}</p>}
+                          </div>
+                        </button>
+                      ))}
+                    {usuarios.filter((u) => u.id !== userId && u.nome.toLowerCase().includes(mentionQuery.toLowerCase())).length === 0 && (
+                      <p className="text-[#555] text-[12px] p-3 text-center">Nenhum usuário encontrado</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-end gap-3">
+                  <textarea
+                    ref={textareaRef}
+                    value={novaMensagem}
+                    onChange={handleMensagemChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`Mensagem para ${nomeCanalAtivo}... (use @ para mencionar)`}
+                    rows={1}
+                    className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-3 text-[#eee] text-[14px] placeholder-[#555] focus:border-[#14E9BC] focus:outline-none resize-none font-['Inter:Regular',sans-serif] leading-relaxed"
+                    style={{ maxHeight: "120px" }}
+                    onInput={(e) => {
+                      const t = e.currentTarget;
+                      t.style.height = "auto";
+                      t.style.height = Math.min(t.scrollHeight, 120) + "px";
+                    }}
+                  />
+                  <button
+                    onClick={handleEnviar}
+                    disabled={!novaMensagem.trim() || enviando}
+                    className="w-10 h-10 bg-[#14E9BC] rounded-xl flex items-center justify-center hover:bg-[#12d4a8] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                  >
+                    <Send size={18} className="text-[#000]" />
+                  </button>
+                </div>
+                <p className="text-[#555] text-[11px] mt-2 font-['Inter:Regular',sans-serif]">
+                  Enter para enviar • Shift+Enter para nova linha • @ para mencionar
+                </p>
+              </div>
+            </div>
+
+            {/* Painel de membros */}
+            {mostrarMembros && (
+              <div className="w-[220px] border-l border-[#333] bg-[#0f0f0f] flex flex-col flex-shrink-0">
+                <div className="p-4 border-b border-[#333] flex items-center justify-between">
+                  <span className="text-[#eee] text-[14px] font-['Inter:Semi_Bold',sans-serif]">
+                    Membros ({membrosCanal.length})
+                  </span>
+                  <button
+                    onClick={() => setMostrarMembros(false)}
+                    className="text-[#555] hover:text-[#eee] transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-2">
+                  {membrosCanal.length === 0 ? (
+                    <p className="text-[#555] text-[12px] p-3 text-center">Sem membros</p>
+                  ) : (
+                    membrosCanal.map((m) => (
+                      <div key={m.id} className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-[#1a1a1a] transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-[#14E9BC]/20 flex items-center justify-center text-[10px] font-bold text-[#14E9BC] flex-shrink-0">
+                          {getIniciais(m.nome)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[#eee] text-[13px] font-['Inter:Medium',sans-serif] truncate">{m.nome}</p>
+                          {m.cargo && <p className="text-[#555] text-[11px] truncate">{m.cargo}</p>}
                         </div>
                       </div>
-                    );
-                  })}
+                    ))
+                  )}
                 </div>
-              ))
+              </div>
             )}
-            <div ref={messagesEndRef} />
-          </div>
 
-          {/* Input de mensagem */}
-          <div className="border-t border-[#333] p-4 bg-[#0f0f0f] flex-shrink-0">
-            <div className="flex items-end gap-3">
-              <textarea
-                value={novaMensagem}
-                onChange={(e) => setNovaMensagem(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={`Mensagem para ${nomeCanalAtivo}...`}
-                rows={1}
-                className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-3 text-[#eee] text-[14px] placeholder-[#555] focus:border-[#14E9BC] focus:outline-none resize-none font-['Inter:Regular',sans-serif] leading-relaxed"
-                style={{ maxHeight: "120px" }}
-                onInput={(e) => {
-                  const t = e.currentTarget;
-                  t.style.height = "auto";
-                  t.style.height = Math.min(t.scrollHeight, 120) + "px";
-                }}
-              />
-              <button
-                onClick={handleEnviar}
-                disabled={!novaMensagem.trim() || enviando}
-                className="w-10 h-10 bg-[#14E9BC] rounded-xl flex items-center justify-center hover:bg-[#12d4a8] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-              >
-                <Send size={18} className="text-[#000]" />
-              </button>
-            </div>
-            <p className="text-[#555] text-[11px] mt-2 font-['Inter:Regular',sans-serif]">
-              Enter para enviar • Shift+Enter para nova linha
-            </p>
           </div>
         </div>
       ) : (
