@@ -31,7 +31,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const DEPARTAMENTOS = ["marketing", "ops", "comercial", "produto", "financeiro"];
+const DEPARTAMENTOS = ["marketing", "ops", "comercial", "produto", "financeiro", "tecnologia", "governanca", "juridico"];
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
