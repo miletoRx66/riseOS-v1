@@ -16,8 +16,6 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { supabase } from "../../../lib/supabase";
-import { getDepartamentos } from "../../../lib/services/departamentos";
-import { entrarCanalDepartamento } from "../../../lib/services/mensagens";
 
 export function MainLayout() {
   const location = useLocation();
@@ -29,24 +27,23 @@ export function MainLayout() {
   useEffect(() => {
     if (!usuario) return;
 
-    // Garante que o usuário está nos canais de departamento para que o RLS
-    // do Realtime permita o envio dos eventos de INSERT em mensagens
-    getDepartamentos()
-      .then((depts) => {
-        for (const dept of depts) {
-          entrarCanalDepartamento(dept.id, usuario.id).catch(() => {});
-        }
-      })
-      .catch(() => {});
-
+    // Assina a tabela notificacoes filtrando pelo usuário atual.
+    // O trigger trg_notificar_mensagem insere uma linha aqui para cada
+    // membro do canal quando uma mensagem é enviada — sem depender de RLS
+    // complexo sobre canal_membros.
     const channel = supabase
-      .channel("layout-mensagens")
+      .channel("layout-notificacoes")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "mensagens" },
-        (payload: { new: { autor_id?: string } }) => {
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notificacoes",
+          filter: `usuario_id=eq.${usuario.id}`,
+        },
+        (payload: { new: { tipo?: string } }) => {
           if (
-            payload.new.autor_id !== usuario.id &&
+            payload.new.tipo === "nova_mensagem" &&
             !window.location.pathname.startsWith("/mensagens")
           ) {
             setHasUnread(true);
