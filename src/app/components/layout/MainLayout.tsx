@@ -16,6 +16,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { supabase } from "../../../lib/supabase";
+import { NotificacoesBell } from "./NotificacoesBell";
 
 export function MainLayout() {
   const location = useLocation();
@@ -156,8 +157,9 @@ export function MainLayout() {
           </div>
         </nav>
 
-        {/* Theme Toggle + Perfil */}
+        {/* Notificações + Perfil + Tema */}
         <div className="p-4 border-t border-[#333] space-y-1">
+          {usuario && <NotificacoesBell userId={usuario.id} />}
           <Link
             to="/perfil"
             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
