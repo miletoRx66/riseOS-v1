@@ -20,6 +20,7 @@ import Messages from "./pages/Messages";
 import Documentos from "./pages/Documentos";
 import Relatorios from "./pages/Relatorios";
 import RelatorioDepartamento from "./pages/RelatorioDepartamento";
+import Hub from "./pages/Hub";
 import NotFound from "./pages/NotFound";
 
 /**
@@ -80,6 +81,7 @@ export const router = createBrowserRouter([
       { path: "documentos", Component: Documentos },
       { path: "relatorios", Component: Relatorios },
       { path: "relatorio/:id", Component: RelatorioDepartamento },
+      { path: "hub", Component: Hub },
       { path: "*", Component: NotFound },
     ],
   },
