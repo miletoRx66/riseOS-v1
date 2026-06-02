@@ -12,7 +12,7 @@ import {
 import Papa from "papaparse";
 import {
   getProdutos, getSnapshots, getTransacoes, getFluxoCaixaMensal,
-  createTransacao, bulkCreateTransacoes, upsertSnapshot,
+  createTransacao, bulkCreateTransacoes, upsertSnapshot, getSnapshotByKey,
   computarMetricas, ultimasSeisCom, competenciaAtual, formatarCompetencia,
   CATEGORIAS_RECEITA, CATEGORIAS_DESPESA,
   type FinProduto, type FinSnapshot, type FinTransacao,
@@ -41,18 +41,42 @@ interface ModalAUMProps {
 }
 
 function ModalAUM({ produtos, competencia, userId, onSalvo, onFechar }: ModalAUMProps) {
-  const [produtoId, setProdutoId] = useState(produtos[0]?.id ?? "");
-  const [comp, setComp]           = useState(competencia);
-  const [aum, setAum]             = useState("");
-  const [aportes, setAportes]     = useState("");
-  const [resgates, setResgates]   = useState("");
-  const [notas, setNotas]         = useState("");
-  const [salvando, setSalvando]   = useState(false);
-  const [erro, setErro]           = useState("");
+  const [produtoId, setProdutoId]   = useState(produtos[0]?.id ?? "");
+  const [frequencia, setFrequencia] = useState<"mensal" | "semanal">("mensal");
+  const [comp, setComp]             = useState(competencia);
+  const [aum, setAum]               = useState("");
+  const [aportes, setAportes]       = useState("");
+  const [resgates, setResgates]     = useState("");
+  const [notas, setNotas]           = useState("");
+  const [salvando, setSalvando]     = useState(false);
+  const [carregandoSnap, setCarregandoSnap] = useState(false);
+  const [isEdicao, setIsEdicao]     = useState(false);
+  const [erro, setErro]             = useState("");
 
-  const numAum      = parseFloat(aum.replace(",", ".")) || 0;
-  const numAportes  = parseFloat(aportes.replace(",", ".")) || 0;
-  const numResgates = parseFloat(resgates.replace(",", ".")) || 0;
+  // Pré-carrega snapshot existente ao trocar produto ou competência
+  useEffect(() => {
+    if (!produtoId || !comp) return;
+    setCarregandoSnap(true);
+    getSnapshotByKey(produtoId, "geral", comp)
+      .then(snap => {
+        if (snap) {
+          setAum(String(snap.aum_total));
+          setAportes(String(snap.total_aportes));
+          setResgates(String(snap.total_resgates));
+          setNotas(snap.notas ?? "");
+          setIsEdicao(true);
+        } else {
+          setAum(""); setAportes(""); setResgates(""); setNotas("");
+          setIsEdicao(false);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setCarregandoSnap(false));
+  }, [produtoId, comp]);
+
+  const numAum      = parseFloat(aum)      || 0;
+  const numAportes  = parseFloat(aportes)  || 0;
+  const numResgates = parseFloat(resgates) || 0;
   const m = computarMetricas({ aum_total: numAum, total_aportes: numAportes, total_resgates: numResgates });
 
   async function handleSalvar() {
@@ -68,20 +92,27 @@ function ModalAUM({ produtos, competencia, userId, onSalvo, onFechar }: ModalAUM
       onFechar();
     } catch (e: any) {
       setErro(e?.message ?? "Erro ao salvar.");
-    } finally {
-      setSalvando(false);
-    }
+    } finally { setSalvando(false); }
   }
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-[#0f0f0f] border border-[#333] rounded-xl w-full max-w-[560px]">
         <div className="flex items-center justify-between p-6 border-b border-[#333]">
-          <h2 className="text-[#eee] text-[20px] font-bold">Lançar AUM</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-[#eee] text-[20px] font-bold">Lançar AUM</h2>
+            {isEdicao && !carregandoSnap && (
+              <span className="bg-[#f59e0b]/15 text-[#f59e0b] text-[11px] font-semibold px-2 py-0.5 rounded-full border border-[#f59e0b]/30">
+                Editando existente
+              </span>
+            )}
+          </div>
           <button onClick={onFechar} className="text-[#555] hover:text-[#eee] transition-colors"><X size={20} /></button>
         </div>
 
         <div className="p-6 space-y-4">
+
+          {/* Produto */}
           <div>
             <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Produto</label>
             <select value={produtoId} onChange={e => setProdutoId(e.target.value)}
@@ -90,33 +121,60 @@ function ModalAUM({ produtos, competencia, userId, onSalvo, onFechar }: ModalAUM
             </select>
           </div>
 
+          {/* Frequência + Competência */}
           <div>
-            <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Competência</label>
-            <input type="month" value={comp} onChange={e => setComp(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none" />
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[#bdbdbd] text-[12px] font-semibold">Competência</label>
+              <div className="flex items-center gap-1 bg-[#111] border border-[#2a2a2a] rounded-lg p-0.5">
+                {(["mensal", "semanal"] as const).map(f => (
+                  <button key={f} onClick={() => { setFrequencia(f); setComp(f === "mensal" ? competencia : ""); }}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${
+                      frequencia === f ? "bg-[#f59e0b] text-[#000]" : "text-[#555] hover:text-[#bdbdbd]"
+                    }`}>
+                    {f === "mensal" ? "Mensal" : "Semanal"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <input
+              type={frequencia === "mensal" ? "month" : "week"}
+              value={comp} onChange={e => setComp(e.target.value)}
+              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none"
+            />
+            {frequencia === "semanal" && comp && (
+              <p className="text-[#555] text-[11px] mt-1">Competência semanal: {comp}</p>
+            )}
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { label: "Total AUM", val: aum, set: setAum, cor: "#14E9BC" },
-              { label: "Total Aportes", val: aportes, set: setAportes, cor: "#28d939" },
-              { label: "Total Resgates", val: resgates, set: setResgates, cor: "#ec5d5e" },
-            ].map(({ label, val, set, cor }) => (
-              <div key={label}>
-                <label className="block text-[12px] font-semibold mb-1.5" style={{ color: cor }}>{label}</label>
-                <input value={val} onChange={e => set(e.target.value)} placeholder="0,00" type="number" step="0.01"
-                  className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:outline-none"
-                  style={{ borderColor: val ? cor : undefined }} />
-              </div>
-            ))}
-          </div>
+          {/* Inputs AUM */}
+          {carregandoSnap ? (
+            <div className="flex items-center justify-center py-6 text-[#555] text-[13px] gap-2">
+              <div className="w-4 h-4 border-2 border-[#f59e0b] border-t-transparent rounded-full animate-spin" />
+              Verificando lançamento anterior...
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Total AUM",      val: aum,      set: setAum,      cor: "#14E9BC" },
+                { label: "Total Aportes",  val: aportes,  set: setAportes,  cor: "#28d939" },
+                { label: "Total Resgates", val: resgates, set: setResgates, cor: "#ec5d5e" },
+              ].map(({ label, val, set, cor }) => (
+                <div key={label}>
+                  <label className="block text-[12px] font-semibold mb-1.5" style={{ color: cor }}>{label}</label>
+                  <input value={val} onChange={e => set(e.target.value)} placeholder="0.00" type="number" step="0.01"
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:outline-none transition-colors"
+                    style={{ borderColor: val ? cor : undefined }} />
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Computed preview */}
           <div className="bg-[#1a1a1a] border border-[#222] rounded-lg p-4 grid grid-cols-3 gap-3">
             {[
-              { label: "Total Investido", val: m.total_investido, cor: "#6B8AFF" },
-              { label: "Fees Gerados",    val: m.fees_gerados,    cor: "#f59e0b" },
-              { label: "Vol. Transacionado", val: m.volume_transacionado, cor: "#bdbdbd" },
+              { label: "Total Investido",     val: m.total_investido,      cor: "#6B8AFF" },
+              { label: "Fees Gerados",        val: m.fees_gerados,         cor: "#f59e0b" },
+              { label: "Vol. Transacionado",  val: m.volume_transacionado, cor: "#bdbdbd" },
             ].map(({ label, val, cor }) => (
               <div key={label} className="text-center">
                 <p className="text-[11px] mb-1" style={{ color: cor }}>{label}</p>
@@ -337,6 +395,46 @@ export default function DepartamentoFinanceiro() {
     ...cat, total: transacoes.filter(t => t.tipo === "despesa" && t.categoria === cat.id).reduce((s, t) => s + Number(t.valor), 0),
   }));
 
+  // ── AUM Insights (computed from snapshots) ───────────────────────────────
+
+  const insightsAUM = (() => {
+    if (snapshots.length === 0) return null;
+    const enriched = snapshots.map(s => ({
+      ...s,
+      nome: produtos.find(p => p.id === s.produto_id)?.nome ?? s.produto_id,
+      cor:  produtos.find(p => p.id === s.produto_id)?.cor  ?? "#f59e0b",
+      ...computarMetricas(s),
+    }));
+    const maiorAUM      = enriched.reduce((a, b) => a.aum_total > b.aum_total ? a : b);
+    const maiorFeeRatio = enriched.reduce((a, b) => {
+      const ra = a.aum_total > 0 ? a.fees_gerados / a.aum_total : 0;
+      const rb = b.aum_total > 0 ? b.fees_gerados / b.aum_total : 0;
+      return ra > rb ? a : b;
+    });
+    const maiorVolume   = enriched.reduce((a, b) => a.volume_transacionado > b.volume_transacionado ? a : b);
+    const alertas       = enriched.filter(s => s.fees_gerados < 0);
+    const feeRatioTotal = totalAUM > 0 ? (fees_gerados / totalAUM) * 100 : 0;
+    return { maiorAUM, maiorFeeRatio, maiorVolume, alertas, feeRatioTotal };
+  })();
+
+  // ── Export AUM CSV ────────────────────────────────────────────────────────
+
+  function exportarAUM() {
+    const header = ["Produto", "Competência", "AUM Total", "Total Aportes", "Total Resgates",
+                    "Total Investido", "Fees Gerados", "Volume Transacionado"];
+    const rows = snapshots.map(s => {
+      const nome = produtos.find(p => p.id === s.produto_id)?.nome ?? s.produto_id;
+      const m = computarMetricas(s);
+      return [nome, s.competencia, s.aum_total, s.total_aportes, s.total_resgates,
+              m.total_investido.toFixed(2), m.fees_gerados.toFixed(2), m.volume_transacionado.toFixed(2)];
+    });
+    const csv = [header, ...rows].map(r => r.join(",")).join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" }));
+    a.download = `relatorio-aum-${competencia}.csv`;
+    a.click();
+  }
+
   // ── Import helpers ────────────────────────────────────────────────────────
 
   const handleDragOver  = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); setIsDragging(true); };
@@ -432,6 +530,12 @@ export default function DepartamentoFinanceiro() {
                   className="bg-[#f59e0b] text-[#000] px-4 py-2 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:bg-[#d97706]">
                   <Layers size={16} /> Lançar AUM
                 </button>
+                {snapshots.length > 0 && (
+                  <button onClick={exportarAUM}
+                    className="bg-[#1a1a1a] border border-[#333] text-[#eee] px-4 py-2 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:border-[#f59e0b]">
+                    <Download size={16} /> Exportar AUM
+                  </button>
+                )}
                 <button onClick={() => setModalTrans(true)}
                   className="bg-[#1a1a1a] border border-[#333] text-[#eee] px-4 py-2 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:border-[#f59e0b]">
                   <Plus size={16} /> Transação
@@ -527,6 +631,74 @@ export default function DepartamentoFinanceiro() {
                 </div>
               )}
             </div>
+
+            {/* ═══════════════════════════════════════════════════════════════
+                INSIGHTS-CHAVE AUM
+            ═══════════════════════════════════════════════════════════════ */}
+            {insightsAUM && (
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp size={18} className="text-[#f59e0b]" />
+                  <h2 className="text-[#eee] text-[18px] font-bold">Insights-Chave</h2>
+                  <span className="text-[#555] text-[13px]">· {formatarCompetencia(competencia)}</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                  {/* Maior AUM */}
+                  <div className="bg-[#0f0f0f] border border-[#14E9BC]/30 rounded-xl p-5">
+                    <p className="text-[#555] text-[11px] uppercase tracking-wider mb-2">Maior AUM</p>
+                    <p className="text-[#eee] text-[15px] font-bold truncate mb-1">{insightsAUM.maiorAUM.nome}</p>
+                    <p className="text-[#14E9BC] text-[18px] font-bold">{fmt(insightsAUM.maiorAUM.aum_total)}</p>
+                    <p className="text-[#555] text-[11px] mt-1">
+                      {totalAUM > 0 ? ((insightsAUM.maiorAUM.aum_total / totalAUM) * 100).toFixed(1) : 0}% do AUM total
+                    </p>
+                  </div>
+
+                  {/* Maior performance (fee ratio) */}
+                  <div className="bg-[#0f0f0f] border border-[#f59e0b]/30 rounded-xl p-5">
+                    <p className="text-[#555] text-[11px] uppercase tracking-wider mb-2">Maior Rendimento</p>
+                    <p className="text-[#eee] text-[15px] font-bold truncate mb-1">{insightsAUM.maiorFeeRatio.nome}</p>
+                    <p className="text-[#f59e0b] text-[18px] font-bold">{fmt(insightsAUM.maiorFeeRatio.fees_gerados)}</p>
+                    <p className="text-[#555] text-[11px] mt-1">
+                      {insightsAUM.maiorFeeRatio.aum_total > 0
+                        ? ((insightsAUM.maiorFeeRatio.fees_gerados / insightsAUM.maiorFeeRatio.aum_total) * 100).toFixed(2)
+                        : "0.00"}% fees/AUM
+                    </p>
+                  </div>
+
+                  {/* Maior atividade */}
+                  <div className="bg-[#0f0f0f] border border-[#6B8AFF]/30 rounded-xl p-5">
+                    <p className="text-[#555] text-[11px] uppercase tracking-wider mb-2">Maior Atividade</p>
+                    <p className="text-[#eee] text-[15px] font-bold truncate mb-1">{insightsAUM.maiorVolume.nome}</p>
+                    <p className="text-[#6B8AFF] text-[18px] font-bold">{fmt(insightsAUM.maiorVolume.volume_transacionado)}</p>
+                    <p className="text-[#555] text-[11px] mt-1">volume transacionado</p>
+                  </div>
+
+                  {/* Fee ratio consolidado */}
+                  <div className="bg-[#0f0f0f] border border-[#28d939]/30 rounded-xl p-5">
+                    <p className="text-[#555] text-[11px] uppercase tracking-wider mb-2">Fee Ratio Consolidado</p>
+                    <p className="text-[#eee] text-[15px] font-bold mb-1">{snapshots.length} produto{snapshots.length !== 1 ? "s" : ""}</p>
+                    <p className="text-[#28d939] text-[18px] font-bold">{insightsAUM.feeRatioTotal.toFixed(2)}%</p>
+                    <p className="text-[#555] text-[11px] mt-1">fees sobre AUM total</p>
+                  </div>
+                </div>
+
+                {/* Alertas */}
+                {insightsAUM.alertas.length > 0 && (
+                  <div className="bg-[#ec5d5e]/8 border border-[#ec5d5e]/30 rounded-xl p-4 flex items-start gap-3">
+                    <AlertCircle size={18} className="text-[#ec5d5e] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-[#ec5d5e] text-[13px] font-semibold mb-1">
+                        {insightsAUM.alertas.length} produto{insightsAUM.alertas.length > 1 ? "s" : ""} com AUM abaixo do capital investido
+                      </p>
+                      <p className="text-[#ec5d5e]/70 text-[12px]">
+                        {insightsAUM.alertas.map(a => a.nome).join(", ")} — fees negativos indicam que o patrimônio atual é menor que o capital aportado líquido.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ═══════════════════════════════════════════════════════════════
                 MÓDULO OPERACIONAL

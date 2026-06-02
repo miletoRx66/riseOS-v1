@@ -121,8 +121,25 @@ export async function upsertSnapshot(
   snapshot: Omit<FinSnapshot, "id" | "criado_em" | "atualizado_em">
 ): Promise<void> {
   const { error } = await db("fin_snapshots")
-    .upsert(snapshot, { onConflict: "produto_id,classe,competencia" });
+    .upsert(
+      { ...snapshot, atualizado_em: new Date().toISOString() },
+      { onConflict: "produto_id,classe,competencia" }
+    );
   if (error) throw error;
+}
+
+export async function getSnapshotByKey(
+  produtoId: string,
+  classe: string,
+  competencia: string
+): Promise<FinSnapshot | null> {
+  const { data } = await db("fin_snapshots")
+    .select("*")
+    .eq("produto_id", produtoId)
+    .eq("classe", classe)
+    .eq("competencia", competencia)
+    .maybeSingle();
+  return data ?? null;
 }
 
 export async function getTransacoes(opts?: {
