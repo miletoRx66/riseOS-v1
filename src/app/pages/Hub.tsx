@@ -1,4 +1,4 @@
-import { ExternalLink, Globe, Monitor, TrendingUp, BookOpen, PieChart, HardDrive, Search, Clock } from "lucide-react";
+import { ExternalLink, Globe, Monitor, TrendingUp, BookOpen, PieChart, HardDrive, Search, Clock, Archive } from "lucide-react";
 
 interface LinkItem {
   id: string;
@@ -21,13 +21,22 @@ const LINKS_CORPORATIVOS: LinkItem[] = [
     tag: "Operações",
   },
   {
-    id: "rise-leads",
-    nome: "Rise Leads",
+    id: "rise-v2",
+    nome: "Rise v2",
     descricao: "Plataforma de produtos e captação de clientes da Rise Finance.",
     url: "https://v2.risefinance.com.br/?redirect=%2Fprodutos",
     icon: TrendingUp,
     cor: "#6B8AFF",
     tag: "Comercial",
+  },
+  {
+    id: "rise-v1",
+    nome: "Rise v1",
+    descricao: "Versão anterior da plataforma Rise Finance (acesso privado).",
+    url: "https://private.risefinance.com.br/login",
+    icon: Archive,
+    cor: "#f97316",
+    tag: "Plataforma",
   },
   {
     id: "site",
@@ -42,6 +51,7 @@ const LINKS_CORPORATIVOS: LinkItem[] = [
     id: "gitbook",
     nome: "Gitbook",
     descricao: "Documentação técnica, guias e base de conhecimento interna.",
+    url: "https://rise-finance-2.gitbook.io/rise-docs-l-institucional",
     icon: BookOpen,
     cor: "#f59e0b",
     tag: "Produto",
