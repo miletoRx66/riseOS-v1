@@ -42,7 +42,6 @@ interface ModalAUMProps {
 
 function ModalAUM({ produtos, competencia, userId, onSalvo, onFechar }: ModalAUMProps) {
   const [produtoId, setProdutoId] = useState(produtos[0]?.id ?? "");
-  const [classe, setClasse]       = useState("geral");
   const [comp, setComp]           = useState(competencia);
   const [aum, setAum]             = useState("");
   const [aportes, setAportes]     = useState("");
@@ -61,10 +60,9 @@ function ModalAUM({ produtos, competencia, userId, onSalvo, onFechar }: ModalAUM
     setSalvando(true);
     try {
       await upsertSnapshot({
-        produto_id: produtoId, classe, competencia: comp,
+        produto_id: produtoId, classe: "geral", competencia: comp,
         aum_total: numAum, total_aportes: numAportes, total_resgates: numResgates,
         notas: notas || null, fonte: "manual", criado_por: userId,
-        atualizado_em: new Date().toISOString(),
       });
       onSalvo();
       onFechar();
@@ -84,19 +82,12 @@ function ModalAUM({ produtos, competencia, userId, onSalvo, onFechar }: ModalAUM
         </div>
 
         <div className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Produto</label>
-              <select value={produtoId} onChange={e => setProdutoId(e.target.value)}
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none">
-                {produtos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Classe</label>
-              <input value={classe} onChange={e => setClasse(e.target.value)} placeholder="ex: senior, mezanino, geral"
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none" />
-            </div>
+          <div>
+            <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Produto</label>
+            <select value={produtoId} onChange={e => setProdutoId(e.target.value)}
+              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none">
+              {produtos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+            </select>
           </div>
 
           <div>
