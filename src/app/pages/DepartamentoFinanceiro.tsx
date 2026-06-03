@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer,
+  Tooltip, Legend, ResponsiveContainer, Cell, LabelList,
 } from "recharts";
 import Papa from "papaparse";
 import {
@@ -395,44 +395,158 @@ export default function DepartamentoFinanceiro() {
     ...cat, total: transacoes.filter(t => t.tipo === "despesa" && t.categoria === cat.id).reduce((s, t) => s + Number(t.valor), 0),
   }));
 
-  // ── AUM Insights (computed from snapshots) ───────────────────────────────
+  // ── AUM Insights + Chart Data ─────────────────────────────────────────────
 
   const insightsAUM = (() => {
     if (snapshots.length === 0) return null;
-    const enriched = snapshots.map(s => ({
-      ...s,
-      nome: produtos.find(p => p.id === s.produto_id)?.nome ?? s.produto_id,
-      cor:  produtos.find(p => p.id === s.produto_id)?.cor  ?? "#f59e0b",
-      ...computarMetricas(s),
-    }));
-    const maiorAUM      = enriched.reduce((a, b) => a.aum_total > b.aum_total ? a : b);
-    const maiorFeeRatio = enriched.reduce((a, b) => {
-      const ra = a.aum_total > 0 ? a.fees_gerados / a.aum_total : 0;
-      const rb = b.aum_total > 0 ? b.fees_gerados / b.aum_total : 0;
-      return ra > rb ? a : b;
+
+    const shortNome = (nome: string) => {
+      if (nome.includes("Rise Fixed Yield") && nome.includes("Sênior")) return "RFY Sênior";
+      if (nome.includes("Rise Fixed Yield") && nome.includes("Sub"))    return "RFY Sub";
+      if (nome.includes("RFY18"))                                         return "RFY18";
+      if (nome.includes("Rise Liquidity Yield 3"))                        return "RLY 3";
+      if (nome.includes("Rise Liquidity Yield"))                          return "RLY";
+      if (nome.includes("Capex Senior"))                                  return "Capex Sr";
+      if (nome.includes("Capex Sub"))                                     return "Capex Sub";
+      if (nome.includes("BATS"))                                          return "BATS";
+      const parts = nome.split(" ");
+      return parts.length > 2 ? `${parts[0]} ${parts[parts.length - 1]}` : nome;
+    };
+
+    const enriched = snapshots.map(s => {
+      const prod = produtos.find(p => p.id === s.produto_id);
+      const m = computarMetricas(s);
+      return {
+        ...s, ...m,
+        nome:       prod?.nome  ?? s.produto_id,
+        shortNome:  shortNome(prod?.nome ?? s.produto_id),
+        cor:        prod?.cor   ?? "#f59e0b",
+        feeRatioPct: s.aum_total > 0 ? (m.fees_gerados / s.aum_total) * 100 : 0,
+        concentracaoPct: totalAUM > 0 ? (s.aum_total / totalAUM) * 100 : 0,
+      };
     });
+
+    const sorted = [...enriched].sort((a, b) => b.aum_total - a.aum_total);
+
+    const maiorAUM      = enriched.reduce((a, b) => a.aum_total > b.aum_total ? a : b);
+    const maiorFeeRatio = enriched.reduce((a, b) => a.feeRatioPct > b.feeRatioPct ? a : b);
     const maiorVolume   = enriched.reduce((a, b) => a.volume_transacionado > b.volume_transacionado ? a : b);
     const alertas       = enriched.filter(s => s.fees_gerados < 0);
     const feeRatioTotal = totalAUM > 0 ? (fees_gerados / totalAUM) * 100 : 0;
-    return { maiorAUM, maiorFeeRatio, maiorVolume, alertas, feeRatioTotal };
+
+    // Chart data
+    const aumChartData = sorted.map(s => ({
+      name: s.shortNome, fullName: s.nome, aum: s.aum_total,
+      fees: s.fees_gerados, cor: s.cor,
+    }));
+    const movChartData = [...enriched]
+      .sort((a, b) => b.total_aportes - a.total_aportes)
+      .map(s => ({ name: s.shortNome, aportes: s.total_aportes, resgates: s.total_resgates }));
+
+    return { enriched, sorted, maiorAUM, maiorFeeRatio, maiorVolume,
+             alertas, feeRatioTotal, aumChartData, movChartData };
   })();
 
-  // ── Export AUM CSV ────────────────────────────────────────────────────────
+  // ── Export AUM — Relatório Técnico Estruturado ────────────────────────────
 
   function exportarAUM() {
-    const header = ["Produto", "Competência", "AUM Total", "Total Aportes", "Total Resgates",
-                    "Total Investido", "Fees Gerados", "Volume Transacionado"];
-    const rows = snapshots.map(s => {
-      const nome = produtos.find(p => p.id === s.produto_id)?.nome ?? s.produto_id;
-      const m = computarMetricas(s);
-      return [nome, s.competencia, s.aum_total, s.total_aportes, s.total_resgates,
-              m.total_investido.toFixed(2), m.fees_gerados.toFixed(2), m.volume_transacionado.toFixed(2)];
+    const agora   = new Date().toLocaleString("pt-BR");
+    const sep     = ",";
+    const L: string[] = [];
+
+    const row = (...cols: (string | number)[]) => L.push(cols.join(sep));
+    const blank = () => L.push("");
+    const sec = (title: string) => { blank(); row(`=== ${title} ===`); };
+
+    // Cabeçalho
+    row("RELATÓRIO DE AUM — Rise Finance");
+    row(`Competência: ${formatarCompetencia(competencia)}  (${competencia})`);
+    row(`Gerado em: ${agora}`);
+    blank();
+
+    // Sumário executivo
+    sec("SUMÁRIO EXECUTIVO");
+    row("Métrica", "Valor", "Observação");
+    row("Total AUM", fmt(totalAUM), "Patrimônio sob gestão no período");
+    row("Total Investido (Líquido)", fmt(total_investido), "Aportes − Resgates acumulados");
+    row("Fees Gerados", fmt(fees_gerados), "AUM − Total Investido");
+    row("Fee Ratio Total", `${totalAUM > 0 ? ((fees_gerados / totalAUM) * 100).toFixed(2) : "0.00"}%`, "Rendimento sobre AUM");
+    row("Volume Total Transacionado", fmt(volume_transacionado), "Aportes + Resgates");
+    row("Produtos Analisados", snapshots.length, "");
+    if (insightsAUM) {
+      row("Produtos com Alerta", insightsAUM.alertas.length, insightsAUM.alertas.length > 0 ? "AUM abaixo do capital investido" : "Nenhum");
+    }
+
+    // Detalhamento por produto
+    sec("DETALHAMENTO POR PRODUTO");
+    row("Produto", "AUM Total (R$)", "Aportes (R$)", "Resgates (R$)",
+        "Investido Líquido (R$)", "Fees Gerados (R$)", "Fee Ratio (%)",
+        "Volume Transacionado (R$)", "Conc. AUM (%)", "Status");
+    (insightsAUM?.sorted ?? snapshots.map(s => ({
+      ...s, ...computarMetricas(s),
+      nome: produtos.find(p => p.id === s.produto_id)?.nome ?? s.produto_id,
+      feeRatioPct: s.aum_total > 0 ? ((computarMetricas(s).fees_gerados / s.aum_total) * 100) : 0,
+      concentracaoPct: totalAUM > 0 ? ((s.aum_total / totalAUM) * 100) : 0,
+    }))).forEach(s => {
+      row(
+        s.nome,
+        Number(s.aum_total).toFixed(2),
+        Number(s.total_aportes).toFixed(2),
+        Number(s.total_resgates).toFixed(2),
+        s.total_investido.toFixed(2),
+        s.fees_gerados.toFixed(2),
+        s.feeRatioPct.toFixed(2),
+        s.volume_transacionado.toFixed(2),
+        s.concentracaoPct.toFixed(1),
+        s.fees_gerados < 0 ? "ALERTA — AUM < Investido" : "OK",
+      );
     });
-    const csv = [header, ...rows].map(r => r.join(",")).join("\n");
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" }));
-    a.download = `relatorio-aum-${competencia}.csv`;
-    a.click();
+
+    // Rankings
+    if (insightsAUM) {
+      sec("RANKINGS");
+      row("Posição", "Critério", "Produto", "Valor");
+      insightsAUM.sorted.forEach((s, i) => {
+        row(`#${i + 1}`, "AUM", s.nome, Number(s.aum_total).toFixed(2));
+      });
+      blank();
+      [...insightsAUM.enriched]
+        .sort((a, b) => b.feeRatioPct - a.feeRatioPct)
+        .forEach((s, i) => {
+          row(`#${i + 1}`, "Fee Ratio (%)", s.nome, `${s.feeRatioPct.toFixed(2)}%`);
+        });
+      blank();
+      [...insightsAUM.enriched]
+        .sort((a, b) => b.volume_transacionado - a.volume_transacionado)
+        .forEach((s, i) => {
+          row(`#${i + 1}`, "Volume Transacionado", s.nome, Number(s.volume_transacionado).toFixed(2));
+        });
+
+      // Concentração
+      sec("ANÁLISE DE CONCENTRAÇÃO");
+      const top3 = insightsAUM.sorted.slice(0, 3).reduce((s, x) => s + x.aum_total, 0);
+      row("Observação", "Valor");
+      row("Top 3 produtos representam", `${totalAUM > 0 ? ((top3 / totalAUM) * 100).toFixed(1) : "0.0"}% do AUM total`);
+      insightsAUM.sorted.forEach((s, i) => {
+        row(`#${i + 1} — ${s.nome}`, `${s.concentracaoPct.toFixed(1)}% (${fmt(s.aum_total)})`);
+      });
+
+      // Alertas
+      if (insightsAUM.alertas.length > 0) {
+        sec("ALERTAS");
+        row("Produto", "AUM (R$)", "Investido (R$)", "Diferença (R$)", "Detalhe");
+        insightsAUM.alertas.forEach(a => {
+          row(a.nome, Number(a.aum_total).toFixed(2), a.total_investido.toFixed(2),
+              (a.aum_total - a.total_investido).toFixed(2), "AUM abaixo do capital aportado líquido");
+        });
+      }
+    }
+
+    const csv = L.join("\n");
+    const el = document.createElement("a");
+    el.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" }));
+    el.download = `relatorio-aum-${competencia}.csv`;
+    el.click();
   }
 
   // ── Import helpers ────────────────────────────────────────────────────────
@@ -637,49 +751,147 @@ export default function DepartamentoFinanceiro() {
             ═══════════════════════════════════════════════════════════════ */}
             {insightsAUM && (
               <div className="mb-8">
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-5">
                   <TrendingUp size={18} className="text-[#f59e0b]" />
                   <h2 className="text-[#eee] text-[18px] font-bold">Insights-Chave</h2>
                   <span className="text-[#555] text-[13px]">· {formatarCompetencia(competencia)}</span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                  {/* Maior AUM */}
+                {/* KPI Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   <div className="bg-[#0f0f0f] border border-[#14E9BC]/30 rounded-xl p-5">
                     <p className="text-[#555] text-[11px] uppercase tracking-wider mb-2">Maior AUM</p>
-                    <p className="text-[#eee] text-[15px] font-bold truncate mb-1">{insightsAUM.maiorAUM.nome}</p>
-                    <p className="text-[#14E9BC] text-[18px] font-bold">{fmt(insightsAUM.maiorAUM.aum_total)}</p>
-                    <p className="text-[#555] text-[11px] mt-1">
-                      {totalAUM > 0 ? ((insightsAUM.maiorAUM.aum_total / totalAUM) * 100).toFixed(1) : 0}% do AUM total
-                    </p>
+                    <p className="text-[#bdbdbd] text-[13px] font-semibold truncate mb-1">{insightsAUM.maiorAUM.shortNome}</p>
+                    <p className="text-[#14E9BC] text-[20px] font-bold leading-tight">{fmt(insightsAUM.maiorAUM.aum_total)}</p>
+                    <p className="text-[#555] text-[11px] mt-1">{insightsAUM.maiorAUM.concentracaoPct.toFixed(1)}% do AUM total</p>
                   </div>
-
-                  {/* Maior performance (fee ratio) */}
                   <div className="bg-[#0f0f0f] border border-[#f59e0b]/30 rounded-xl p-5">
                     <p className="text-[#555] text-[11px] uppercase tracking-wider mb-2">Maior Rendimento</p>
-                    <p className="text-[#eee] text-[15px] font-bold truncate mb-1">{insightsAUM.maiorFeeRatio.nome}</p>
-                    <p className="text-[#f59e0b] text-[18px] font-bold">{fmt(insightsAUM.maiorFeeRatio.fees_gerados)}</p>
-                    <p className="text-[#555] text-[11px] mt-1">
-                      {insightsAUM.maiorFeeRatio.aum_total > 0
-                        ? ((insightsAUM.maiorFeeRatio.fees_gerados / insightsAUM.maiorFeeRatio.aum_total) * 100).toFixed(2)
-                        : "0.00"}% fees/AUM
-                    </p>
+                    <p className="text-[#bdbdbd] text-[13px] font-semibold truncate mb-1">{insightsAUM.maiorFeeRatio.shortNome}</p>
+                    <p className="text-[#f59e0b] text-[20px] font-bold leading-tight">{insightsAUM.maiorFeeRatio.feeRatioPct.toFixed(2)}%</p>
+                    <p className="text-[#555] text-[11px] mt-1">fees / AUM · {fmt(insightsAUM.maiorFeeRatio.fees_gerados)}</p>
                   </div>
-
-                  {/* Maior atividade */}
                   <div className="bg-[#0f0f0f] border border-[#6B8AFF]/30 rounded-xl p-5">
                     <p className="text-[#555] text-[11px] uppercase tracking-wider mb-2">Maior Atividade</p>
-                    <p className="text-[#eee] text-[15px] font-bold truncate mb-1">{insightsAUM.maiorVolume.nome}</p>
-                    <p className="text-[#6B8AFF] text-[18px] font-bold">{fmt(insightsAUM.maiorVolume.volume_transacionado)}</p>
+                    <p className="text-[#bdbdbd] text-[13px] font-semibold truncate mb-1">{insightsAUM.maiorVolume.shortNome}</p>
+                    <p className="text-[#6B8AFF] text-[20px] font-bold leading-tight">{fmt(insightsAUM.maiorVolume.volume_transacionado)}</p>
                     <p className="text-[#555] text-[11px] mt-1">volume transacionado</p>
                   </div>
-
-                  {/* Fee ratio consolidado */}
                   <div className="bg-[#0f0f0f] border border-[#28d939]/30 rounded-xl p-5">
                     <p className="text-[#555] text-[11px] uppercase tracking-wider mb-2">Fee Ratio Consolidado</p>
-                    <p className="text-[#eee] text-[15px] font-bold mb-1">{snapshots.length} produto{snapshots.length !== 1 ? "s" : ""}</p>
-                    <p className="text-[#28d939] text-[18px] font-bold">{insightsAUM.feeRatioTotal.toFixed(2)}%</p>
-                    <p className="text-[#555] text-[11px] mt-1">fees sobre AUM total</p>
+                    <p className="text-[#bdbdbd] text-[13px] font-semibold mb-1">{snapshots.length} produto{snapshots.length !== 1 ? "s" : ""}</p>
+                    <p className="text-[#28d939] text-[20px] font-bold leading-tight">{insightsAUM.feeRatioTotal.toFixed(2)}%</p>
+                    <p className="text-[#555] text-[11px] mt-1">fees / AUM total · {fmt(fees_gerados)}</p>
+                  </div>
+                </div>
+
+                {/* Gráficos lado a lado */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+
+                  {/* AUM por Produto — barras horizontais */}
+                  <div className="bg-[#0f0f0f] border border-[#333] rounded-xl p-5">
+                    <p className="text-[#eee] text-[14px] font-semibold mb-4">AUM por Produto</p>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart data={insightsAUM.aumChartData} layout="vertical"
+                        margin={{ top: 0, right: 60, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" horizontal={false} />
+                        <XAxis type="number" hide />
+                        <YAxis type="category" dataKey="name" width={72}
+                          tick={{ fill: "#bdbdbd", fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: "#1a1a1a", border: "1px solid #333", borderRadius: 8, fontSize: 12 }}
+                          formatter={(v: number, _: string, p: any) => [fmt(v), p.payload.fullName]}
+                          cursor={{ fill: "#ffffff08" }}
+                        />
+                        <Bar dataKey="aum" radius={[0, 4, 4, 0]}>
+                          {insightsAUM.aumChartData.map((e, i) => (
+                            <Cell key={i} fill={e.cor} fillOpacity={0.85} />
+                          ))}
+                          <LabelList dataKey="aum" position="right"
+                            formatter={(v: number) => `${totalAUM > 0 ? ((v / totalAUM) * 100).toFixed(0) : 0}%`}
+                            style={{ fill: "#666", fontSize: 11 }} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Aportes vs Resgates — barras agrupadas */}
+                  <div className="bg-[#0f0f0f] border border-[#333] rounded-xl p-5">
+                    <p className="text-[#eee] text-[14px] font-semibold mb-4">Aportes vs Resgates</p>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart data={insightsAUM.movChartData}
+                        margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" vertical={false} />
+                        <XAxis dataKey="name" tick={{ fill: "#bdbdbd", fontSize: 10 }}
+                          axisLine={false} tickLine={false} />
+                        <YAxis hide />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: "#1a1a1a", border: "1px solid #333", borderRadius: 8, fontSize: 12 }}
+                          formatter={(v: number) => fmt(v)}
+                          cursor={{ fill: "#ffffff08" }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                        <Bar dataKey="aportes" name="Aportes"  fill="#28d939" fillOpacity={0.85} radius={[3, 3, 0, 0]} />
+                        <Bar dataKey="resgates" name="Resgates" fill="#ec5d5e" fillOpacity={0.85} radius={[3, 3, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Tabela de análise cruzada */}
+                <div className="bg-[#0f0f0f] border border-[#333] rounded-xl overflow-hidden mb-4">
+                  <div className="px-5 py-3.5 border-b border-[#222]">
+                    <p className="text-[#eee] text-[14px] font-semibold">Análise Cruzada por Produto</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-[#1a1a1a]">
+                          {["Produto", "AUM", "Conc.", "Aportes", "Resgates", "Investido", "Fees", "Fee %"].map(h => (
+                            <th key={h} className="px-4 py-2.5 text-left text-[11px] font-semibold text-[#555] uppercase tracking-wider">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {insightsAUM.sorted.map((s, i) => {
+                          const feeOk = s.fees_gerados >= 0;
+                          return (
+                            <tr key={s.produto_id} className={`border-b border-[#111] hover:bg-[#111] transition-colors ${i === 0 ? "bg-[#f59e0b]/4" : ""}`}>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.cor }} />
+                                  <span className="text-[#eee] text-[13px] font-medium">{s.shortNome}</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-[#14E9BC] text-[13px] font-semibold">{fmt(s.aum_total)}</td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-16 bg-[#1a1a1a] rounded-full h-1.5">
+                                    <div className="h-1.5 rounded-full" style={{ width: `${s.concentracaoPct}%`, backgroundColor: s.cor }} />
+                                  </div>
+                                  <span className="text-[#555] text-[11px]">{s.concentracaoPct.toFixed(0)}%</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-[#28d939] text-[13px]">{fmt(s.total_aportes)}</td>
+                              <td className="px-4 py-3 text-[#ec5d5e] text-[13px]">{fmt(s.total_resgates)}</td>
+                              <td className="px-4 py-3 text-[#6B8AFF] text-[13px]">{fmt(s.total_investido)}</td>
+                              <td className="px-4 py-3">
+                                <span className={`text-[13px] font-semibold ${feeOk ? "text-[#f59e0b]" : "text-[#ec5d5e]"}`}>
+                                  {fmt(s.fees_gerados)}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                                  feeOk ? "bg-[#f59e0b]/15 text-[#f59e0b]" : "bg-[#ec5d5e]/15 text-[#ec5d5e]"
+                                }`}>
+                                  {s.feeRatioPct.toFixed(2)}%
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
@@ -692,7 +904,7 @@ export default function DepartamentoFinanceiro() {
                         {insightsAUM.alertas.length} produto{insightsAUM.alertas.length > 1 ? "s" : ""} com AUM abaixo do capital investido
                       </p>
                       <p className="text-[#ec5d5e]/70 text-[12px]">
-                        {insightsAUM.alertas.map(a => a.nome).join(", ")} — fees negativos indicam que o patrimônio atual é menor que o capital aportado líquido.
+                        {insightsAUM.alertas.map(a => a.shortNome).join(", ")} — fees negativos indicam patrimônio atual menor que o capital aportado líquido.
                       </p>
                     </div>
                   </div>
