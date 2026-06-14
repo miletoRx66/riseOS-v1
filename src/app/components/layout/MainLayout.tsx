@@ -13,6 +13,7 @@ import {
   Moon,
   UserCircle,
   Globe,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -75,6 +76,7 @@ export function MainLayout() {
     { path: "/mensagens", label: "Mensagens", icon: MessageSquare },
     { path: "/documentos", label: "Documentos", icon: FileText },
     { path: "/relatorios", label: "Relatórios", icon: BarChart3 },
+    { path: "/bi", label: "BI Integrado", icon: Activity },
     { path: "/hub", label: "Hub de Links", icon: Globe },
   ];
 

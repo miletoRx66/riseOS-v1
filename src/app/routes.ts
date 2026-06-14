@@ -21,6 +21,7 @@ import Documentos from "./pages/Documentos";
 import Relatorios from "./pages/Relatorios";
 import RelatorioDepartamento from "./pages/RelatorioDepartamento";
 import Hub from "./pages/Hub";
+import BI from "./pages/BI";
 import NotFound from "./pages/NotFound";
 
 /**
@@ -82,6 +83,7 @@ export const router = createBrowserRouter([
       { path: "relatorios", Component: Relatorios },
       { path: "relatorio/:id", Component: RelatorioDepartamento },
       { path: "hub", Component: Hub },
+      { path: "bi", Component: BI },
       { path: "*", Component: NotFound },
     ],
   },

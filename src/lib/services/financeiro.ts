@@ -171,6 +171,29 @@ export async function bulkCreateTransacoes(
   if (error) throw error;
 }
 
+export async function getAUMEvolution(): Promise<
+  { competencia: string; label: string; aum_total: number; total_aportes: number; total_resgates: number }[]
+> {
+  const { data, error } = await db("fin_snapshots")
+    .select("competencia, aum_total, total_aportes, total_resgates")
+    .order("competencia");
+  if (error) throw error;
+
+  const grouped: Record<string, { aum_total: number; total_aportes: number; total_resgates: number }> = {};
+  for (const row of (data ?? [])) {
+    if (!grouped[row.competencia]) grouped[row.competencia] = { aum_total: 0, total_aportes: 0, total_resgates: 0 };
+    grouped[row.competencia].aum_total += Number(row.aum_total);
+    grouped[row.competencia].total_aportes += Number(row.total_aportes);
+    grouped[row.competencia].total_resgates += Number(row.total_resgates);
+  }
+
+  return Object.entries(grouped).map(([competencia, v]) => ({
+    competencia,
+    label: formatarCompetencia(competencia),
+    ...v,
+  }));
+}
+
 export async function getFluxoCaixaMensal(meses: string[]): Promise<
   { competencia: string; mesNome: string; receitas: number; despesas: number; lucro: number }[]
 > {
