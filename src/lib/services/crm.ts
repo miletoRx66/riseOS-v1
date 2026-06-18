@@ -16,6 +16,7 @@ export interface CRMCliente {
   prioridade: "baixa" | "media" | "alta";
   prazo: string | null;
   notas: string | null;
+  persona: string[] | null;
   criado_em: string;
   atualizado_em: string;
   responsavel?: { id: string; nome: string; avatar_url: string | null } | null;

@@ -53,7 +53,8 @@ export default function DepartamentoComercial() {
     nome: "", email: "", telefone: "", empresa: "",
     status: "lead" as CRMCliente["status"],
     responsavel_id: "", originador_id: "",
-    valor_potencial: "", prioridade: "media" as CRMCliente["prioridade"],
+    persona: [] as string[],
+    prioridade: "media" as CRMCliente["prioridade"],
     prazo: "", notas: "",
   });
 
@@ -114,13 +115,14 @@ export default function DepartamentoComercial() {
         status: formCliente.status,
         responsavel_id: formCliente.responsavel_id || null,
         originador_id: formCliente.originador_id || null,
-        valor_potencial: parseFloat(formCliente.valor_potencial) || 0,
+        valor_potencial: 0,
+        persona: formCliente.persona.length > 0 ? formCliente.persona : null,
         prioridade: formCliente.prioridade,
         prazo: formCliente.prazo || null,
         notas: formCliente.notas || null,
       });
       setModalCliente(false);
-      setFormCliente({ nome: "", email: "", telefone: "", empresa: "", status: "lead", responsavel_id: "", originador_id: "", valor_potencial: "", prioridade: "media", prazo: "", notas: "" });
+      setFormCliente({ nome: "", email: "", telefone: "", empresa: "", status: "lead", responsavel_id: "", originador_id: "", persona: [], prioridade: "media", prazo: "", notas: "" });
       await reloadAll();
     } finally { setSalvando(false); }
   }
@@ -281,10 +283,12 @@ export default function DepartamentoComercial() {
                         {cliente.prioridade.charAt(0).toUpperCase() + cliente.prioridade.slice(1)}
                       </span>
                     </div>
-                    {cliente.valor_potencial > 0 && (
-                      <span className="text-[#28d939] text-[12px] font-semibold">
-                        {fmtValor(Number(cliente.valor_potencial))}
-                      </span>
+                    {cliente.persona && cliente.persona.length > 0 && (
+                      <div className="flex gap-1 flex-wrap justify-end">
+                        {cliente.persona.map((p) => (
+                          <span key={p} className="text-[10px] px-1.5 py-0.5 rounded bg-[#14E9BC]/10 text-[#14E9BC]">{p}</span>
+                        ))}
+                      </div>
                     )}
                   </div>
 
@@ -426,12 +430,35 @@ export default function DepartamentoComercial() {
                   </select>
                 </div>
 
-                {/* Valor + Prioridade + Prazo */}
-                <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Valor Potencial (R$)</label>
-                  <input type="number" value={formCliente.valor_potencial} onChange={(e) => setFormCliente((f) => ({ ...f, valor_potencial: e.target.value }))}
-                    placeholder="0"
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                {/* Personas + Prioridade */}
+                <div className="col-span-2">
+                  <label className="text-[#bdbdbd] text-[12px] mb-2 block">Persona <span className="text-[#555]">(múltipla escolha)</span></label>
+                  <div className="flex flex-wrap gap-2">
+                    {["Gestora", "Administradora", "Escritórios", "Outros"].map((p) => {
+                      const ativo = formCliente.persona.includes(p);
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() =>
+                            setFormCliente((f) => ({
+                              ...f,
+                              persona: ativo
+                                ? f.persona.filter((x) => x !== p)
+                                : [...f.persona, p],
+                            }))
+                          }
+                          className={`px-4 py-2 rounded-lg text-[13px] font-medium transition-all border ${
+                            ativo
+                              ? "bg-[#14E9BC]/15 border-[#14E9BC]/50 text-[#14E9BC]"
+                              : "bg-[#1a1a1a] border-[#333] text-[#777] hover:border-[#555] hover:text-[#bdbdbd]"
+                          }`}
+                        >
+                          {ativo && <span className="mr-1.5">✓</span>}{p}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div>
                   <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Prioridade</label>
