@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import {
   getClientes, criarCliente, atualizarCliente,
-  getOperacoes, criarOperacao, atualizarOperacao, fmtValor,
-  type CRMCliente, type CRMOperacao,
+  getOperacoes, criarOperacao, atualizarOperacao,
+  getComentarios, criarComentario, fmtValor,
+  type CRMCliente, type CRMOperacao, type CRMComentario,
 } from "../../lib/services/crm";
 import { getUsuarios, type UsuarioDB } from "../../lib/services/usuarios";
 import { useAuth } from "../context/AuthContext";
 import {
   Users, TrendingUp, Plus, X, Filter,
   Loader2, Building2, Phone, Mail,
-  ChevronRight, Calendar, Tag, User,
+  ChevronRight, Calendar, Tag, User, MessageCircle, Send,
 } from "lucide-react";
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ export default function DepartamentoComercial() {
   const [loading, setLoading]       = useState(true);
 
   const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [subTabClientes, setSubTabClientes] = useState<"pj" | "pf">("pj");
   const [modalCliente, setModalCliente] = useState(false);
   const [modalOp, setModalOp]           = useState(false);
   const [detalheCliente, setDetalheCliente] = useState<CRMCliente | null>(null);
@@ -55,8 +57,14 @@ export default function DepartamentoComercial() {
   const [draggingOpId, setDraggingOpId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
 
+  // comentários
+  const [comentarios, setComentarios]       = useState<CRMComentario[]>([]);
+  const [novoComentario, setNovoComentario] = useState("");
+  const [enviandoComentario, setEnviandoComentario] = useState(false);
+
   const [formCliente, setFormCliente] = useState({
     nome: "", email: "", telefone: "", empresa: "",
+    tipo: "pj" as CRMCliente["tipo"],
     status: "lead" as CRMCliente["status"],
     responsavel_id: "", originador_id: "",
     persona: [] as string[],
@@ -84,6 +92,21 @@ export default function DepartamentoComercial() {
       .then(([c, o]) => { setClientes(c); setOperacoes(o); })
       .catch(console.error);
 
+  useEffect(() => {
+    if (!detalheOp) { setComentarios([]); return; }
+    getComentarios(detalheOp.id).then(setComentarios).catch(console.error);
+  }, [detalheOp?.id]);
+
+  async function handleEnviarComentario() {
+    if (!novoComentario.trim() || !detalheOp || !usuario) return;
+    setEnviandoComentario(true);
+    try {
+      const novo = await criarComentario(detalheOp.id, usuario.id, novoComentario.trim());
+      setComentarios((prev: CRMComentario[]) => [...prev, novo]);
+      setNovoComentario("");
+    } finally { setEnviandoComentario(false); }
+  }
+
   // ── KPIs ────────────────────────────────────────────────────────
 
   const pipeline = operacoes
@@ -100,9 +123,14 @@ export default function DepartamentoComercial() {
 
   // ── Filtered lists ───────────────────────────────────────────────
 
-  const clientesFiltrados = clientes.filter((c) =>
-    filtroStatus === "todos" ? true : c.status === filtroStatus
+  const clientesPJ = clientes.filter((c: CRMCliente) =>
+    c.tipo === "pj" && (filtroStatus === "todos" || c.status === filtroStatus)
   );
+  const clientesPF = clientes.filter((c: CRMCliente) =>
+    c.tipo === "pf" && (filtroStatus === "todos" || c.status === filtroStatus)
+  );
+  const clientesVisiveis = subTabClientes === "pj" ? clientesPJ : clientesPF;
+
   const opFiltradas = operacoes.filter((o) =>
     filtroStatus === "todos" ? true : o.status === filtroStatus
   );
@@ -118,6 +146,7 @@ export default function DepartamentoComercial() {
         email: formCliente.email || null,
         telefone: formCliente.telefone || null,
         empresa: formCliente.empresa || null,
+        tipo: formCliente.tipo,
         status: formCliente.status,
         responsavel_id: formCliente.responsavel_id || null,
         originador_id: formCliente.originador_id || null,
@@ -128,7 +157,7 @@ export default function DepartamentoComercial() {
         notas: formCliente.notas || null,
       });
       setModalCliente(false);
-      setFormCliente({ nome: "", email: "", telefone: "", empresa: "", status: "lead", responsavel_id: "", originador_id: "", persona: [], prioridade: "media", prazo: "", notas: "" });
+      setFormCliente({ nome: "", email: "", telefone: "", empresa: "", tipo: "pj", status: "lead", responsavel_id: "", originador_id: "", persona: [], prioridade: "media", prazo: "", notas: "" });
       await reloadAll();
     } finally { setSalvando(false); }
   }
@@ -307,25 +336,51 @@ export default function DepartamentoComercial() {
           </div>
         ) : tab === "clientes" ? (
 
-          /* ── Clientes grid ── */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {clientesFiltrados.length === 0 ? (
-              <div className="col-span-3 text-center py-16 text-[#444]">Nenhum cliente encontrado</div>
-            ) : clientesFiltrados.map((cliente) => {
+          /* ── Clientes (B2B / PF) ── */
+          <div>
+            {/* Sub-tabs */}
+            <div className="flex gap-1 mb-5 bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-1 w-fit">
+              {([["pj", "B2B — Pessoa Jurídica"], ["pf", "PF — Pessoa Física"]] as const).map(([v, label]) => (
+                <button key={v} onClick={() => setSubTabClientes(v)}
+                  className="px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-all"
+                  style={subTabClientes === v
+                    ? { backgroundColor: "#14E9BC", color: "#000" }
+                    : { color: "#555" }}>
+                  {label}
+                  <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                    style={subTabClientes === v
+                      ? { backgroundColor: "#00000030", color: "#000" }
+                      : { backgroundColor: "#1a1a1a", color: "#444" }}>
+                    {v === "pj" ? clientesPJ.length : clientesPF.length}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {clientesVisiveis.length === 0 ? (
+              <div className="col-span-3 text-center py-16 text-[#444]">Nenhum cliente {subTabClientes === "pj" ? "B2B" : "PF"} encontrado</div>
+            ) : clientesVisiveis.map((cliente: CRMCliente) => {
               const st = CLIENTE_STATUS[cliente.status];
-              const pr = PRIORIDADE_COLOR[cliente.prioridade] ?? "#555";
+              const pr = PRIORIDADE_COLOR[cliente.prioridade as keyof typeof PRIORIDADE_COLOR] ?? "#555";
               return (
                 <div key={cliente.id} onClick={() => setDetalheCliente(cliente)}
                   className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-5 hover:border-[#444] transition-all cursor-pointer">
                   <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="text-[#eee] font-semibold text-[15px]">{cliente.nome}</h3>
-                      {cliente.empresa && <p className="text-[#555] text-[12px] mt-0.5">{cliente.empresa}</p>}
+                    <div className="flex-1 min-w-0 pr-2">
+                      <h3 className="text-[#eee] font-semibold text-[15px] truncate">{cliente.nome}</h3>
+                      {cliente.empresa && <p className="text-[#555] text-[12px] mt-0.5 truncate">{cliente.empresa}</p>}
                     </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: `${st.color}18`, color: st.color }}>
-                      {st.label}
-                    </span>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: `${st.color}18`, color: st.color }}>
+                        {st.label}
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                        style={{ backgroundColor: cliente.tipo === "pj" ? "#6B8AFF18" : "#f59e0b18", color: cliente.tipo === "pj" ? "#6B8AFF" : "#f59e0b" }}>
+                        {cliente.tipo === "pj" ? "B2B" : "PF"}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="space-y-1.5 mb-3">
@@ -373,6 +428,7 @@ export default function DepartamentoComercial() {
                 </div>
               );
             })}
+            </div>
           </div>
 
         ) : (
@@ -500,6 +556,24 @@ export default function DepartamentoComercial() {
             </div>
 
             <div className="space-y-4">
+              {/* Tipo: B2B / PF */}
+              <div>
+                <label className="text-[#bdbdbd] text-[12px] mb-2 block">Tipo de Cliente</label>
+                <div className="flex gap-2">
+                  {([["pj", "B2B — Pessoa Jurídica"], ["pf", "PF — Pessoa Física"]] as const).map(([v, label]) => (
+                    <button key={v} type="button"
+                      onClick={() => setFormCliente((f: typeof formCliente) => ({ ...f, tipo: v }))}
+                      className={`flex-1 py-2 rounded-lg text-[13px] font-semibold border transition-all ${
+                        formCliente.tipo === v
+                          ? "bg-[#14E9BC]/15 border-[#14E9BC]/50 text-[#14E9BC]"
+                          : "bg-[#1a1a1a] border-[#333] text-[#666] hover:border-[#555]"
+                      }`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
                   <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Nome *</label>
@@ -809,7 +883,7 @@ export default function DepartamentoComercial() {
             </p>
 
             {/* Actions */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 mb-6">
               {detalheOp.status !== "fechada" && detalheOp.status !== "perdida" && (
                 <>
                   <button
@@ -824,6 +898,60 @@ export default function DepartamentoComercial() {
                   </button>
                 </>
               )}
+            </div>
+
+            {/* ── Comentários ── */}
+            <div className="border-t border-[#1e1e1e] pt-5">
+              <div className="flex items-center gap-2 mb-4">
+                <MessageCircle size={15} className="text-[#555]" />
+                <span className="text-[#bdbdbd] text-[13px] font-semibold">Comentários</span>
+                {comentarios.length > 0 && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#1a1a1a] text-[#555]">{comentarios.length}</span>
+                )}
+              </div>
+
+              {/* Lista */}
+              {comentarios.length === 0 ? (
+                <p className="text-[#333] text-[12px] mb-4">Nenhum comentário ainda.</p>
+              ) : (
+                <div className="space-y-3 mb-4 max-h-[220px] overflow-y-auto pr-1">
+                  {comentarios.map((c: CRMComentario) => (
+                    <div key={c.id} className="flex gap-3">
+                      <span className="w-7 h-7 rounded-full bg-[#6B8AFF]/15 flex items-center justify-center text-[#6B8AFF] text-[11px] font-bold flex-shrink-0 mt-0.5">
+                        {c.usuario?.nome?.charAt(0)?.toUpperCase() ?? "?"}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2 mb-0.5">
+                          <span className="text-[#eee] text-[12px] font-semibold">{c.usuario?.nome ?? "Usuário"}</span>
+                          <span className="text-[#333] text-[10px]">
+                            {new Date(c.criado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                        <p className="text-[#bdbdbd] text-[13px] leading-relaxed break-words">{c.conteudo}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Input */}
+              <div className="flex gap-2">
+                <textarea
+                  value={novoComentario}
+                  onChange={(e) => setNovoComentario(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleEnviarComentario(); }}
+                  placeholder="Adicionar comentário... (Ctrl+Enter para enviar)"
+                  rows={2}
+                  className="flex-1 bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl px-4 py-2.5 text-[#eee] text-[13px] resize-none focus:border-[#6B8AFF] focus:outline-none placeholder-[#333]"
+                />
+                <button
+                  onClick={handleEnviarComentario}
+                  disabled={!novoComentario.trim() || enviandoComentario}
+                  className="px-3 bg-[#6B8AFF]/15 border border-[#6B8AFF]/30 text-[#6B8AFF] rounded-xl hover:bg-[#6B8AFF]/25 transition-colors disabled:opacity-40 flex items-center justify-center"
+                >
+                  {enviandoComentario ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -871,11 +999,49 @@ export default function DepartamentoComercial() {
 
             {detalheCliente.status !== "ativo" && detalheCliente.status !== "inativo" && (
               <button onClick={() => handleAvancarCliente(detalheCliente)}
-                className="w-full bg-[#14E9BC]/15 border border-[#14E9BC]/30 text-[#14E9BC] py-2.5 rounded-lg text-[14px] font-semibold hover:bg-[#14E9BC]/25 transition-colors flex items-center justify-center gap-2">
+                className="w-full bg-[#14E9BC]/15 border border-[#14E9BC]/30 text-[#14E9BC] py-2.5 rounded-lg text-[14px] font-semibold hover:bg-[#14E9BC]/25 transition-colors flex items-center justify-center gap-2 mb-5">
                 <ChevronRight size={16} />
                 Avançar no Funil
               </button>
             )}
+
+            {/* ── Operações vinculadas ── */}
+            {(() => {
+              const opsCliente = operacoes.filter((o: CRMOperacao) => o.cliente_id === detalheCliente.id);
+              if (opsCliente.length === 0) return null;
+              return (
+                <div className="border-t border-[#1e1e1e] pt-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <TrendingUp size={14} className="text-[#555]" />
+                    <span className="text-[#bdbdbd] text-[13px] font-semibold">Operações vinculadas</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#1a1a1a] text-[#555]">{opsCliente.length}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {opsCliente.map((op: CRMOperacao) => {
+                      const stCfg = OP_STATUS[op.status as keyof typeof OP_STATUS];
+                      return (
+                        <button key={op.id} onClick={() => { setDetalheCliente(null); setDetalheOp(op); }}
+                          className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl px-4 py-3 flex items-center justify-between hover:border-[#444] transition-all text-left">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: stCfg.color }} />
+                            <span className="text-[#eee] text-[13px] font-medium truncate">{op.titulo}</span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                            {Number(op.valor) > 0 && (
+                              <span className="text-[#28d939] text-[11px] font-semibold">{fmtValor(Number(op.valor))}</span>
+                            )}
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                              style={{ backgroundColor: `${stCfg.color}18`, color: stCfg.color }}>
+                              {stCfg.label}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

@@ -9,6 +9,7 @@ export interface CRMCliente {
   email: string | null;
   telefone: string | null;
   empresa: string | null;
+  tipo: "pj" | "pf";
   status: "lead" | "prospecto" | "qualificado" | "ativo" | "inativo";
   responsavel_id: string | null;
   originador_id: string | null;
@@ -43,14 +44,25 @@ export interface CRMOperacao {
   cliente?: { id: string; nome: string } | null;
 }
 
+export interface CRMComentario {
+  id: string;
+  operacao_id: string;
+  usuario_id: string;
+  conteudo: string;
+  criado_em: string;
+  usuario?: { id: string; nome: string; avatar_url: string | null } | null;
+}
+
 export async function getClientes(filtros?: {
   status?: string;
+  tipo?: string;
 }): Promise<CRMCliente[]> {
   let q = db("crm_clientes")
     .select("*, responsavel:profiles!responsavel_id(id,nome,avatar_url), originador:profiles!originador_id(id,nome,avatar_url)")
     .order("criado_em", { ascending: false });
 
   if (filtros?.status && filtros.status !== "todos") q = q.eq("status", filtros.status);
+  if (filtros?.tipo && filtros.tipo !== "todos") q = q.eq("tipo", filtros.tipo);
 
   const { data, error } = await q;
   if (error) throw error;
@@ -77,7 +89,7 @@ export async function getOperacoes(filtros?: {
   cliente_id?: string;
 }): Promise<CRMOperacao[]> {
   let q = db("crm_operacoes")
-    .select("*, responsavel:profiles!responsavel_id(id,nome,avatar_url), originador:profiles!originador_id(id,nome,avatar_url), cliente:crm_clientes(id,nome)")
+    .select("*, responsavel:profiles!responsavel_id(id,nome,avatar_url), originador:profiles!originador_id(id,nome,avatar_url), cliente:crm_clientes(id,nome,tipo)")
     .order("criado_em", { ascending: false });
 
   if (filtros?.status && filtros.status !== "todos") q = q.eq("status", filtros.status);
@@ -101,6 +113,28 @@ export async function atualizarOperacao(id: string, updates: Partial<CRMOperacao
     .update({ ...updates, atualizado_em: new Date().toISOString() })
     .eq("id", id);
   if (error) throw error;
+}
+
+export async function getComentarios(operacaoId: string): Promise<CRMComentario[]> {
+  const { data, error } = await db("crm_operacao_comentarios")
+    .select("*, usuario:profiles!usuario_id(id,nome,avatar_url)")
+    .eq("operacao_id", operacaoId)
+    .order("criado_em", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function criarComentario(
+  operacaoId: string,
+  usuarioId: string,
+  conteudo: string,
+): Promise<CRMComentario> {
+  const { data, error } = await db("crm_operacao_comentarios")
+    .insert({ operacao_id: operacaoId, usuario_id: usuarioId, conteudo })
+    .select("*, usuario:profiles!usuario_id(id,nome,avatar_url)")
+    .single();
+  if (error) throw error;
+  return data;
 }
 
 export function fmtValor(v: number): string {
