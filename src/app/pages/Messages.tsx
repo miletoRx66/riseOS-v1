@@ -311,7 +311,7 @@ export default function Messages() {
       <div className="w-[300px] bg-[#0f0f0f] border-r border-[#333] flex flex-col flex-shrink-0">
         <div className="p-4 border-b border-[#333]">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="font-['Inter:Bold',sans-serif] text-[#eee] text-[22px]">Mensagens</h1>
+            <h1 className="font-['Inter:Bold',sans-serif] text-[#eee] text-[22px]">Mural de Comunicação</h1>
           </div>
           {/* Tabs */}
           <div className="flex gap-1 bg-[#1a1a1a] rounded-lg p-1">

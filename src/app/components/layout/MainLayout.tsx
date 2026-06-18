@@ -14,6 +14,7 @@ import {
   UserCircle,
   Globe,
   Activity,
+  Ticket,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -73,10 +74,11 @@ export function MainLayout() {
     { path: "/departamentos", label: "Departamentos", icon: Building2 },
     { path: "/tarefas", label: "Tarefas", icon: CheckSquare },
     { path: "/okrs", label: "OKRs", icon: Target },
-    { path: "/mensagens", label: "Mensagens", icon: MessageSquare },
+    { path: "/mensagens", label: "Mural de Comunicação", icon: MessageSquare },
     { path: "/documentos", label: "Documentos", icon: FileText },
     { path: "/relatorios", label: "Relatórios", icon: BarChart3 },
     { path: "/bi", label: "BI Integrado", icon: Activity },
+    { path: "/tickets", label: "Tickets", icon: Ticket },
     { path: "/hub", label: "Hub de Links", icon: Globe },
   ];
 

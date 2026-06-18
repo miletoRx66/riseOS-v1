@@ -8,6 +8,7 @@ import { ArrowLeft, Users, CheckSquare, FileText, Target, Calendar, User } from 
 import { TaskCard } from "../components/common/TaskCard";
 import { ParceirosB2B } from "../components/common/ParceirosB2B";
 import DepartamentoFinanceiro from "./DepartamentoFinanceiro";
+import DepartamentoComercial from "./DepartamentoComercial";
 
 export default function DepartamentoDetail() {
   const { id } = useParams();
@@ -41,9 +42,12 @@ export default function DepartamentoDetail() {
     );
   }
 
-  // Se for o departamento financeiro, renderizar o componente especial
   if (departamento?.nome?.toLowerCase() === "financeiro") {
     return <DepartamentoFinanceiro />;
+  }
+
+  if (departamento?.nome?.toLowerCase() === "comercial") {
+    return <DepartamentoComercial />;
   }
 
   if (!departamento) {

@@ -2,15 +2,35 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { getTarefas, atualizarTarefa, type TarefaDB } from "../../lib/services/tarefas";
 import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
-import { Plus, Filter, LayoutGrid, List } from "lucide-react";
-import type { TarefaStatus } from "../types";
+import { Plus, Filter, List } from "lucide-react";
+
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  "planejamento":  { label: "Planejamento",  color: "#6B8AFF" },
+  "em-andamento":  { label: "Em Andamento",  color: "#28d939" },
+  "concluido":     { label: "Concluído",     color: "#bdbdbd" },
+};
+
+const PRIORIDADE_COLOR: Record<string, string> = {
+  alta:  "#ec5d5e",
+  media: "#f59e0b",
+  baixa: "#6B8AFF",
+};
+
+function formatarData(data: string) {
+  return new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+}
+
+function isAtrasada(tarefa: TarefaDB): boolean {
+  if (!tarefa.prazo || tarefa.status === "concluido") return false;
+  return new Date(tarefa.prazo) < new Date();
+}
 
 export default function TarefasKanban() {
   const [tarefas, setTarefas] = useState<TarefaDB[]>([]);
   const [departamentos, setDepartamentos] = useState<DepartamentoDB[]>([]);
-  const [selectedDept, setSelectedDept] = useState<string>("todos");
+  const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOverCol, setDragOverCol] = useState<TarefaStatus | null>(null);
+  const [dragOverDept, setDragOverDept] = useState<string | null>(null);
   const dragItem = useRef<string | null>(null);
 
   useEffect(() => {
@@ -18,38 +38,20 @@ export default function TarefasKanban() {
     getDepartamentos().then(setDepartamentos).catch(console.error);
   }, []);
 
-  const filteredTasks = tarefas.filter((task) => {
-    if (selectedDept !== "todos" && task.departamento_id !== selectedDept) return false;
-    return true;
+  const tarefasFiltradas = tarefas.filter((t) => {
+    if (filtroStatus === "todos") return true;
+    if (filtroStatus === "atrasadas") return isAtrasada(t);
+    return t.status === filtroStatus;
   });
 
-  const colunas: { status: TarefaStatus; label: string; color: string }[] = [
-    { status: "planejamento", label: "Planejamento", color: "#6B8AFF" },
-    { status: "em-andamento", label: "Em Andamento", color: "#28d939" },
-    { status: "concluido", label: "Concluído", color: "#bdbdbd" },
-  ];
+  const getTarefasPorDept = (deptId: string) =>
+    tarefasFiltradas.filter((t) => t.departamento_id === deptId);
 
-  const getTarefasPorStatus = (status: TarefaStatus) =>
-    filteredTasks.filter((t) => t.status === status);
+  const getSemDept = () =>
+    tarefasFiltradas.filter((t) => !t.departamento_id);
 
-  const getDepartamentoNome = (deptId: string | null) => {
-    if (!deptId) return "—";
-    return departamentos.find((d) => d.id === deptId)?.nome || deptId;
-  };
+  // ── Drag & drop ────────────────────────────────────────────────
 
-  const getPrioridadeColor = (prioridade: string) => {
-    switch (prioridade) {
-      case "alta": return "#ff6b6b";
-      case "media": return "#FFA500";
-      case "baixa": return "#6B8AFF";
-      default: return "#bdbdbd";
-    }
-  };
-
-  const formatarData = (data: string) =>
-    new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-
-  // ── Drag handlers ──────────────────────────────────────────────
   const handleDragStart = (e: React.DragEvent, tarefaId: string) => {
     dragItem.current = tarefaId;
     setDraggingId(tarefaId);
@@ -58,247 +60,186 @@ export default function TarefasKanban() {
 
   const handleDragEnd = () => {
     setDraggingId(null);
-    setDragOverCol(null);
+    setDragOverDept(null);
     dragItem.current = null;
   };
 
-  const handleDragOver = (e: React.DragEvent, status: TarefaStatus) => {
+  const handleDragOver = (e: React.DragEvent, deptId: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    setDragOverCol(status);
+    setDragOverDept(deptId);
   };
 
-  const handleDrop = async (e: React.DragEvent, novoStatus: TarefaStatus) => {
+  const handleDrop = async (e: React.DragEvent, novoDeptId: string | null) => {
     e.preventDefault();
     const id = dragItem.current;
     if (!id) return;
 
     const tarefa = tarefas.find((t) => t.id === id);
-    if (!tarefa || tarefa.status === novoStatus) {
+    if (!tarefa || tarefa.departamento_id === novoDeptId) {
       handleDragEnd();
       return;
     }
 
     // Optimistic update
     setTarefas((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: novoStatus } : t))
+      prev.map((t) => (t.id === id ? { ...t, departamento_id: novoDeptId } : t))
     );
     handleDragEnd();
 
     try {
-      await atualizarTarefa(id, { status: novoStatus });
+      await atualizarTarefa(id, { departamento_id: novoDeptId } as Partial<TarefaDB>);
     } catch (err) {
-      // Reverte em caso de erro
       console.error("Erro ao mover tarefa:", err);
       setTarefas((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, status: tarefa.status } : t))
+        prev.map((t) => (t.id === id ? { ...t, departamento_id: tarefa.departamento_id } : t))
       );
     }
   };
 
+  const semDept = getSemDept();
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] p-8">
-      <div className="max-w-[1600px] mx-auto">
+      <div className="max-w-full mx-auto">
+
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6 max-w-[1400px]">
           <div>
-            <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[32px] mb-2">
-              Tarefas — Kanban
-            </h1>
-            <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[16px]">
-              Arraste os cards entre colunas para mudar o status
+            <h1 className="font-bold text-[#eee] text-[32px] mb-1">Tarefas por Área</h1>
+            <p className="text-[#bdbdbd] text-[15px]">
+              Cada coluna representa um departamento — arraste para transferir
             </p>
           </div>
-
           <div className="flex items-center gap-3">
             <Link
               to="/tarefas"
-              className="bg-[#1a1a1a] border border-[#333] text-[#eee] px-4 py-2 rounded-lg font-['Inter:Medium',sans-serif] text-[14px] flex items-center gap-2 hover:bg-[#222] transition-colors"
+              className="bg-[#1a1a1a] border border-[#333] text-[#bdbdbd] px-4 py-2 rounded-lg text-[14px] flex items-center gap-2 hover:bg-[#222] hover:text-[#eee] transition-colors"
             >
-              <List size={18} />
-              Vista Lista
+              <List size={16} />
+              Todas as Tarefas
             </Link>
-            <button className="bg-[#1a1a1a] border border-[#14E9BC] text-[#14E9BC] px-4 py-2 rounded-lg font-['Inter:Medium',sans-serif] text-[14px] flex items-center gap-2">
-              <LayoutGrid size={18} />
-              Vista Kanban
-            </button>
             <Link to="/tarefas/nova">
-              <button className="bg-[#14E9BC] text-[#000] px-6 py-3 rounded-lg font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] flex items-center gap-2 hover:bg-[#12d4a8] transition-colors">
-                <Plus size={20} />
+              <button className="bg-[#14E9BC] text-[#000] px-5 py-2.5 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:bg-[#12d4a8] transition-colors">
+                <Plus size={18} />
                 Nova Tarefa
               </button>
             </Link>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-4 mb-6">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Filter size={20} className="text-[#bdbdbd]" />
-              <span className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
-                Filtrar por:
-              </span>
-            </div>
-            <select
-              value={selectedDept}
-              onChange={(e) => setSelectedDept(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#333] rounded px-4 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
-            >
-              <option value="todos">Todos os Departamentos</option>
-              {departamentos.map((dept) => (
-                <option key={dept.id} value={dept.id}>{dept.nome}</option>
-              ))}
-            </select>
-            {selectedDept !== "todos" && (
-              <button
-                onClick={() => setSelectedDept("todos")}
-                className="text-[#14E9BC] hover:underline font-['Inter:Medium',sans-serif] text-[14px]"
-              >
-                Limpar filtro
-              </button>
-            )}
+        {/* Filtro por status */}
+        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg px-5 py-3 mb-6 max-w-[1400px] flex items-center gap-4">
+          <div className="flex items-center gap-2 text-[#bdbdbd]">
+            <Filter size={16} />
+            <span className="text-[14px]">Status:</span>
           </div>
+          {[
+            { value: "todos",        label: "Todos" },
+            { value: "planejamento", label: "Planejamento" },
+            { value: "em-andamento", label: "Em Andamento" },
+            { value: "concluido",    label: "Concluído" },
+            { value: "atrasadas",    label: "Atrasadas" },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setFiltroStatus(opt.value)}
+              className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${
+                filtroStatus === opt.value
+                  ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]"
+                  : "text-[#777] hover:text-[#bdbdbd]"
+              }`}
+            >
+              {opt.label}
+              {opt.value !== "todos" && (
+                <span className="ml-1.5 text-[11px] opacity-70">
+                  {opt.value === "atrasadas"
+                    ? tarefas.filter(isAtrasada).length
+                    : opt.value === "planejamento" || opt.value === "em-andamento" || opt.value === "concluido"
+                      ? tarefas.filter((t) => t.status === opt.value).length
+                      : ""}
+                </span>
+              )}
+            </button>
+          ))}
+          <span className="ml-auto text-[#555] text-[12px]">
+            {tarefasFiltradas.length} tarefa{tarefasFiltradas.length !== 1 ? "s" : ""}
+          </span>
         </div>
 
-        {/* Kanban Board */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {colunas.map((coluna) => {
-            const tarefasColuna = getTarefasPorStatus(coluna.status);
-            const isOver = dragOverCol === coluna.status;
+        {/* Board — scroll horizontal */}
+        <div className="flex gap-5 overflow-x-auto pb-6" style={{ minWidth: "min-content" }}>
+
+          {/* Colunas por departamento */}
+          {departamentos.map((dept) => {
+            const deptTarefas = getTarefasPorDept(dept.id);
+            const isOver = dragOverDept === dept.id;
 
             return (
               <div
-                key={coluna.status}
-                className="flex flex-col"
-                onDragOver={(e) => handleDragOver(e, coluna.status)}
-                onDrop={(e) => handleDrop(e, coluna.status)}
-                onDragLeave={() => setDragOverCol(null)}
+                key={dept.id}
+                className="flex flex-col flex-shrink-0"
+                style={{ width: "260px" }}
+                onDragOver={(e) => handleDragOver(e, dept.id)}
+                onDrop={(e) => handleDrop(e, dept.id)}
+                onDragLeave={() => setDragOverDept(null)}
               >
-                {/* Column Header */}
+                {/* Cabeçalho da coluna */}
                 <div
-                  className="bg-[#0f0f0f] border rounded-lg p-4 mb-4 transition-colors"
-                  style={{ borderColor: isOver ? coluna.color : "#333" }}
+                  className="rounded-xl p-4 mb-3 transition-colors border"
+                  style={{
+                    backgroundColor: `${dept.cor}08`,
+                    borderColor: isOver ? dept.cor : `${dept.cor}30`,
+                  }}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: coluna.color }} />
-                      <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px]">
-                        {coluna.label}
-                      </h3>
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: dept.cor }}
+                      />
+                      <span
+                        className="font-semibold text-[14px] truncate max-w-[160px]"
+                        style={{ color: dept.cor }}
+                      >
+                        {dept.nome}
+                      </span>
                     </div>
-                    <span className="px-2 py-1 rounded-full bg-[#1a1a1a] text-[#bdbdbd] text-[12px] font-['Inter:Semi_Bold',sans-serif]">
-                      {tarefasColuna.length}
+                    <span
+                      className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: `${dept.cor}20`, color: dept.cor }}
+                    >
+                      {deptTarefas.length}
                     </span>
                   </div>
                 </div>
 
                 {/* Drop zone */}
                 <div
-                  className={`flex-1 space-y-3 min-h-[120px] rounded-lg transition-colors p-1 ${
-                    isOver ? "bg-[#14E9BC]/5 ring-1 ring-[#14E9BC]/30" : ""
+                  className={`flex-1 space-y-2.5 min-h-[180px] rounded-xl p-2 transition-colors ${
+                    isOver ? "bg-[#14E9BC]/5 ring-1 ring-[#14E9BC]/25" : ""
                   }`}
                 >
-                  {tarefasColuna.length > 0 ? (
-                    tarefasColuna.map((tarefa) => (
-                      <div
+                  {deptTarefas.length > 0 ? (
+                    deptTarefas.map((tarefa) => (
+                      <KanbanCard
                         key={tarefa.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, tarefa.id)}
+                        tarefa={tarefa}
+                        isDragging={draggingId === tarefa.id}
+                        onDragStart={handleDragStart}
                         onDragEnd={handleDragEnd}
-                        className={`transition-all ${
-                          draggingId === tarefa.id ? "opacity-40 scale-95" : ""
-                        }`}
-                      >
-                        <Link to={`/tarefas/${tarefa.id}`}>
-                          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-4 hover:border-[#14E9BC] transition-all cursor-grab active:cursor-grabbing">
-                            {/* Header */}
-                            <div className="flex items-start justify-between mb-3">
-                              <h4 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px] flex-1 pr-2">
-                                {tarefa.titulo}
-                              </h4>
-                              {tarefa.prioridade === "alta" && (
-                                <div
-                                  className="w-2 h-2 rounded-full flex-shrink-0 mt-1"
-                                  style={{ backgroundColor: getPrioridadeColor(tarefa.prioridade) }}
-                                />
-                              )}
-                            </div>
-
-                            {/* Departamento */}
-                            <div className="mb-3">
-                              <span className="px-2 py-1 rounded bg-[#1a1a1a] text-[#bdbdbd] text-[11px] font-['Inter:Regular',sans-serif]">
-                                {getDepartamentoNome(tarefa.departamento_id)}
-                              </span>
-                            </div>
-
-                            {/* Progresso */}
-                            {tarefa.progresso !== undefined && tarefa.progresso > 0 && (
-                              <div className="mb-3">
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="text-[#666] text-[11px] font-['Inter:Regular',sans-serif]">Progresso</span>
-                                  <span className="text-[#14E9BC] text-[11px] font-['Inter:Semi_Bold',sans-serif]">{tarefa.progresso}%</span>
-                                </div>
-                                <div className="w-full bg-[#1a1a1a] rounded-full h-1.5 overflow-hidden">
-                                  <div
-                                    className="bg-[#14E9BC] h-full rounded-full"
-                                    style={{ width: `${tarefa.progresso}%` }}
-                                  />
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Footer */}
-                            <div className="flex items-center justify-between pt-3 border-t border-[#1a1a1a]">
-                              <div className="flex items-center gap-1">
-                                <div className="w-6 h-6 rounded-full bg-[#14E9BC]/20 flex items-center justify-center">
-                                  <span className="text-[#14E9BC] font-['Inter:Semi_Bold',sans-serif] text-[10px]">
-                                    {tarefa.responsavel?.nome?.charAt(0) ?? "?"}
-                                  </span>
-                                </div>
-                                <span className="text-[#666] text-[11px] font-['Inter:Regular',sans-serif] ml-1">
-                                  {tarefa.responsavel?.nome?.split(" ")[0] ?? "—"}
-                                </span>
-                              </div>
-                              <span className="text-[#666] text-[11px] font-['Inter:Regular',sans-serif]">
-                                {tarefa.prazo ? formatarData(tarefa.prazo) : "—"}
-                              </span>
-                            </div>
-
-                            {/* Subtarefas e Comentários */}
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {((tarefa as any).subtarefas?.length || (tarefa as any).comentarios?.length) ? (
-                              <div className="flex items-center gap-3 pt-3 border-t border-[#1a1a1a] mt-3">
-                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                {(tarefa as any).subtarefas?.length > 0 && (
-                                  <div className="flex items-center gap-1 text-[#666] text-[11px]">
-                                    <span>☑</span>
-                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                    <span>{(tarefa as any).subtarefas.filter((s: any) => s.concluida).length}/{(tarefa as any).subtarefas.length}</span>
-                                  </div>
-                                )}
-                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                {(tarefa as any).comentarios?.length > 0 && (
-                                  <div className="flex items-center gap-1 text-[#666] text-[11px]">
-                                    <span>💬</span>
-                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                    <span>{(tarefa as any).comentarios.length}</span>
-                                  </div>
-                                )}
-                              </div>
-                            ) : null}
-                          </div>
-                        </Link>
-                      </div>
+                      />
                     ))
                   ) : (
                     <div
-                      className={`border border-dashed rounded-lg p-8 text-center transition-colors ${
-                        isOver ? "border-[#14E9BC]/40 bg-[#14E9BC]/5" : "border-[#333] bg-[#0f0f0f]"
+                      className={`border border-dashed rounded-xl p-6 text-center transition-colors ${
+                        isOver
+                          ? "border-[#14E9BC]/40 bg-[#14E9BC]/5"
+                          : "border-[#222]"
                       }`}
                     >
-                      <p className="text-[#666] text-[12px] font-['Inter:Regular',sans-serif]">
-                        {isOver ? "Solte aqui" : "Nenhuma tarefa"}
+                      <p className="text-[#444] text-[12px]">
+                        {isOver ? "Soltar aqui" : "Sem tarefas"}
                       </p>
                     </div>
                   )}
@@ -306,8 +247,143 @@ export default function TarefasKanban() {
               </div>
             );
           })}
+
+          {/* Coluna "Sem Departamento" — só exibe se houver tarefas */}
+          {semDept.length > 0 && (
+            <div
+              className="flex flex-col flex-shrink-0"
+              style={{ width: "260px" }}
+              onDragOver={(e) => handleDragOver(e, "__sem_dept__")}
+              onDrop={(e) => handleDrop(e, null)}
+              onDragLeave={() => setDragOverDept(null)}
+            >
+              <div
+                className={`rounded-xl p-4 mb-3 border transition-colors ${
+                  dragOverDept === "__sem_dept__"
+                    ? "border-[#555] bg-[#1a1a1a]"
+                    : "border-[#2a2a2a] bg-[#0f0f0f]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#555]" />
+                    <span className="text-[#555] font-semibold text-[14px]">Sem Área</span>
+                  </div>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#222] text-[#555]">
+                    {semDept.length}
+                  </span>
+                </div>
+              </div>
+              <div
+                className={`flex-1 space-y-2.5 min-h-[180px] rounded-xl p-2 transition-colors ${
+                  dragOverDept === "__sem_dept__" ? "bg-[#ffffff08] ring-1 ring-[#555]/25" : ""
+                }`}
+              >
+                {semDept.map((tarefa) => (
+                  <KanbanCard
+                    key={tarefa.id}
+                    tarefa={tarefa}
+                    isDragging={draggingId === tarefa.id}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Card component ─────────────────────────────────────────────────────────────
+
+function KanbanCard({
+  tarefa,
+  isDragging,
+  onDragStart,
+  onDragEnd,
+}: {
+  tarefa: TarefaDB;
+  isDragging: boolean;
+  onDragStart: (e: React.DragEvent, id: string) => void;
+  onDragEnd: () => void;
+}) {
+  const status = STATUS_CONFIG[tarefa.status] ?? STATUS_CONFIG["planejamento"];
+  const atrasada = isAtrasada(tarefa);
+
+  return (
+    <div
+      draggable
+      onDragStart={(e) => onDragStart(e, tarefa.id)}
+      onDragEnd={onDragEnd}
+      className={`transition-all ${isDragging ? "opacity-40 scale-95" : ""}`}
+    >
+      <Link to={`/tarefas/${tarefa.id}`}>
+        <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-4 hover:border-[#444] transition-all cursor-grab active:cursor-grabbing group">
+
+          {/* Status badge */}
+          <div className="flex items-center justify-between mb-2.5">
+            <span
+              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: `${status.color}18`, color: status.color }}
+            >
+              {status.label}
+            </span>
+            {tarefa.prioridade === "alta" && (
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: PRIORIDADE_COLOR[tarefa.prioridade] }}
+              />
+            )}
+          </div>
+
+          {/* Título */}
+          <h4 className="text-[#eee] text-[13px] font-semibold leading-snug mb-3 group-hover:text-[#14E9BC] transition-colors line-clamp-2">
+            {tarefa.titulo}
+          </h4>
+
+          {/* Progresso */}
+          {tarefa.progresso !== undefined && tarefa.progresso > 0 && (
+            <div className="mb-3">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[#555] text-[10px]">Progresso</span>
+                <span className="text-[#14E9BC] text-[10px] font-semibold">{tarefa.progresso}%</span>
+              </div>
+              <div className="w-full bg-[#1a1a1a] rounded-full h-1">
+                <div
+                  className="bg-[#14E9BC] h-1 rounded-full"
+                  style={{ width: `${tarefa.progresso}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-2.5 border-t border-[#1a1a1a]">
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded-full bg-[#14E9BC]/15 flex items-center justify-center">
+                <span className="text-[#14E9BC] text-[9px] font-bold">
+                  {tarefa.responsavel?.nome?.charAt(0) ?? "?"}
+                </span>
+              </div>
+              <span className="text-[#666] text-[11px]">
+                {tarefa.responsavel?.nome?.split(" ")[0] ?? "—"}
+              </span>
+            </div>
+            {tarefa.prazo && (
+              <span
+                className={`text-[10px] font-medium ${atrasada ? "text-[#ec5d5e]" : "text-[#666]"}`}
+              >
+                {atrasada ? "⚠ " : ""}{formatarData(tarefa.prazo)}
+              </span>
+            )}
+          </div>
+
+        </div>
+      </Link>
     </div>
   );
 }

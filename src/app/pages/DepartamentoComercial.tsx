@@ -1,0 +1,622 @@
+import { useState, useEffect } from "react";
+import {
+  getClientes, criarCliente, atualizarCliente,
+  getOperacoes, criarOperacao, fmtValor,
+  type CRMCliente, type CRMOperacao,
+} from "../../lib/services/crm";
+import { getUsuarios, type UsuarioDB } from "../../lib/services/usuarios";
+import { useAuth } from "../context/AuthContext";
+import {
+  Users, TrendingUp, Plus, X, Filter,
+  DollarSign, Loader2, Building2, Phone, Mail,
+  ChevronRight,
+} from "lucide-react";
+
+// ── Config ────────────────────────────────────────────────────────────────────
+
+const CLIENTE_STATUS = {
+  lead:        { label: "Lead",        color: "#6B8AFF" },
+  prospecto:   { label: "Prospecto",   color: "#f59e0b" },
+  qualificado: { label: "Qualificado", color: "#14E9BC" },
+  ativo:       { label: "Ativo",       color: "#28d939" },
+  inativo:     { label: "Inativo",     color: "#555"    },
+};
+
+const OP_STATUS = {
+  aberta:      { label: "Aberta",      color: "#6B8AFF" },
+  negociacao:  { label: "Negociação",  color: "#f59e0b" },
+  proposta:    { label: "Proposta",    color: "#14E9BC" },
+  fechada:     { label: "Fechada",     color: "#28d939" },
+  perdida:     { label: "Perdida",     color: "#ec5d5e" },
+};
+
+const PRIORIDADE_COLOR = { baixa: "#6B8AFF", media: "#f59e0b", alta: "#ec5d5e" };
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export default function DepartamentoComercial() {
+  const { usuario } = useAuth();
+  const [tab, setTab] = useState<"clientes" | "operacoes">("clientes");
+
+  const [clientes, setClientes]     = useState<CRMCliente[]>([]);
+  const [operacoes, setOperacoes]   = useState<CRMOperacao[]>([]);
+  const [usuarios, setUsuarios]     = useState<UsuarioDB[]>([]);
+  const [loading, setLoading]       = useState(true);
+
+  const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [modalCliente, setModalCliente] = useState(false);
+  const [modalOp, setModalOp]           = useState(false);
+  const [detalheCliente, setDetalheCliente] = useState<CRMCliente | null>(null);
+  const [salvando, setSalvando]         = useState(false);
+
+  const [formCliente, setFormCliente] = useState({
+    nome: "", email: "", telefone: "", empresa: "",
+    status: "lead" as CRMCliente["status"],
+    responsavel_id: "", originador_id: "",
+    valor_potencial: "", prioridade: "media" as CRMCliente["prioridade"],
+    prazo: "", notas: "",
+  });
+
+  const [formOp, setFormOp] = useState({
+    titulo: "", tipo: "", cliente_id: "",
+    status: "aberta" as CRMOperacao["status"],
+    responsavel_id: "", originador_id: "",
+    valor: "", prioridade: "media" as CRMOperacao["prioridade"],
+    prazo: "", descricao: "",
+  });
+
+  useEffect(() => {
+    Promise.all([getClientes(), getOperacoes(), getUsuarios()])
+      .then(([c, o, u]) => { setClientes(c); setOperacoes(o); setUsuarios(u); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const reloadAll = () =>
+    Promise.all([getClientes(), getOperacoes()])
+      .then(([c, o]) => { setClientes(c); setOperacoes(o); })
+      .catch(console.error);
+
+  // ── KPIs ────────────────────────────────────────────────────────
+
+  const pipeline = operacoes
+    .filter((o) => o.status !== "perdida" && o.status !== "fechada")
+    .reduce((s, o) => s + Number(o.valor), 0);
+
+  const receita = operacoes
+    .filter((o) => o.status === "fechada")
+    .reduce((s, o) => s + Number(o.valor), 0);
+
+  const taxaConversao = clientes.length > 0
+    ? Math.round((clientes.filter((c) => c.status === "ativo").length / clientes.length) * 100)
+    : 0;
+
+  // ── Filtered lists ───────────────────────────────────────────────
+
+  const clientesFiltrados = clientes.filter((c) =>
+    filtroStatus === "todos" ? true : c.status === filtroStatus
+  );
+  const opFiltradas = operacoes.filter((o) =>
+    filtroStatus === "todos" ? true : o.status === filtroStatus
+  );
+
+  // ── Handlers ────────────────────────────────────────────────────
+
+  async function handleCriarCliente() {
+    if (!formCliente.nome.trim()) return;
+    setSalvando(true);
+    try {
+      await criarCliente({
+        nome: formCliente.nome,
+        email: formCliente.email || null,
+        telefone: formCliente.telefone || null,
+        empresa: formCliente.empresa || null,
+        status: formCliente.status,
+        responsavel_id: formCliente.responsavel_id || null,
+        originador_id: formCliente.originador_id || null,
+        valor_potencial: parseFloat(formCliente.valor_potencial) || 0,
+        prioridade: formCliente.prioridade,
+        prazo: formCliente.prazo || null,
+        notas: formCliente.notas || null,
+      });
+      setModalCliente(false);
+      setFormCliente({ nome: "", email: "", telefone: "", empresa: "", status: "lead", responsavel_id: "", originador_id: "", valor_potencial: "", prioridade: "media", prazo: "", notas: "" });
+      await reloadAll();
+    } finally { setSalvando(false); }
+  }
+
+  async function handleCriarOp() {
+    if (!formOp.titulo.trim()) return;
+    setSalvando(true);
+    try {
+      await criarOperacao({
+        titulo: formOp.titulo,
+        tipo: formOp.tipo || null,
+        cliente_id: formOp.cliente_id || null,
+        status: formOp.status,
+        responsavel_id: formOp.responsavel_id || null,
+        originador_id: formOp.originador_id || null,
+        valor: parseFloat(formOp.valor) || 0,
+        prioridade: formOp.prioridade,
+        prazo: formOp.prazo || null,
+        descricao: formOp.descricao || null,
+      });
+      setModalOp(false);
+      setFormOp({ titulo: "", tipo: "", cliente_id: "", status: "aberta", responsavel_id: "", originador_id: "", valor: "", prioridade: "media", prazo: "", descricao: "" });
+      await reloadAll();
+    } finally { setSalvando(false); }
+  }
+
+  async function handleAvancarCliente(cliente: CRMCliente) {
+    const flow: CRMCliente["status"][] = ["lead", "prospecto", "qualificado", "ativo"];
+    const idx = flow.indexOf(cliente.status);
+    if (idx >= flow.length - 1) return;
+    await atualizarCliente(cliente.id, { status: flow[idx + 1] });
+    await reloadAll();
+    if (detalheCliente?.id === cliente.id) setDetalheCliente((d) => d ? { ...d, status: flow[idx + 1] } : d);
+  }
+
+  // ── Render ───────────────────────────────────────────────────────
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] p-8">
+      <div className="max-w-[1400px] mx-auto">
+
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-[#28d939]/10 flex items-center justify-center">
+                <TrendingUp size={20} className="text-[#28d939]" />
+              </div>
+              <div>
+                <h1 className="font-bold text-[#eee] text-[28px] leading-tight">CRM Comercial</h1>
+                <p className="text-[#555] text-[13px]">Departamento Comercial</p>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => tab === "clientes" ? setModalCliente(true) : setModalOp(true)}
+            className="bg-[#14E9BC] text-[#000] px-5 py-2.5 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:bg-[#12d4a8] transition-colors mt-1"
+          >
+            <Plus size={18} />
+            {tab === "clientes" ? "Novo Cliente" : "Nova Operação"}
+          </button>
+        </div>
+
+        {/* KPIs */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[
+            { label: "Clientes",         value: clientes.length,                   color: "#6B8AFF",  suffix: "" },
+            { label: "Pipeline",         value: fmtValor(pipeline),                color: "#f59e0b",  suffix: "" },
+            { label: "Receita Fechada",  value: fmtValor(receita),                 color: "#28d939",  suffix: "" },
+            { label: "Taxa Conversão",   value: `${taxaConversao}%`,               color: "#14E9BC",  suffix: "" },
+          ].map((k) => (
+            <div key={k.label} className="bg-[#0f0f0f] border border-[#222] rounded-xl p-5">
+              <p className="text-[#555] text-[12px] mb-1">{k.label}</p>
+              <p className="text-[22px] font-bold" style={{ color: k.color }}>{k.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-5">
+          {(["clientes", "operacoes"] as const).map((t) => (
+            <button key={t} onClick={() => { setTab(t); setFiltroStatus("todos"); }}
+              className={`px-5 py-2.5 rounded-lg text-[14px] font-semibold transition-colors ${
+                tab === t
+                  ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]"
+                  : "bg-[#0f0f0f] border border-[#333] text-[#bdbdbd] hover:text-[#eee]"
+              }`}>
+              {t === "clientes" ? (
+                <span className="flex items-center gap-2"><Users size={15} />Clientes ({clientes.length})</span>
+              ) : (
+                <span className="flex items-center gap-2"><TrendingUp size={15} />Operações ({operacoes.length})</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Filtro */}
+        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg px-5 py-3 mb-5 flex items-center gap-3 flex-wrap">
+          <Filter size={14} className="text-[#555]" />
+          {(tab === "clientes"
+            ? [{ v: "todos", l: "Todos" }, ...Object.entries(CLIENTE_STATUS).map(([v, c]) => ({ v, l: c.label }))]
+            : [{ v: "todos", l: "Todos" }, ...Object.entries(OP_STATUS).map(([v, c]) => ({ v, l: c.label }))]
+          ).map(({ v, l }) => (
+            <button key={v} onClick={() => setFiltroStatus(v)}
+              className={`px-3 py-1 rounded-lg text-[12px] font-medium transition-colors ${
+                filtroStatus === v ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]" : "text-[#666] hover:text-[#bdbdbd]"
+              }`}>
+              {l}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 size={24} className="text-[#14E9BC] animate-spin" />
+          </div>
+        ) : tab === "clientes" ? (
+
+          /* ── Clientes grid ── */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {clientesFiltrados.length === 0 ? (
+              <div className="col-span-3 text-center py-16 text-[#444]">Nenhum cliente encontrado</div>
+            ) : clientesFiltrados.map((cliente) => {
+              const st = CLIENTE_STATUS[cliente.status];
+              const pr = PRIORIDADE_COLOR[cliente.prioridade] ?? "#555";
+              return (
+                <div key={cliente.id} onClick={() => setDetalheCliente(cliente)}
+                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-5 hover:border-[#444] transition-all cursor-pointer">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="text-[#eee] font-semibold text-[15px]">{cliente.nome}</h3>
+                      {cliente.empresa && <p className="text-[#555] text-[12px] mt-0.5">{cliente.empresa}</p>}
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: `${st.color}18`, color: st.color }}>
+                      {st.label}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 mb-3">
+                    {cliente.email && (
+                      <div className="flex items-center gap-2 text-[#666] text-[12px]">
+                        <Mail size={12} />{cliente.email}
+                      </div>
+                    )}
+                    {cliente.telefone && (
+                      <div className="flex items-center gap-2 text-[#666] text-[12px]">
+                        <Phone size={12} />{cliente.telefone}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-[#1a1a1a]">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: pr }} />
+                      <span className="text-[11px]" style={{ color: pr }}>
+                        {cliente.prioridade.charAt(0).toUpperCase() + cliente.prioridade.slice(1)}
+                      </span>
+                    </div>
+                    {cliente.valor_potencial > 0 && (
+                      <span className="text-[#28d939] text-[12px] font-semibold">
+                        {fmtValor(Number(cliente.valor_potencial))}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-2.5 text-[11px] text-[#555]">
+                    {cliente.responsavel && (
+                      <span className="flex items-center gap-1">
+                        <span className="w-4 h-4 rounded-full bg-[#14E9BC]/15 flex items-center justify-center text-[#14E9BC] text-[9px] font-bold">
+                          {cliente.responsavel.nome.charAt(0)}
+                        </span>
+                        {cliente.responsavel.nome.split(" ")[0]}
+                      </span>
+                    )}
+                    {cliente.originador && (
+                      <span className="text-[#444]">via {cliente.originador.nome.split(" ")[0]}</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+        ) : (
+
+          /* ── Operações board ── */
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {Object.entries(OP_STATUS).map(([statusKey, stCfg]) => {
+              const items = opFiltradas.filter((o) => o.status === statusKey);
+              const total = items.reduce((s, o) => s + Number(o.valor), 0);
+              return (
+                <div key={statusKey} className="flex-shrink-0" style={{ width: "260px" }}>
+                  <div className="rounded-xl p-3 mb-3 border" style={{ borderColor: `${stCfg.color}30`, backgroundColor: `${stCfg.color}08` }}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-[13px]" style={{ color: stCfg.color }}>{stCfg.label}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${stCfg.color}20`, color: stCfg.color }}>
+                        {items.length}
+                      </span>
+                    </div>
+                    {total > 0 && (
+                      <p className="text-[11px] mt-1" style={{ color: `${stCfg.color}99` }}>{fmtValor(total)}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {items.length === 0 ? (
+                      <div className="border border-dashed border-[#222] rounded-xl p-5 text-center">
+                        <p className="text-[#444] text-[12px]">Sem operações</p>
+                      </div>
+                    ) : items.map((op) => (
+                      <div key={op.id} className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-4 hover:border-[#444] transition-all">
+                        <h4 className="text-[#eee] text-[13px] font-semibold mb-1.5 line-clamp-2">{op.titulo}</h4>
+                        {op.cliente && (
+                          <p className="text-[#555] text-[11px] mb-2 flex items-center gap-1">
+                            <Building2 size={10} />{op.cliente.nome}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between pt-2 border-t border-[#1a1a1a]">
+                          <div className="flex items-center gap-2 text-[11px] text-[#666]">
+                            {op.responsavel && (
+                              <span className="flex items-center gap-1">
+                                <span className="w-4 h-4 rounded-full bg-[#6B8AFF]/15 flex items-center justify-center text-[#6B8AFF] text-[9px] font-bold">
+                                  {op.responsavel.nome.charAt(0)}
+                                </span>
+                                {op.responsavel.nome.split(" ")[0]}
+                              </span>
+                            )}
+                            {op.originador && (
+                              <span className="text-[#444]">/ {op.originador.nome.split(" ")[0]}</span>
+                            )}
+                          </div>
+                          {op.valor > 0 && (
+                            <span className="text-[#28d939] text-[11px] font-semibold">{fmtValor(Number(op.valor))}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Modal: Novo Cliente */}
+      {modalCliente && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-[560px] max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-[#eee] text-[18px] font-semibold">Novo Cliente / Lead</h2>
+              <button onClick={() => setModalCliente(false)} className="text-[#555] hover:text-[#eee]"><X size={20} /></button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Nome *</label>
+                  <input value={formCliente.nome} onChange={(e) => setFormCliente((f) => ({ ...f, nome: e.target.value }))}
+                    placeholder="Nome completo ou razão social"
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Empresa</label>
+                  <input value={formCliente.empresa} onChange={(e) => setFormCliente((f) => ({ ...f, empresa: e.target.value }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Status</label>
+                  <select value={formCliente.status} onChange={(e) => setFormCliente((f) => ({ ...f, status: e.target.value as CRMCliente["status"] }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    {Object.entries(CLIENTE_STATUS).map(([v, c]) => <option key={v} value={v}>{c.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Email</label>
+                  <input type="email" value={formCliente.email} onChange={(e) => setFormCliente((f) => ({ ...f, email: e.target.value }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Telefone</label>
+                  <input value={formCliente.telefone} onChange={(e) => setFormCliente((f) => ({ ...f, telefone: e.target.value }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                </div>
+
+                {/* Responsável + Originador */}
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Responsável</label>
+                  <select value={formCliente.responsavel_id} onChange={(e) => setFormCliente((f) => ({ ...f, responsavel_id: e.target.value }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    <option value="">Nenhum</option>
+                    {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Originador</label>
+                  <select value={formCliente.originador_id} onChange={(e) => setFormCliente((f) => ({ ...f, originador_id: e.target.value }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    <option value="">Nenhum</option>
+                    {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                  </select>
+                </div>
+
+                {/* Valor + Prioridade + Prazo */}
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Valor Potencial (R$)</label>
+                  <input type="number" value={formCliente.valor_potencial} onChange={(e) => setFormCliente((f) => ({ ...f, valor_potencial: e.target.value }))}
+                    placeholder="0"
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Prioridade</label>
+                  <select value={formCliente.prioridade} onChange={(e) => setFormCliente((f) => ({ ...f, prioridade: e.target.value as CRMCliente["prioridade"] }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    <option value="baixa">Baixa</option>
+                    <option value="media">Média</option>
+                    <option value="alta">Alta</option>
+                  </select>
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Prazo</label>
+                  <input type="date" value={formCliente.prazo} onChange={(e) => setFormCliente((f) => ({ ...f, prazo: e.target.value }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Notas</label>
+                  <textarea value={formCliente.notas} onChange={(e) => setFormCliente((f) => ({ ...f, notas: e.target.value }))}
+                    rows={2} placeholder="Observações sobre o cliente..."
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] resize-none focus:border-[#14E9BC] focus:outline-none" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setModalCliente(false)}
+                className="flex-1 bg-[#1a1a1a] border border-[#333] text-[#bdbdbd] py-2.5 rounded-lg text-[14px] hover:text-[#eee] transition-colors">
+                Cancelar
+              </button>
+              <button onClick={handleCriarCliente} disabled={!formCliente.nome.trim() || salvando}
+                className="flex-1 bg-[#14E9BC] text-[#000] py-2.5 rounded-lg font-semibold text-[14px] hover:bg-[#12d4a8] transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                {salvando ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                {salvando ? "Salvando..." : "Cadastrar Cliente"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Nova Operação */}
+      {modalOp && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-[520px] max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-[#eee] text-[18px] font-semibold">Nova Operação</h2>
+              <button onClick={() => setModalOp(false)} className="text-[#555] hover:text-[#eee]"><X size={20} /></button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Título *</label>
+                <input value={formOp.titulo} onChange={(e) => setFormOp((f) => ({ ...f, titulo: e.target.value }))}
+                  placeholder="Ex: Contrato de Gestão — Empresa XYZ"
+                  className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Cliente</label>
+                  <select value={formOp.cliente_id} onChange={(e) => setFormOp((f) => ({ ...f, cliente_id: e.target.value }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    <option value="">Nenhum</option>
+                    {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Status</label>
+                  <select value={formOp.status} onChange={(e) => setFormOp((f) => ({ ...f, status: e.target.value as CRMOperacao["status"] }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    {Object.entries(OP_STATUS).map(([v, c]) => <option key={v} value={v}>{c.label}</option>)}
+                  </select>
+                </div>
+
+                {/* Responsável + Originador */}
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Responsável</label>
+                  <select value={formOp.responsavel_id} onChange={(e) => setFormOp((f) => ({ ...f, responsavel_id: e.target.value }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    <option value="">Nenhum</option>
+                    {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Originador</label>
+                  <select value={formOp.originador_id} onChange={(e) => setFormOp((f) => ({ ...f, originador_id: e.target.value }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    <option value="">Nenhum</option>
+                    {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Valor (R$)</label>
+                  <input type="number" value={formOp.valor} onChange={(e) => setFormOp((f) => ({ ...f, valor: e.target.value }))}
+                    placeholder="0"
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Prioridade</label>
+                  <select value={formOp.prioridade} onChange={(e) => setFormOp((f) => ({ ...f, prioridade: e.target.value as CRMOperacao["prioridade"] }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    <option value="baixa">Baixa</option>
+                    <option value="media">Média</option>
+                    <option value="alta">Alta</option>
+                  </select>
+                </div>
+
+                <div className="col-span-2">
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Prazo</label>
+                  <input type="date" value={formOp.prazo} onChange={(e) => setFormOp((f) => ({ ...f, prazo: e.target.value }))}
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Descrição</label>
+                  <textarea value={formOp.descricao} onChange={(e) => setFormOp((f) => ({ ...f, descricao: e.target.value }))}
+                    rows={2} className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] resize-none focus:border-[#14E9BC] focus:outline-none" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setModalOp(false)}
+                className="flex-1 bg-[#1a1a1a] border border-[#333] text-[#bdbdbd] py-2.5 rounded-lg text-[14px] hover:text-[#eee] transition-colors">
+                Cancelar
+              </button>
+              <button onClick={handleCriarOp} disabled={!formOp.titulo.trim() || salvando}
+                className="flex-1 bg-[#14E9BC] text-[#000] py-2.5 rounded-lg font-semibold text-[14px] hover:bg-[#12d4a8] transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                {salvando ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                {salvando ? "Salvando..." : "Criar Operação"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Detalhe Cliente */}
+      {detalheCliente && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-[480px]">
+            <div className="flex items-start justify-between mb-5">
+              <div>
+                <h2 className="text-[#eee] text-[18px] font-semibold">{detalheCliente.nome}</h2>
+                {detalheCliente.empresa && <p className="text-[#555] text-[13px] mt-0.5">{detalheCliente.empresa}</p>}
+              </div>
+              <button onClick={() => setDetalheCliente(null)} className="text-[#555] hover:text-[#eee]"><X size={20} /></button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              {[
+                { label: "Status",       value: CLIENTE_STATUS[detalheCliente.status]?.label, color: CLIENTE_STATUS[detalheCliente.status]?.color },
+                { label: "Prioridade",   value: detalheCliente.prioridade.charAt(0).toUpperCase() + detalheCliente.prioridade.slice(1), color: PRIORIDADE_COLOR[detalheCliente.prioridade] },
+                { label: "Responsável",  value: detalheCliente.responsavel?.nome ?? "—",      color: "#eee" },
+                { label: "Originador",   value: detalheCliente.originador?.nome ?? "—",       color: "#bdbdbd" },
+              ].map((row) => (
+                <div key={row.label} className="bg-[#0f0f0f] rounded-xl p-3">
+                  <p className="text-[#555] text-[11px] mb-1">{row.label}</p>
+                  <p className="font-semibold text-[13px]" style={{ color: row.color }}>{row.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {detalheCliente.valor_potencial > 0 && (
+              <div className="bg-[#0f0f0f] rounded-xl p-4 mb-4 flex items-center justify-between">
+                <span className="text-[#555] text-[12px]">Valor Potencial</span>
+                <span className="text-[#28d939] font-bold text-[18px]">{fmtValor(Number(detalheCliente.valor_potencial))}</span>
+              </div>
+            )}
+
+            {detalheCliente.notas && (
+              <div className="bg-[#0f0f0f] rounded-xl p-4 mb-4">
+                <p className="text-[#555] text-[11px] mb-1">Notas</p>
+                <p className="text-[#bdbdbd] text-[13px] leading-relaxed">{detalheCliente.notas}</p>
+              </div>
+            )}
+
+            {detalheCliente.status !== "ativo" && detalheCliente.status !== "inativo" && (
+              <button onClick={() => handleAvancarCliente(detalheCliente)}
+                className="w-full bg-[#14E9BC]/15 border border-[#14E9BC]/30 text-[#14E9BC] py-2.5 rounded-lg text-[14px] font-semibold hover:bg-[#14E9BC]/25 transition-colors flex items-center justify-center gap-2">
+                <ChevronRight size={16} />
+                Avançar no Funil
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

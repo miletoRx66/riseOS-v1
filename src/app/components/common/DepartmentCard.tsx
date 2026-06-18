@@ -36,7 +36,7 @@ const iconMap: Record<string, React.ElementType> = {
 export function DepartmentCard({ id, nome, cor, icon, membros, tarefasAbertas, documentos }: DepartmentCardProps) {
   const Icon = iconMap[icon as keyof typeof iconMap] || Settings;
 
-  const destino = id === "financeiro" ? `/departamentos/${id}` : `/workspace/${id}`;
+  const destino = `/departamentos/${id}`;
 
   return (
     <Link

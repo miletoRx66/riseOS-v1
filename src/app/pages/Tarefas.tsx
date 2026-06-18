@@ -295,16 +295,12 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="bg-[#1a1a1a] border border-[#14E9BC] text-[#14E9BC] px-4 py-2 rounded-lg font-['Inter:Medium',sans-serif] text-[14px] flex items-center gap-2">
-              <List size={18} />
-              Vista Lista
-            </button>
             <Link
               to="/tarefas/kanban"
-              className="bg-[#1a1a1a] border border-[#333] text-[#eee] px-4 py-2 rounded-lg font-['Inter:Medium',sans-serif] text-[14px] flex items-center gap-2 hover:bg-[#222] transition-colors"
+              className="bg-[#1a1a1a] border border-[#333] text-[#eee] px-4 py-2 rounded-lg font-['Inter:Medium',sans-serif] text-[14px] flex items-center gap-2 hover:bg-[#222] hover:border-[#14E9BC] transition-colors"
             >
               <LayoutGrid size={18} />
-              Vista Kanban
+              Ver Kanban por Área
             </Link>
             <button
               onClick={handleOpenImportModal}
