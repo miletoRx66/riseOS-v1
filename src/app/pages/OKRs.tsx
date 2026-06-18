@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { getOkrs, criarOkr, criarKeyResult, deletarOkr, atualizarProgresso, type OkrDB } from "../../lib/services/okrs";
 import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
 import { getUsuarios, type UsuarioDB } from "../../lib/services/usuarios";
+import { useAuth } from "../context/AuthContext";
 import { Target, TrendingUp, Calendar, User, Plus, Filter, X, Trash2, LayoutList, CalendarDays, LayoutGrid, ChevronDown, ChevronUp } from "lucide-react";
 
 interface KeyResult {
@@ -15,6 +16,7 @@ interface KeyResult {
 }
 
 export default function OKRs() {
+  const { usuario } = useAuth();
   const [okrs, setOkrs] = useState<OkrDB[]>([]);
   const [departamentos, setDepartamentos] = useState<DepartamentoDB[]>([]);
   const [usuarios, setUsuarios] = useState<UsuarioDB[]>([]);
@@ -25,10 +27,12 @@ export default function OKRs() {
   const [expandedOKRs, setExpandedOKRs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    getOkrs().then(setOkrs).catch(console.error);
+    if (!usuario) return;
+    const deptFiltro = usuario.isAdmin ? undefined : usuario.departamento || undefined;
+    getOkrs(deptFiltro).then(setOkrs).catch(console.error);
     getDepartamentos().then(setDepartamentos).catch(console.error);
     getUsuarios().then(setUsuarios).catch(console.error);
-  }, []);
+  }, [usuario?.id]);
   const [formData, setFormData] = useState({
     titulo: "",
     departamento: "",

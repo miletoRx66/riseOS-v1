@@ -4,14 +4,16 @@ import { getDepartamentosComStats, type DepartamentoComStats } from "../../lib/s
 import { getTarefas, type TarefaDB } from "../../lib/services/tarefas";
 import { getOkrs, type OkrDB } from "../../lib/services/okrs";
 import { documentos } from "../data/mockData";
-import { ArrowLeft, Users, CheckSquare, FileText, Target, Calendar, User } from "lucide-react";
+import { ArrowLeft, Users, CheckSquare, FileText, Target, Calendar, User, Lock } from "lucide-react";
 import { TaskCard } from "../components/common/TaskCard";
 import { ParceirosB2B } from "../components/common/ParceirosB2B";
 import DepartamentoFinanceiro from "./DepartamentoFinanceiro";
 import DepartamentoComercial from "./DepartamentoComercial";
+import { useAuth } from "../context/AuthContext";
 
 export default function DepartamentoDetail() {
   const { id } = useParams();
+  const { usuario, podeEditar } = useAuth();
 
   const [departamento, setDepartamento] = useState<DepartamentoComStats | null>(null);
   const [tarefas, setTarefas] = useState<TarefaDB[]>([]);
@@ -38,6 +40,24 @@ export default function DepartamentoDetail() {
     return (
       <div className="min-h-screen bg-[#0a0a0a] p-8 flex items-center justify-center">
         <p className="text-[#bdbdbd] text-[16px]">Carregando...</p>
+      </div>
+    );
+  }
+
+  // Guard: bloqueia acesso a departamentos que o usuário não tem permissão
+  if (departamento && !usuario?.isAdmin && !podeEditar(departamento.id)) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] p-8 flex flex-col items-center justify-center gap-4">
+        <div className="w-16 h-16 rounded-2xl bg-[#ec5d5e]/10 flex items-center justify-center">
+          <Lock size={28} className="text-[#ec5d5e]" />
+        </div>
+        <h2 className="text-[#eee] text-[22px] font-bold">Acesso Restrito</h2>
+        <p className="text-[#555] text-[14px] text-center max-w-[320px]">
+          Você não tem permissão para acessar o departamento <span className="text-[#bdbdbd] font-semibold">{departamento.nome}</span>.
+        </p>
+        <Link to="/departamentos" className="mt-2 text-[#14E9BC] text-[14px] hover:underline flex items-center gap-1">
+          <ArrowLeft size={14} /> Voltar para Departamentos
+        </Link>
       </div>
     );
   }

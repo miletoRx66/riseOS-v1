@@ -10,6 +10,7 @@ interface Usuario {
   departamento: string;
   avatar: string;
   permissoes: string[];
+  isAdmin: boolean;
 }
 
 interface SignupResult {
@@ -51,6 +52,7 @@ async function buildUsuario(user: User): Promise<Usuario> {
     departamento: "",
     avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.id)}`,
     permissoes: ["visualizar-todos"],
+    isAdmin: false,
   };
 
   try {
@@ -96,6 +98,7 @@ async function buildUsuario(user: User): Promise<Usuario> {
         profile.avatar_url ??
         `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(profile.nome ?? user.id)}`,
       permissoes: perms,
+      isAdmin,
     };
   } catch {
     // Timeout ou falha de rede — retorna fallback para não travar o login

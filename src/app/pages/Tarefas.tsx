@@ -23,9 +23,11 @@ export default function Tarefas() {
   const [departamentos, setDepartamentos] = useState<DepartamentoDB[]>([]);
 
   useEffect(() => {
-    getTarefas().then(setTarefas).catch(console.error);
+    if (!usuario) return;
+    const filtro = usuario.isAdmin ? {} : { departamento_id: usuario.departamento };
+    getTarefas(filtro).then(setTarefas).catch(console.error);
     getDepartamentos().then(setDepartamentos).catch(console.error);
-  }, []);
+  }, [usuario?.id]);
   const [activeTab, setActiveTab] = useState<"todas" | "minhas">("todas");
   const [selectedDept, setSelectedDept] = useState<string>("todos");
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");

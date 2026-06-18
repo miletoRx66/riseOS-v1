@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { getTarefas, atualizarTarefa, type TarefaDB } from "../../lib/services/tarefas";
 import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
 import { Plus, Filter, List } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   "planejamento":  { label: "Planejamento",  color: "#6B8AFF" },
@@ -26,6 +27,7 @@ function isAtrasada(tarefa: TarefaDB): boolean {
 }
 
 export default function TarefasKanban() {
+  const { usuario } = useAuth();
   const [tarefas, setTarefas] = useState<TarefaDB[]>([]);
   const [departamentos, setDepartamentos] = useState<DepartamentoDB[]>([]);
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
@@ -34,9 +36,11 @@ export default function TarefasKanban() {
   const dragItem = useRef<string | null>(null);
 
   useEffect(() => {
-    getTarefas().then(setTarefas).catch(console.error);
+    if (!usuario) return;
+    const filtro = usuario.isAdmin ? {} : { departamento_id: usuario.departamento };
+    getTarefas(filtro).then(setTarefas).catch(console.error);
     getDepartamentos().then(setDepartamentos).catch(console.error);
-  }, []);
+  }, [usuario?.id]);
 
   const tarefasFiltradas = tarefas.filter((t) => {
     if (filtroStatus === "todos") return true;

@@ -2,8 +2,10 @@ import { useState, useEffect, FormEvent } from "react";
 import { DepartmentCard } from "../components/common/DepartmentCard";
 import { getDepartamentosComStats, criarDepartamento, atualizarDepartamento, type DepartamentoComStats } from "../../lib/services/departamentos";
 import { Plus, X, Megaphone, Settings, TrendingUp, Package, Users, Briefcase, Lightbulb, HeadphonesIcon, DollarSign, Pencil } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Departamentos() {
+  const { usuario, podeEditar } = useAuth();
   const [departamentos, setDepartamentos] = useState<DepartamentoComStats[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -103,18 +105,28 @@ export default function Departamentos() {
 
         {/* Departments Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {departamentos.map((dept) => (
-            <div key={dept.id} className="relative group/card">
-              <DepartmentCard {...dept} />
-              <button
-                onClick={() => handleAbrirEdicao(dept)}
-                className="absolute top-3 right-3 w-8 h-8 bg-[#1a1a1a] border border-[#333] rounded-lg flex items-center justify-center text-[#bdbdbd] hover:text-[#eee] hover:border-[#555] transition-all opacity-0 group-hover/card:opacity-100"
-                title="Editar departamento"
-              >
-                <Pencil size={14} />
-              </button>
-            </div>
-          ))}
+          {departamentos.map((dept) => {
+            const temAcesso = usuario?.isAdmin || podeEditar(dept.id);
+            const isOwn = dept.id === usuario?.departamento;
+            return (
+              <div key={dept.id} className="relative group/card">
+                <DepartmentCard
+                  {...dept}
+                  locked={!temAcesso}
+                  isOwn={isOwn}
+                />
+                {usuario?.isAdmin && (
+                  <button
+                    onClick={() => handleAbrirEdicao(dept)}
+                    className="absolute top-3 right-3 w-8 h-8 bg-[#1a1a1a] border border-[#333] rounded-lg flex items-center justify-center text-[#bdbdbd] hover:text-[#eee] hover:border-[#555] transition-all opacity-0 group-hover/card:opacity-100"
+                    title="Editar departamento"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Overview Stats */}

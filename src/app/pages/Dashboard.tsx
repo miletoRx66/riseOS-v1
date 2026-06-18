@@ -5,21 +5,25 @@ import { getDepartamentos, type DepartamentoDB } from "../../lib/services/depart
 import { TaskCard } from "../components/common/TaskCard";
 import { FileText, TrendingUp, Building2, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { Link } from "react-router";
+import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {
+  const { usuario } = useAuth();
   const [tarefas, setTarefas] = useState<TarefaDB[]>([]);
   const [departamentos, setDepartamentos] = useState<DepartamentoDB[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([getTarefas(), getDepartamentos()])
+    if (!usuario) return;
+    const filtro = usuario.isAdmin ? {} : { departamento_id: usuario.departamento };
+    Promise.all([getTarefas(filtro), getDepartamentos()])
       .then(([t, d]) => {
         setTarefas(t);
         setDepartamentos(d);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [usuario?.id]);
 
   // KPIs calculados a partir de dados reais
   const total = tarefas.length;

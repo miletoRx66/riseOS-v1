@@ -69,18 +69,20 @@ export function MainLayout() {
     navigate("/login");
   };
 
+  const isAdmin = usuario?.isAdmin ?? false;
+
   const menuItems = [
-    { path: "/", label: "Início", icon: LayoutDashboard },
-    { path: "/departamentos", label: "Departamentos", icon: Building2 },
-    { path: "/tarefas", label: "Tarefas", icon: CheckSquare },
-    { path: "/okrs", label: "OKRs", icon: Target },
-    { path: "/mensagens", label: "Mural de Comunicação", icon: MessageSquare },
-    { path: "/documentos", label: "Documentos", icon: FileText },
-    { path: "/relatorios", label: "Relatórios", icon: BarChart3 },
-    { path: "/bi", label: "BI Integrado", icon: Activity },
-    { path: "/tickets", label: "Tickets", icon: Ticket },
-    { path: "/hub", label: "Hub de Links", icon: Globe },
-  ];
+    { path: "/",            label: "Início",               icon: LayoutDashboard, sempre: true },
+    { path: "/departamentos", label: "Departamentos",      icon: Building2,       sempre: true },
+    { path: "/tarefas",     label: "Tarefas",              icon: CheckSquare,     sempre: true },
+    { path: "/okrs",        label: "OKRs",                 icon: Target,          sempre: true },
+    { path: "/mensagens",   label: "Mural de Comunicação", icon: MessageSquare,   sempre: true },
+    { path: "/documentos",  label: "Documentos",           icon: FileText,        sempre: true },
+    { path: "/relatorios",  label: "Relatórios",           icon: BarChart3,       sempre: true },
+    { path: "/tickets",     label: "Tickets",              icon: Ticket,          sempre: true },
+    { path: "/hub",         label: "Hub de Links",         icon: Globe,           sempre: true },
+    { path: "/bi",          label: "BI Integrado",         icon: Activity,        sempre: false, adminOnly: true },
+  ].filter((item) => item.sempre || (item.adminOnly && isAdmin));
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
