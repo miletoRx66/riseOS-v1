@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   getClientes, criarCliente, atualizarCliente,
-  getOperacoes, criarOperacao, fmtValor,
+  getOperacoes, criarOperacao, atualizarOperacao, fmtValor,
   type CRMCliente, type CRMOperacao,
 } from "../../lib/services/crm";
 import { getUsuarios, type UsuarioDB } from "../../lib/services/usuarios";
 import { useAuth } from "../context/AuthContext";
 import {
   Users, TrendingUp, Plus, X, Filter,
-  DollarSign, Loader2, Building2, Phone, Mail,
-  ChevronRight,
+  Loader2, Building2, Phone, Mail,
+  ChevronRight, Calendar, Tag, User,
 } from "lucide-react";
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -47,7 +47,13 @@ export default function DepartamentoComercial() {
   const [modalCliente, setModalCliente] = useState(false);
   const [modalOp, setModalOp]           = useState(false);
   const [detalheCliente, setDetalheCliente] = useState<CRMCliente | null>(null);
+  const [detalheOp, setDetalheOp]       = useState<CRMOperacao | null>(null);
   const [salvando, setSalvando]         = useState(false);
+
+  // drag-and-drop operações
+  const draggingOpRef                   = useRef<string | null>(null);
+  const [draggingOpId, setDraggingOpId] = useState<string | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
 
   const [formCliente, setFormCliente] = useState({
     nome: "", email: "", telefone: "", empresa: "",
@@ -148,6 +154,65 @@ export default function DepartamentoComercial() {
       await reloadAll();
     } finally { setSalvando(false); }
   }
+
+  // ── Drag handlers (operações) ────────────────────────────────────
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handleOpDragStart(e: any, opId: string) {
+    draggingOpRef.current = opId;
+    setDraggingOpId(opId);
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+  }
+
+  function handleOpDragEnd() {
+    setDraggingOpId(null);
+    setDragOverStatus(null);
+    draggingOpRef.current = null;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handleOpDragOver(e: any, status: string) {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    setDragOverStatus(status);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function handleOpDrop(e: any, novoStatus: CRMOperacao["status"]) {
+    e.preventDefault();
+    const id = draggingOpRef.current;
+    if (!id) return;
+    const op = operacoes.find((o) => o.id === id);
+    if (!op || op.status === novoStatus) { handleOpDragEnd(); return; }
+
+    setOperacoes((prev) => prev.map((o) => o.id === id ? { ...o, status: novoStatus } : o));
+    handleOpDragEnd();
+    try {
+      await atualizarOperacao(id, { status: novoStatus });
+      if (detalheOp?.id === id) setDetalheOp((d) => d ? { ...d, status: novoStatus } : d);
+    } catch (err) {
+      console.error("Erro ao mover operação:", err);
+      setOperacoes((prev) => prev.map((o) => o.id === id ? { ...o, status: op.status } : o));
+    }
+  }
+
+  async function handleAvancarOp(op: CRMOperacao) {
+    const flow: CRMOperacao["status"][] = ["aberta", "negociacao", "proposta", "fechada"];
+    const idx = flow.indexOf(op.status);
+    if (idx < 0 || idx >= flow.length - 1) return;
+    const novoStatus = flow[idx + 1];
+    setOperacoes((prev) => prev.map((o) => o.id === op.id ? { ...o, status: novoStatus } : o));
+    if (detalheOp?.id === op.id) setDetalheOp((d) => d ? { ...d, status: novoStatus } : d);
+    await atualizarOperacao(op.id, { status: novoStatus });
+  }
+
+  async function handleMarcarPerdida(op: CRMOperacao) {
+    setOperacoes((prev) => prev.map((o) => o.id === op.id ? { ...o, status: "perdida" } : o));
+    setDetalheOp(null);
+    await atualizarOperacao(op.id, { status: "perdida" });
+  }
+
+  // ── ────────────────────────────────────────────────────────────────
 
   async function handleAvancarCliente(cliente: CRMCliente) {
     const flow: CRMCliente["status"][] = ["lead", "prospecto", "qualificado", "ativo"];
@@ -312,14 +377,29 @@ export default function DepartamentoComercial() {
 
         ) : (
 
-          /* ── Operações board ── */
-          <div className="flex gap-4 overflow-x-auto pb-4">
+          /* ── Operações board (drag-and-drop) ── */
+          <div className="flex gap-4 overflow-x-auto pb-4 select-none">
             {Object.entries(OP_STATUS).map(([statusKey, stCfg]) => {
               const items = opFiltradas.filter((o) => o.status === statusKey);
               const total = items.reduce((s, o) => s + Number(o.valor), 0);
+              const isOver = dragOverStatus === statusKey;
               return (
-                <div key={statusKey} className="flex-shrink-0" style={{ width: "260px" }}>
-                  <div className="rounded-xl p-3 mb-3 border" style={{ borderColor: `${stCfg.color}30`, backgroundColor: `${stCfg.color}08` }}>
+                <div
+                  key={statusKey}
+                  className="flex-shrink-0 transition-all"
+                  style={{ width: "260px" }}
+                  onDragOver={(e) => handleOpDragOver(e, statusKey)}
+                  onDragLeave={() => setDragOverStatus(null)}
+                  onDrop={(e) => handleOpDrop(e, statusKey as CRMOperacao["status"])}
+                >
+                  {/* Column header */}
+                  <div
+                    className="rounded-xl p-3 mb-3 border transition-all"
+                    style={{
+                      borderColor: isOver ? stCfg.color : `${stCfg.color}30`,
+                      backgroundColor: isOver ? `${stCfg.color}18` : `${stCfg.color}08`,
+                    }}
+                  >
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-[13px]" style={{ color: stCfg.color }}>{stCfg.label}</span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${stCfg.color}20`, color: stCfg.color }}>
@@ -331,39 +411,77 @@ export default function DepartamentoComercial() {
                     )}
                   </div>
 
-                  <div className="space-y-2.5">
+                  {/* Cards */}
+                  <div className="space-y-2.5 min-h-[60px]">
                     {items.length === 0 ? (
-                      <div className="border border-dashed border-[#222] rounded-xl p-5 text-center">
-                        <p className="text-[#444] text-[12px]">Sem operações</p>
+                      <div
+                        className="border border-dashed rounded-xl p-5 text-center transition-all"
+                        style={{ borderColor: isOver ? stCfg.color : "#222", backgroundColor: isOver ? `${stCfg.color}08` : "transparent" }}
+                      >
+                        <p className="text-[#444] text-[12px]">{isOver ? "Soltar aqui" : "Sem operações"}</p>
                       </div>
-                    ) : items.map((op) => (
-                      <div key={op.id} className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-4 hover:border-[#444] transition-all">
-                        <h4 className="text-[#eee] text-[13px] font-semibold mb-1.5 line-clamp-2">{op.titulo}</h4>
-                        {op.cliente && (
-                          <p className="text-[#555] text-[11px] mb-2 flex items-center gap-1">
-                            <Building2 size={10} />{op.cliente.nome}
-                          </p>
-                        )}
-                        <div className="flex items-center justify-between pt-2 border-t border-[#1a1a1a]">
-                          <div className="flex items-center gap-2 text-[11px] text-[#666]">
-                            {op.responsavel && (
-                              <span className="flex items-center gap-1">
-                                <span className="w-4 h-4 rounded-full bg-[#6B8AFF]/15 flex items-center justify-center text-[#6B8AFF] text-[9px] font-bold">
-                                  {op.responsavel.nome.charAt(0)}
+                    ) : items.map((op) => {
+                      const isDragging = draggingOpId === op.id;
+                      const prioColor = PRIORIDADE_COLOR[op.prioridade] ?? "#555";
+                      return (
+                        <div
+                          key={op.id}
+                          draggable
+                          onDragStart={(e) => handleOpDragStart(e, op.id)}
+                          onDragEnd={handleOpDragEnd}
+                          onClick={() => setDetalheOp(op)}
+                          className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-4 cursor-pointer hover:border-[#444] transition-all"
+                          style={{ opacity: isDragging ? 0.4 : 1 }}
+                        >
+                          <div className="flex items-start gap-2 mb-1.5">
+                            <span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: prioColor }} />
+                            <h4 className="text-[#eee] text-[13px] font-semibold line-clamp-2 leading-snug">{op.titulo}</h4>
+                          </div>
+
+                          {op.tipo && (
+                            <p className="text-[#555] text-[11px] mb-1.5 flex items-center gap-1">
+                              <Tag size={9} />{op.tipo}
+                            </p>
+                          )}
+
+                          {op.cliente && (
+                            <p className="text-[#555] text-[11px] mb-2 flex items-center gap-1">
+                              <Building2 size={9} />{op.cliente.nome}
+                            </p>
+                          )}
+
+                          {op.prazo && (
+                            <p className="text-[#555] text-[11px] mb-2 flex items-center gap-1">
+                              <Calendar size={9} />
+                              {new Date(op.prazo).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                            </p>
+                          )}
+
+                          <div className="flex items-center justify-between pt-2 border-t border-[#1a1a1a]">
+                            <div className="flex items-center gap-2 text-[11px] text-[#666]">
+                              {op.responsavel ? (
+                                <span className="flex items-center gap-1">
+                                  <span className="w-5 h-5 rounded-full bg-[#6B8AFF]/15 flex items-center justify-center text-[#6B8AFF] text-[9px] font-bold">
+                                    {op.responsavel.nome.charAt(0).toUpperCase()}
+                                  </span>
+                                  <span className="text-[#999]">{op.responsavel.nome.split(" ")[0]}</span>
                                 </span>
-                                {op.responsavel.nome.split(" ")[0]}
-                              </span>
-                            )}
-                            {op.originador && (
-                              <span className="text-[#444]">/ {op.originador.nome.split(" ")[0]}</span>
+                              ) : (
+                                <span className="flex items-center gap-1 text-[#333]">
+                                  <User size={11} />Sem resp.
+                                </span>
+                              )}
+                              {op.originador && (
+                                <span className="text-[#444]">/ {op.originador.nome.split(" ")[0]}</span>
+                              )}
+                            </div>
+                            {Number(op.valor) > 0 && (
+                              <span className="text-[#28d939] text-[11px] font-semibold">{fmtValor(Number(op.valor))}</span>
                             )}
                           </div>
-                          {op.valor > 0 && (
-                            <span className="text-[#28d939] text-[11px] font-semibold">{fmtValor(Number(op.valor))}</span>
-                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -589,6 +707,123 @@ export default function DepartamentoComercial() {
                 {salvando ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                 {salvando ? "Salvando..." : "Criar Operação"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Detalhe Operação */}
+      {detalheOp && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-[520px] max-h-[90vh] overflow-y-auto">
+
+            {/* Header */}
+            <div className="flex items-start justify-between mb-5">
+              <div className="flex items-start gap-3 flex-1 pr-4">
+                <span
+                  className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
+                  style={{ backgroundColor: PRIORIDADE_COLOR[detalheOp.prioridade as keyof typeof PRIORIDADE_COLOR] ?? "#555" }}
+                />
+                <div>
+                  <h2 className="text-[#eee] text-[18px] font-semibold leading-snug">{detalheOp.titulo}</h2>
+                  {detalheOp.tipo && (
+                    <p className="text-[#555] text-[12px] mt-0.5 flex items-center gap-1.5">
+                      <Tag size={11} />{detalheOp.tipo}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button onClick={() => setDetalheOp(null)} className="text-[#555] hover:text-[#eee] flex-shrink-0"><X size={20} /></button>
+            </div>
+
+            {/* Status flow */}
+            <div className="flex items-center gap-1 mb-5 overflow-x-auto">
+              {Object.entries(OP_STATUS).map(([sk, sc], i, arr) => {
+                const statusKeys = Object.keys(OP_STATUS);
+                const curIdx = statusKeys.indexOf(detalheOp.status);
+                const thisIdx = statusKeys.indexOf(sk);
+                const isPast = thisIdx < curIdx;
+                const isCurrent = sk === detalheOp.status;
+                return (
+                  <div key={sk} className="flex items-center gap-1 flex-shrink-0">
+                    <div
+                      className="px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all"
+                      style={{
+                        backgroundColor: isCurrent ? sc.color : isPast ? `${sc.color}30` : "#1a1a1a",
+                        color: isCurrent ? "#000" : isPast ? sc.color : "#555",
+                        border: `1px solid ${isCurrent ? sc.color : isPast ? `${sc.color}40` : "#2a2a2a"}`,
+                      }}
+                    >
+                      {sc.label}
+                    </div>
+                    {i < arr.length - 1 && <ChevronRight size={10} className="text-[#333] flex-shrink-0" />}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Info grid */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {[
+                { label: "Cliente",     value: detalheOp.cliente?.nome ?? "—",             color: "#eee" },
+                { label: "Prioridade",  value: detalheOp.prioridade.charAt(0).toUpperCase() + detalheOp.prioridade.slice(1), color: PRIORIDADE_COLOR[detalheOp.prioridade as keyof typeof PRIORIDADE_COLOR] ?? "#eee" },
+                { label: "Responsável", value: detalheOp.responsavel?.nome ?? "—",         color: "#eee" },
+                { label: "Originador",  value: detalheOp.originador?.nome ?? "—",          color: "#bdbdbd" },
+              ].map((row) => (
+                <div key={row.label} className="bg-[#0f0f0f] rounded-xl p-3">
+                  <p className="text-[#555] text-[11px] mb-1">{row.label}</p>
+                  <p className="font-semibold text-[13px]" style={{ color: row.color }}>{row.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Valor + Prazo */}
+            <div className="flex gap-3 mb-4">
+              {Number(detalheOp.valor) > 0 && (
+                <div className="flex-1 bg-[#0f0f0f] rounded-xl p-3 flex items-center justify-between">
+                  <span className="text-[#555] text-[12px]">Valor</span>
+                  <span className="text-[#28d939] font-bold text-[18px]">{fmtValor(Number(detalheOp.valor))}</span>
+                </div>
+              )}
+              {detalheOp.prazo && (
+                <div className="flex-1 bg-[#0f0f0f] rounded-xl p-3 flex items-center justify-between">
+                  <span className="text-[#555] text-[12px] flex items-center gap-1"><Calendar size={11} />Prazo</span>
+                  <span className="text-[#eee] font-semibold text-[13px]">
+                    {new Date(detalheOp.prazo).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Descrição */}
+            {detalheOp.descricao && (
+              <div className="bg-[#0f0f0f] rounded-xl p-4 mb-5">
+                <p className="text-[#555] text-[11px] mb-1.5">Descrição</p>
+                <p className="text-[#bdbdbd] text-[13px] leading-relaxed">{detalheOp.descricao}</p>
+              </div>
+            )}
+
+            {/* Criado em */}
+            <p className="text-[#333] text-[11px] mb-5">
+              Criada em {new Date(detalheOp.criado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+            </p>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              {detalheOp.status !== "fechada" && detalheOp.status !== "perdida" && (
+                <>
+                  <button
+                    onClick={() => handleAvancarOp(detalheOp)}
+                    className="flex-1 bg-[#14E9BC]/15 border border-[#14E9BC]/30 text-[#14E9BC] py-2.5 rounded-lg text-[14px] font-semibold hover:bg-[#14E9BC]/25 transition-colors flex items-center justify-center gap-2">
+                    <ChevronRight size={16} />Avançar Status
+                  </button>
+                  <button
+                    onClick={() => handleMarcarPerdida(detalheOp)}
+                    className="px-4 bg-[#ec5d5e]/10 border border-[#ec5d5e]/30 text-[#ec5d5e] py-2.5 rounded-lg text-[14px] font-semibold hover:bg-[#ec5d5e]/20 transition-colors">
+                    Perdida
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
