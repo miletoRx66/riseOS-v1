@@ -32,7 +32,7 @@ export default function OKRs() {
     getOkrs(deptFiltro).then(setOkrs).catch(console.error);
     getDepartamentos().then(setDepartamentos).catch(console.error);
     getUsuarios().then(setUsuarios).catch(console.error);
-  }, [usuario?.id]);
+  }, [usuario?.id, usuario?.isAdmin, usuario?.departamento]);
   const [formData, setFormData] = useState({
     titulo: "",
     departamento: "",

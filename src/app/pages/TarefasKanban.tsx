@@ -40,7 +40,7 @@ export default function TarefasKanban() {
     const filtro = usuario.isAdmin ? {} : { departamento_id: usuario.departamento };
     getTarefas(filtro).then(setTarefas).catch(console.error);
     getDepartamentos().then(setDepartamentos).catch(console.error);
-  }, [usuario?.id]);
+  }, [usuario?.id, usuario?.isAdmin, usuario?.departamento]);
 
   const tarefasFiltradas = tarefas.filter((t) => {
     if (filtroStatus === "todos") return true;

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect, useRef, useCallback } from "react";
 import { supabase } from "../../lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -34,13 +34,27 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const DEPARTAMENTOS = ["marketing", "ops", "comercial", "produto", "financeiro", "tecnologia", "governanca", "juridico"];
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error("timeout")), ms)
-    ),
-  ]);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = (table: string) => supabase.from(table) as any;
+
+// Tenta executar a promise até `tentativas` vezes antes de lançar
+async function withRetry<T>(fn: () => Promise<T>, tentativas = 2, timeoutMs = 10000): Promise<T> {
+  let ultimo: unknown;
+  for (let i = 0; i < tentativas; i++) {
+    try {
+      return await Promise.race([
+        fn(),
+        new Promise<T>((_, reject) =>
+          setTimeout(() => reject(new Error("timeout")), timeoutMs)
+        ),
+      ]);
+    } catch (err) {
+      ultimo = err;
+      // Aguarda 800ms entre tentativas
+      if (i < tentativas - 1) await new Promise((r) => setTimeout(r, 800));
+    }
+  }
+  throw ultimo;
 }
 
 async function buildUsuario(user: User): Promise<Usuario> {
@@ -56,15 +70,11 @@ async function buildUsuario(user: User): Promise<Usuario> {
   };
 
   try {
-    // Query separadas e independentes — evita joins complexos que podem travar
-    const db = (table: string) => supabase.from(table) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-
-    const [profileRes, permsRes] = await withTimeout(
+    const [profileRes, permsRes] = await withRetry(() =>
       Promise.all([
         db("profiles").select("id, nome, cargo, departamento_id, avatar_url").eq("id", user.id).single(),
         db("permissoes").select("tipo, departamento_id").eq("usuario_id", user.id),
-      ]),
-      5000 // 5s timeout — se travar, retorna fallback
+      ])
     );
 
     const profile = profileRes.data;
@@ -101,7 +111,7 @@ async function buildUsuario(user: User): Promise<Usuario> {
       isAdmin,
     };
   } catch {
-    // Timeout ou falha de rede — retorna fallback para não travar o login
+    // Após 2 tentativas sem sucesso — retorna fallback sem perder isLoading
     return fallback;
   }
 }
@@ -110,22 +120,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Ref ao User do Supabase para poder chamar buildUsuario no listener de Realtime
+  const supabaseUserRef = useRef<User | null>(null);
+
+  const refreshUsuario = useCallback(async () => {
+    const user = supabaseUserRef.current;
+    if (!user) return;
+    try {
+      const u = await buildUsuario(user);
+      setUsuario(u);
+    } catch {
+      // silencioso — não zera o usuario em caso de falha de refresh
+    }
+  }, []);
+
+  // Listener de Realtime: recarga permissões automaticamente quando mudam no banco
   useEffect(() => {
-    // onAuthStateChange é a ÚNICA fonte de verdade — substitui getSession() na inicialização.
-    // INITIAL_SESSION replica o estado atual no momento do subscribe, cobrindo sessões pré-existentes.
+    if (!usuario) return;
+
+    const channel = supabase
+      .channel(`permissoes-${usuario.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "permissoes",
+          filter: `usuario_id=eq.${usuario.id}`,
+        },
+        () => {
+          // Permissões do usuário mudaram no banco → recarrega
+          refreshUsuario();
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [usuario?.id, refreshUsuario]);
+
+  useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "TOKEN_REFRESHED") return;
 
       if (event === "SIGNED_OUT") {
+        supabaseUserRef.current = null;
         setUsuario(null);
         setIsLoading(false);
         return;
       }
 
-      // PASSWORD_RECOVERY: sessão temporária para redefinição de senha.
-      // Não tratar como login — deixa RedefinirSenha gerenciar esse estado.
       if (event === "PASSWORD_RECOVERY") {
         setIsLoading(false);
         return;
@@ -138,13 +183,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ) {
         try {
           if (session?.user) {
+            supabaseUserRef.current = session.user;
             const u = await buildUsuario(session.user);
             setUsuario(u);
           } else {
+            supabaseUserRef.current = null;
             setUsuario(null);
           }
         } catch {
-          // buildUsuario falhou (rede, RLS) — garante que isLoading seja liberado
+          supabaseUserRef.current = null;
           setUsuario(null);
         } finally {
           setIsLoading(false);
@@ -163,10 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, message: "Preencha todos os campos" };
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: senha,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
 
     if (error) {
       if (
@@ -184,8 +228,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, message: "Erro ao fazer login. Tente novamente." };
     }
 
-    // onAuthStateChange (SIGNED_IN) cuida de buildUsuario + setUsuario.
-    // Login.tsx detecta usuario via useEffect e navega para /.
     return { success: true, message: "Login realizado com sucesso!" };
   };
 
@@ -208,37 +250,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
-      options: {
-        data: { nome: nome.trim() },
-      },
+      options: { data: { nome: nome.trim() } },
     });
 
     if (error) {
       if (error.message.includes("User already registered")) {
-        return {
-          success: false,
-          requiresConfirmation: false,
-          message: "Este email já possui uma conta. Faça login.",
-        };
+        return { success: false, requiresConfirmation: false, message: "Este email já possui uma conta. Faça login." };
       }
       if (error.message.includes("Password should be")) {
-        return {
-          success: false,
-          requiresConfirmation: false,
-          message: "A senha deve ter pelo menos 8 caracteres",
-        };
+        return { success: false, requiresConfirmation: false, message: "A senha deve ter pelo menos 8 caracteres" };
       }
-      return {
-        success: false,
-        requiresConfirmation: false,
-        message: "Erro ao criar conta. Tente novamente.",
-      };
+      return { success: false, requiresConfirmation: false, message: "Erro ao criar conta. Tente novamente." };
     }
 
-    // Supabase retorna session=null quando confirmação de email é exigida
     const requiresConfirmation = !data.session;
-    // onAuthStateChange (SIGNED_IN) cuida de buildUsuario + setUsuario quando não há confirmação.
-
     return {
       success: true,
       requiresConfirmation,
@@ -250,6 +275,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await supabase.auth.signOut();
+    supabaseUserRef.current = null;
     setUsuario(null);
   };
 

@@ -27,7 +27,7 @@ export default function Tarefas() {
     const filtro = usuario.isAdmin ? {} : { departamento_id: usuario.departamento };
     getTarefas(filtro).then(setTarefas).catch(console.error);
     getDepartamentos().then(setDepartamentos).catch(console.error);
-  }, [usuario?.id]);
+  }, [usuario?.id, usuario?.isAdmin, usuario?.departamento]);
   const [activeTab, setActiveTab] = useState<"todas" | "minhas">("todas");
   const [selectedDept, setSelectedDept] = useState<string>("todos");
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");

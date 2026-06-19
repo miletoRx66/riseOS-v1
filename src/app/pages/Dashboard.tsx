@@ -23,7 +23,7 @@ export default function Dashboard() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [usuario?.id]);
+  }, [usuario?.id, usuario?.isAdmin, usuario?.departamento]);
 
   // KPIs calculados a partir de dados reais
   const total = tarefas.length;
