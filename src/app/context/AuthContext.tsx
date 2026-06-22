@@ -151,25 +151,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "TOKEN_REFRESHED") {
-        // Mantém a ref sincronizada com o novo JWT sem rebaixar permissões
-        if (session?.user) supabaseUserRef.current = session.user;
+        if (session?.user) {
+          supabaseUserRef.current = session.user;
+          // Mantém o backup em sync para que a chave de recuperação reflita o
+          // refresh token mais recente (evita usar um token já rotacionado).
+          try {
+            sessionStorage.setItem(`riseos-sbkp-${session.user.id}`, JSON.stringify({
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+            }));
+          } catch {}
+        }
         return;
       }
 
       if (event === "SIGNED_OUT") {
-        // Guarda referência ao usuário anterior SEM limpar o ref ainda.
-        // Isso permite que eventos TOKEN_REFRESHED concorrentes atualizem
-        // o ref durante a janela de recuperação.
         const previousUser = supabaseUserRef.current;
 
         if (previousUser) {
-          // Aguarda 2s para a rotação de token completar antes de confirmar logout.
-          // JWT rotation em Supabase v2 tipicamente resolve em <1s.
+          // Aguarda 2s para rotação de token completar antes de confirmar logout.
           await new Promise<void>((r) => setTimeout(r, 2000));
           const { data: { session: sessaoRecuperada } } = await supabase.auth.getSession();
 
-          // Só recupera se for o MESMO usuário — evita adotar sessão de outra
-          // conta em cenário de múltiplos usuários no mesmo browser.
+          // Recuperação 1: rotação normal — mesmo usuário ainda na sessão.
           if (sessaoRecuperada?.user && sessaoRecuperada.user.id === previousUser.id) {
             supabaseUserRef.current = sessaoRecuperada.user;
             const u = await buildUsuario(sessaoRecuperada.user, { usarFallback: true });
@@ -177,9 +181,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setIsLoading(false);
             return;
           }
+
+          // Recuperação 2: outra conta sobrescreveu o localStorage (multi-aba).
+          // O sessionStorage é isolado por aba — o backup de mileto não pode ser
+          // sobrescrito pela aba do admin. Tentamos restaurar a sessão original.
+          // Apagamos o backup ANTES de tentar para evitar loop de restaurações.
+          const backupKey = `riseos-sbkp-${previousUser.id}`;
+          const backupJson = sessionStorage.getItem(backupKey);
+          if (backupJson) {
+            sessionStorage.removeItem(backupKey);
+            try {
+              const backup = JSON.parse(backupJson);
+              const { data: { session: restoredSession }, error } =
+                await supabase.auth.setSession({
+                  access_token: backup.access_token,
+                  refresh_token: backup.refresh_token,
+                });
+              if (!error && restoredSession?.user.id === previousUser.id) {
+                // Sessão restaurada — o SIGNED_IN resultante do setSession
+                // vai atualizar supabaseUserRef e usuario normalmente.
+                setIsLoading(false);
+                return;
+              }
+            } catch {}
+          }
         }
 
-        // Logout real confirmado — limpa estado
         supabaseUserRef.current = null;
         setUsuario(null);
         setIsLoading(false);
@@ -197,15 +224,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         event === "USER_UPDATED"
       ) {
         if (session?.user) {
+          // Se já há um usuário logado e este SIGNED_IN é para outra conta
+          // (aba do admin logou no mesmo browser), ignora — não adota a sessão
+          // de terceiros e não derruba quem já estava usando a aplicação.
+          if (
+            event === "SIGNED_IN" &&
+            supabaseUserRef.current &&
+            session.user.id !== supabaseUserRef.current.id
+          ) {
+            setIsLoading(false);
+            return;
+          }
+
           supabaseUserRef.current = session.user;
+          // Salva backup da sessão no sessionStorage (isolado por aba).
+          // Usado pela Recuperação 2 do SIGNED_OUT se outra conta sobrescrever
+          // o localStorage compartilhado.
+          try {
+            sessionStorage.setItem(`riseos-sbkp-${session.user.id}`, JSON.stringify({
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+            }));
+          } catch {}
           try {
             const u = await buildUsuario(session.user, { usarFallback: true });
             setUsuario(u ?? null);
-          } catch {
-            // buildUsuario captura tudo internamente; se chegar aqui é algo
-            // inesperado — não derruba o usuário logado, apenas deixa o
-            // estado atual inalterado
-          }
+          } catch {}
         } else {
           supabaseUserRef.current = null;
           setUsuario(null);
