@@ -157,17 +157,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (event === "SIGNED_OUT") {
-        // Race condition entre abas pode disparar SIGNED_OUT enquanto o token
-        // ainda está sendo rotacionado. Aguarda 800ms para que a aba que fez
-        // o refresh bem-sucedido grave os novos tokens no localStorage, depois
-        // tenta recuperar a sessão antes de deslogar de fato.
-        const hadUser = !!supabaseUserRef.current;
-        supabaseUserRef.current = null;
+        // Guarda referência ao usuário anterior SEM limpar o ref ainda.
+        // Isso permite que eventos TOKEN_REFRESHED concorrentes atualizem
+        // o ref durante a janela de recuperação.
+        const previousUser = supabaseUserRef.current;
 
-        if (hadUser) {
-          await new Promise<void>((r) => setTimeout(r, 800));
+        if (previousUser) {
+          // Aguarda 2s para a rotação de token completar antes de confirmar logout.
+          // JWT rotation em Supabase v2 tipicamente resolve em <1s.
+          await new Promise<void>((r) => setTimeout(r, 2000));
           const { data: { session: sessaoRecuperada } } = await supabase.auth.getSession();
-          if (sessaoRecuperada?.user) {
+
+          // Só recupera se for o MESMO usuário — evita adotar sessão de outra
+          // conta em cenário de múltiplos usuários no mesmo browser.
+          if (sessaoRecuperada?.user && sessaoRecuperada.user.id === previousUser.id) {
             supabaseUserRef.current = sessaoRecuperada.user;
             const u = await buildUsuario(sessaoRecuperada.user, { usarFallback: true });
             setUsuario(u ?? null);
@@ -176,6 +179,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
+        // Logout real confirmado — limpa estado
+        supabaseUserRef.current = null;
         setUsuario(null);
         setIsLoading(false);
         return;

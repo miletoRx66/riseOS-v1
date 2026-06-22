@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 
@@ -5,11 +6,29 @@ interface PrivateRouteProps {
   children: React.ReactNode;
 }
 
+// Aguarda até 3s antes de redirecionar quando a sessão some inesperadamente.
+// Absorve SIGNED_OUT espúrios de rotação de JWT sem causar redirect falso.
 export function PrivateRoute({ children }: PrivateRouteProps) {
   const { usuario, isLoading } = useAuth();
+  const [graceExpired, setGraceExpired] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Mostrar loading enquanto verifica autenticação
-  if (isLoading) {
+  useEffect(() => {
+    if (!usuario && !isLoading) {
+      timerRef.current = setTimeout(() => setGraceExpired(true), 3000);
+    } else {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      setGraceExpired(false);
+    }
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [usuario, isLoading]);
+
+  if (isLoading || (!usuario && !graceExpired)) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="text-center">
@@ -22,11 +41,9 @@ export function PrivateRoute({ children }: PrivateRouteProps) {
     );
   }
 
-  // Redirecionar para login se não estiver autenticado
   if (!usuario) {
     return <Navigate to="/login" replace />;
   }
 
-  // Renderizar conteúdo protegido
   return <>{children}</>;
 }
