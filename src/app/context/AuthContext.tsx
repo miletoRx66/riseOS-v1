@@ -57,7 +57,7 @@ async function withRetry<T>(fn: () => Promise<T>, tentativas = 2, timeoutMs = 10
   throw ultimo;
 }
 
-async function buildUsuario(user: User): Promise<Usuario> {
+async function buildUsuario(user: User, { usarFallback = true } = {}): Promise<Usuario | null> {
   const fallback: Usuario = {
     id: user.id,
     nome: user.user_metadata?.nome ?? user.email?.split("@")[0] ?? "Usuário",
@@ -78,7 +78,7 @@ async function buildUsuario(user: User): Promise<Usuario> {
     );
 
     const profile = profileRes.data;
-    if (!profile) return fallback;
+    if (!profile) return usarFallback ? fallback : null;
 
     const dbPerms: Array<{ tipo: string; departamento_id: string | null }> =
       permsRes.data ?? [];
@@ -111,8 +111,8 @@ async function buildUsuario(user: User): Promise<Usuario> {
       isAdmin,
     };
   } catch {
-    // Após 2 tentativas sem sucesso — retorna fallback sem perder isLoading
-    return fallback;
+    // Após todas as tentativas: fallback no login inicial, null no refresh (não rebaixa permissões)
+    return usarFallback ? fallback : null;
   }
 }
 
@@ -127,10 +127,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const user = supabaseUserRef.current;
     if (!user) return;
     try {
-      const u = await buildUsuario(user);
-      setUsuario(u);
+      // usarFallback: false → se o banco não responder, retorna null em vez de
+      // rebaixar o usuário para isAdmin:false (evita "Acesso Restrito" por timeout)
+      const u = await buildUsuario(user, { usarFallback: false });
+      if (u) setUsuario(u);
     } catch {
-      // silencioso — não zera o usuario em caso de falha de refresh
+      // silencioso
     }
   }, []);
 
@@ -184,8 +186,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           if (session?.user) {
             supabaseUserRef.current = session.user;
-            const u = await buildUsuario(session.user);
-            setUsuario(u);
+            // usarFallback: true → login inicial pode usar o fallback mínimo
+            // se o banco demorar; melhor do que bloquear a tela indefinidamente
+            const u = await buildUsuario(session.user, { usarFallback: true });
+            setUsuario(u ?? null);
           } else {
             supabaseUserRef.current = null;
             setUsuario(null);
