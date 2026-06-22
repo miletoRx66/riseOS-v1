@@ -289,9 +289,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    // scope:"local" invalida SOMENTE a sessão desta aba/dispositivo.
+    // scope:"global" (padrão) apagaria TODOS os refresh tokens do usuário no
+    // servidor, causando "refresh_token_not_found" em outros dispositivos/abas
+    // e disparando SIGNED_OUT cascata — que era a causa raiz do "desloga ao salvar AUM".
     supabaseUserRef.current = null;
     setUsuario(null);
+    await supabase.auth.signOut({ scope: "local" });
   };
 
   const podeEditar = (departamento: string): boolean => {
