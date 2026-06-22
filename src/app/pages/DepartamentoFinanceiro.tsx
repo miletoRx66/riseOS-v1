@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent, DragEvent } from "react";
+import { useState, useEffect, useCallback, ChangeEvent, DragEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 import {
   DollarSign, TrendingUp, TrendingDown, Upload, Download, X,
@@ -346,9 +346,7 @@ export default function DepartamentoFinanceiro() {
 
   const userId = usuario?.id ?? "";
 
-  useEffect(() => { carregarTudo(); }, [competencia]);
-
-  async function carregarTudo() {
+  const carregarTudo = useCallback(async () => {
     setCarregando(true);
     try {
       const meses = ultimasSeisCom();
@@ -364,14 +362,17 @@ export default function DepartamentoFinanceiro() {
       setFluxo(fl);
     } catch (e) { console.error(e); }
     finally { setCarregando(false); }
-  }
+  }, [competencia, filtroTipo]);
 
-  async function recarregarTransacoes() {
+  // Recarrega sempre que mudar competência OU filtro de tipo
+  useEffect(() => { carregarTudo(); }, [carregarTudo]);
+
+  const recarregarTransacoes = useCallback(async () => {
     const trans = await getTransacoes({ competencia, tipo: filtroTipo });
     setTransacoes(trans);
     const fl = await getFluxoCaixaMensal(ultimasSeisCom());
     setFluxo(fl);
-  }
+  }, [competencia, filtroTipo]);
 
   // ── Computed AUM metrics ─────────────────────────────────────────────────
 

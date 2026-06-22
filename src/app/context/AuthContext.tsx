@@ -37,8 +37,10 @@ const DEPARTAMENTOS = ["marketing", "ops", "comercial", "produto", "financeiro",
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = (table: string) => supabase.from(table) as any;
 
-// Tenta executar a promise até `tentativas` vezes antes de lançar
-async function withRetry<T>(fn: () => Promise<T>, tentativas = 2, timeoutMs = 10000): Promise<T> {
+// Tenta executar a promise até `tentativas` vezes antes de lançar.
+// Timeout reduzido para 4s: Supabase REST responde em <500ms normalmente;
+// esperar 10s bloqueava o login por até 20 segundos no pior caso.
+async function withRetry<T>(fn: () => Promise<T>, tentativas = 2, timeoutMs = 4000): Promise<T> {
   let ultimo: unknown;
   for (let i = 0; i < tentativas; i++) {
     try {
@@ -50,8 +52,7 @@ async function withRetry<T>(fn: () => Promise<T>, tentativas = 2, timeoutMs = 10
       ]);
     } catch (err) {
       ultimo = err;
-      // Aguarda 800ms entre tentativas
-      if (i < tentativas - 1) await new Promise((r) => setTimeout(r, 800));
+      if (i < tentativas - 1) await new Promise((r) => setTimeout(r, 400));
     }
   }
   throw ultimo;
@@ -190,23 +191,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         event === "SIGNED_IN" ||
         event === "USER_UPDATED"
       ) {
-        try {
-          if (session?.user) {
-            supabaseUserRef.current = session.user;
-            // usarFallback: true → login inicial pode usar o fallback mínimo
-            // se o banco demorar; melhor do que bloquear a tela indefinidamente
+        if (session?.user) {
+          supabaseUserRef.current = session.user;
+          try {
             const u = await buildUsuario(session.user, { usarFallback: true });
             setUsuario(u ?? null);
-          } else {
-            supabaseUserRef.current = null;
-            setUsuario(null);
+          } catch {
+            // buildUsuario captura tudo internamente; se chegar aqui é algo
+            // inesperado — não derruba o usuário logado, apenas deixa o
+            // estado atual inalterado
           }
-        } catch {
+        } else {
           supabaseUserRef.current = null;
           setUsuario(null);
-        } finally {
-          setIsLoading(false);
         }
+        setIsLoading(false);
       }
     });
 
