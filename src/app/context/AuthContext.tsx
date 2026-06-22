@@ -169,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const previousUser = supabaseUserRef.current;
 
         if (previousUser) {
-          // Aguarda 2s para rotação de token completar antes de confirmar logout.
+          // Aguarda 2s para admin concluir login antes de checar sessão.
           await new Promise<void>((r) => setTimeout(r, 2000));
           const { data: { session: sessaoRecuperada } } = await supabase.auth.getSession();
 
@@ -184,8 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // Recuperação 2: outra conta sobrescreveu o localStorage (multi-aba).
           // O sessionStorage é isolado por aba — o backup de mileto não pode ser
-          // sobrescrito pela aba do admin. Tentamos restaurar a sessão original.
-          // Apagamos o backup ANTES de tentar para evitar loop de restaurações.
+          // sobrescrito pela aba do admin.
           const backupKey = `riseos-sbkp-${previousUser.id}`;
           const backupJson = sessionStorage.getItem(backupKey);
           if (backupJson) {
@@ -197,13 +196,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   access_token: backup.access_token,
                   refresh_token: backup.refresh_token,
                 });
-              if (!error && restoredSession?.user.id === previousUser.id) {
-                // Sessão restaurada — o SIGNED_IN resultante do setSession
-                // vai atualizar supabaseUserRef e usuario normalmente.
+              if (!error && restoredSession && restoredSession.user.id === previousUser.id) {
+                // Atualiza imediatamente sem esperar o SIGNED_IN subsequente.
+                // Isso evita a janela onde duas abas competem e uma fica sem sessão.
+                supabaseUserRef.current = restoredSession.user;
+                try {
+                  sessionStorage.setItem(backupKey, JSON.stringify({
+                    access_token: restoredSession.access_token,
+                    refresh_token: restoredSession.refresh_token,
+                  }));
+                } catch {}
+                const u = await buildUsuario(restoredSession.user, { usarFallback: true });
+                setUsuario(u ?? null);
                 setIsLoading(false);
                 return;
               }
             } catch {}
+          }
+
+          // Recuperação 3: race condition entre abas — outra aba pode ter chamado
+          // setSession() simultaneamente e rotacionado o refresh token antes desta.
+          // Aguarda mais 2s para o setSession da outra aba propagar ao localStorage.
+          await new Promise<void>((r) => setTimeout(r, 2000));
+          const { data: { session: sessaoTardia } } = await supabase.auth.getSession();
+          if (sessaoTardia?.user && sessaoTardia.user.id === previousUser.id) {
+            supabaseUserRef.current = sessaoTardia.user;
+            const u = await buildUsuario(sessaoTardia.user, { usarFallback: true });
+            setUsuario(u ?? null);
+            setIsLoading(false);
+            return;
           }
         }
 
@@ -224,11 +245,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         event === "USER_UPDATED"
       ) {
         if (session?.user) {
-          // Se já há um usuário logado e este SIGNED_IN é para outra conta
-          // (aba do admin logou no mesmo browser), ignora — não adota a sessão
-          // de terceiros e não derruba quem já estava usando a aplicação.
+          // Se já há um usuário logado e este SIGNED_IN/USER_UPDATED é para outra
+          // conta (aba do admin logou no mesmo browser), ignora — não adota a
+          // sessão de terceiros e não derruba quem já estava usando a aplicação.
           if (
-            event === "SIGNED_IN" &&
+            (event === "SIGNED_IN" || event === "USER_UPDATED") &&
             supabaseUserRef.current &&
             session.user.id !== supabaseUserRef.current.id
           ) {
