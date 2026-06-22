@@ -56,7 +56,7 @@ export function MainLayout() {
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [usuario]);
+  }, [usuario?.id]);
 
   useEffect(() => {
     if (location.pathname.startsWith("/mensagens")) {

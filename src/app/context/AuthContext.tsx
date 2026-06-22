@@ -136,38 +136,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Listener de Realtime: recarga permissões automaticamente quando mudam no banco
+  // Polling a cada 5 minutos para recarregar permissões.
+  // Substituímos a subscrição Realtime para evitar ciclos de WebSocket que
+  // interferiam com o refresh de token JWT e causavam SIGNED_OUT espúrios.
   useEffect(() => {
-    if (!usuario) return;
-
-    const channel = supabase
-      .channel(`permissoes-${usuario.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "permissoes",
-          filter: `usuario_id=eq.${usuario.id}`,
-        },
-        () => {
-          // Permissões do usuário mudaram no banco → recarrega
-          refreshUsuario();
-        }
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    if (!usuario?.id) return;
+    const id = setInterval(() => { refreshUsuario(); }, 5 * 60 * 1000);
+    return () => clearInterval(id);
   }, [usuario?.id, refreshUsuario]);
 
   useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "TOKEN_REFRESHED") return;
+      if (event === "TOKEN_REFRESHED") {
+        // Mantém a ref sincronizada com o novo JWT sem rebaixar permissões
+        if (session?.user) supabaseUserRef.current = session.user;
+        return;
+      }
 
       if (event === "SIGNED_OUT") {
+        // Race condition entre abas pode disparar SIGNED_OUT enquanto o token
+        // ainda está sendo rotacionado. Aguarda 800ms para que a aba que fez
+        // o refresh bem-sucedido grave os novos tokens no localStorage, depois
+        // tenta recuperar a sessão antes de deslogar de fato.
+        const hadUser = !!supabaseUserRef.current;
         supabaseUserRef.current = null;
+
+        if (hadUser) {
+          await new Promise<void>((r) => setTimeout(r, 800));
+          const { data: { session: sessaoRecuperada } } = await supabase.auth.getSession();
+          if (sessaoRecuperada?.user) {
+            supabaseUserRef.current = sessaoRecuperada.user;
+            const u = await buildUsuario(sessaoRecuperada.user, { usarFallback: true });
+            setUsuario(u ?? null);
+            setIsLoading(false);
+            return;
+          }
+        }
+
         setUsuario(null);
         setIsLoading(false);
         return;
