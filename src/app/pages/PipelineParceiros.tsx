@@ -153,7 +153,8 @@ function ModalDetalhe({
   onSalvar: (p: PipelineParceiro) => void;
   onDeletar: (id: string) => void;
 }) {
-  const { usuario } = useAuth();
+  const { usuario, podeEditar } = useAuth();
+  const podeGerenciarPipeline = podeEditar("comercial") || (usuario?.isAdmin ?? false);
   const [editando, setEditando] = useState(false);
   const [form, setForm] = useState<typeof FORM_INICIAL>({
     parceiro: parceiro.parceiro,
@@ -263,7 +264,7 @@ function ModalDetalhe({
                 >
                   <Edit2 size={15} />
                 </button>
-                {usuario?.isAdmin && (
+                {podeGerenciarPipeline && (
                   <button
                     onClick={() => { if (confirm(`Deletar ${parceiro.parceiro}?`)) { onDeletar(parceiro.id); onClose(); }}}
                     className="p-2 rounded-lg bg-[#1a1a1a] text-[#888] hover:text-[#ec5d5e] transition-colors"
