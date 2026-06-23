@@ -10,8 +10,9 @@ import { useAuth } from "../context/AuthContext";
 import {
   Users, TrendingUp, Plus, X, Filter,
   Loader2, Building2, Phone, Mail,
-  ChevronRight, Calendar, Tag, User, MessageCircle, Send,
+  ChevronRight, Calendar, Tag, User, MessageCircle, Send, Network,
 } from "lucide-react";
+import PipelineParceiros from "./PipelineParceiros";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -37,7 +38,7 @@ const PRIORIDADE_COLOR = { baixa: "#6B8AFF", media: "#f59e0b", alta: "#ec5d5e" }
 
 export default function DepartamentoComercial() {
   const { usuario } = useAuth();
-  const [tab, setTab] = useState<"clientes" | "operacoes">("clientes");
+  const [tab, setTab] = useState<"clientes" | "operacoes" | "pipeline">("clientes");
 
   const [clientes, setClientes]     = useState<CRMCliente[]>([]);
   const [operacoes, setOperacoes]   = useState<CRMOperacao[]>([]);
@@ -271,13 +272,15 @@ export default function DepartamentoComercial() {
               </div>
             </div>
           </div>
-          <button
-            onClick={() => tab === "clientes" ? setModalCliente(true) : setModalOp(true)}
-            className="bg-[#14E9BC] text-[#000] px-5 py-2.5 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:bg-[#12d4a8] transition-colors mt-1"
-          >
-            <Plus size={18} />
-            {tab === "clientes" ? "Novo Cliente" : "Nova Operação"}
-          </button>
+          {tab !== "pipeline" && (
+            <button
+              onClick={() => tab === "clientes" ? setModalCliente(true) : setModalOp(true)}
+              className="bg-[#14E9BC] text-[#000] px-5 py-2.5 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:bg-[#12d4a8] transition-colors mt-1"
+            >
+              <Plus size={18} />
+              {tab === "clientes" ? "Novo Cliente" : "Nova Operação"}
+            </button>
+          )}
         </div>
 
         {/* KPIs */}
@@ -297,40 +300,46 @@ export default function DepartamentoComercial() {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-5">
-          {(["clientes", "operacoes"] as const).map((t) => (
-            <button key={t} onClick={() => { setTab(t); setFiltroStatus("todos"); }}
+          {([
+            ["clientes",  "Clientes",         <Users size={15} />,      clientes.length],
+            ["operacoes", "Operações",         <TrendingUp size={15} />, operacoes.length],
+            ["pipeline",  "Pipeline Parceiros", <Network size={15} />,   null],
+          ] as const).map(([t, label, icon, count]) => (
+            <button key={t} onClick={() => { setTab(t as typeof tab); setFiltroStatus("todos"); }}
               className={`px-5 py-2.5 rounded-lg text-[14px] font-semibold transition-colors ${
                 tab === t
                   ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]"
                   : "bg-[#0f0f0f] border border-[#333] text-[#bdbdbd] hover:text-[#eee]"
               }`}>
-              {t === "clientes" ? (
-                <span className="flex items-center gap-2"><Users size={15} />Clientes ({clientes.length})</span>
-              ) : (
-                <span className="flex items-center gap-2"><TrendingUp size={15} />Operações ({operacoes.length})</span>
-              )}
+              <span className="flex items-center gap-2">
+                {icon}{label}{count !== null && `(${count})`}
+              </span>
             </button>
           ))}
         </div>
 
-        {/* Filtro */}
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg px-5 py-3 mb-5 flex items-center gap-3 flex-wrap">
-          <Filter size={14} className="text-[#555]" />
-          {(tab === "clientes"
-            ? [{ v: "todos", l: "Todos" }, ...Object.entries(CLIENTE_STATUS).map(([v, c]) => ({ v, l: c.label }))]
-            : [{ v: "todos", l: "Todos" }, ...Object.entries(OP_STATUS).map(([v, c]) => ({ v, l: c.label }))]
-          ).map(({ v, l }) => (
-            <button key={v} onClick={() => setFiltroStatus(v)}
-              className={`px-3 py-1 rounded-lg text-[12px] font-medium transition-colors ${
-                filtroStatus === v ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]" : "text-[#666] hover:text-[#bdbdbd]"
-              }`}>
-              {l}
-            </button>
-          ))}
-        </div>
+        {/* Filtro — oculto na aba Pipeline (tem sua própria toolbar) */}
+        {tab !== "pipeline" && (
+          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg px-5 py-3 mb-5 flex items-center gap-3 flex-wrap">
+            <Filter size={14} className="text-[#555]" />
+            {(tab === "clientes"
+              ? [{ v: "todos", l: "Todos" }, ...Object.entries(CLIENTE_STATUS).map(([v, c]) => ({ v, l: c.label }))]
+              : [{ v: "todos", l: "Todos" }, ...Object.entries(OP_STATUS).map(([v, c]) => ({ v, l: c.label }))]
+            ).map(({ v, l }) => (
+              <button key={v} onClick={() => setFiltroStatus(v)}
+                className={`px-3 py-1 rounded-lg text-[12px] font-medium transition-colors ${
+                  filtroStatus === v ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]" : "text-[#666] hover:text-[#bdbdbd]"
+                }`}>
+                {l}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Content */}
-        {loading ? (
+        {tab === "pipeline" ? (
+          <PipelineParceiros />
+        ) : loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 size={24} className="text-[#14E9BC] animate-spin" />
           </div>
