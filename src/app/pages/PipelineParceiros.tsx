@@ -622,7 +622,9 @@ export default function PipelineParceiros() {
   function handleDragStart(e: React.DragEvent, id: string) {
     draggingRef.current = id;
     setDraggingId(id);
-    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.effectAllowed = "move";
+    // Obrigatório em Safari — sem setData o drop nunca dispara
+    e.dataTransfer.setData("text/plain", id);
   }
 
   function handleDragEnd() {
@@ -633,19 +635,26 @@ export default function PipelineParceiros() {
 
   function handleDragOver(e: React.DragEvent, col: string) {
     e.preventDefault();
-    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
     setDragOverCol(col);
   }
 
   async function handleDrop(e: React.DragEvent, novoStatus: PipelineStatus) {
     e.preventDefault();
-    const id = draggingRef.current;
+    e.stopPropagation();
+    // Usa ref como fonte primária; getData como fallback (Safari)
+    const id = draggingRef.current ?? e.dataTransfer.getData("text/plain");
     if (!id) return;
-    const p = parceiros.find((x) => x.id === id);
+    const parceirosAtual = parceiros;
+    const p = parceirosAtual.find((x) => x.id === id);
     if (!p || p.status === novoStatus) { handleDragEnd(); return; }
     setParceiros((prev) => prev.map((x) => x.id === id ? { ...x, status: novoStatus } : x));
     handleDragEnd();
-    try { await atualizarParceiro(id, { status: novoStatus }); } catch {
+    try {
+      await atualizarParceiro(id, { status: novoStatus });
+    } catch (err) {
+      console.error("Erro ao mover parceiro:", err);
       setParceiros((prev) => prev.map((x) => x.id === id ? { ...x, status: p.status } : x));
     }
   }
