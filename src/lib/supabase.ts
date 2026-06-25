@@ -16,6 +16,9 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: false,
     storageKey: "riseos-auth",
+    // sessionStorage é isolado por aba: cada usuário tem sua própria sessão
+    // sem conflito com outros usuários logados em outras abas no mesmo browser.
+    storage: window.sessionStorage,
   },
   realtime: {
     params: {
