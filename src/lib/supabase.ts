@@ -10,15 +10,41 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+// Adapter que combina isolamento por aba com persistência entre sessões.
+//
+// LEITURA: sessionStorage tem prioridade. Quando Supabase processa um evento
+// de storage disparado por outro tab (admin logando), ele chama getItem() aqui
+// e recebe a sessão do sessionStorage deste tab — não a do outro tab. Assim
+// SIGNED_OUT nunca é disparado para mileto por causa do login do admin.
+//
+// ESCRITA: vai para sessionStorage (isolamento) E localStorage (persistência).
+// Isso garante que o usuário não precisa re-logar ao reabrir o browser ou
+// abrir um novo tab.
+const tabIsolatedStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      return sessionStorage.getItem(key) ?? localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    try { sessionStorage.setItem(key, value); } catch {}
+    try { localStorage.setItem(key, value); } catch {}
+  },
+  removeItem: (key: string): void => {
+    try { sessionStorage.removeItem(key); } catch {}
+    try { localStorage.removeItem(key); } catch {}
+  },
+};
+
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: false,
     storageKey: "riseos-auth",
-    // sessionStorage é isolado por aba: cada usuário tem sua própria sessão
-    // sem conflito com outros usuários logados em outras abas no mesmo browser.
-    storage: window.sessionStorage,
+    storage: tabIsolatedStorage,
   },
   realtime: {
     params: {
