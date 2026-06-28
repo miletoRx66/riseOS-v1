@@ -13,7 +13,7 @@ import { useAuth } from "../context/AuthContext";
 
 export default function DepartamentoDetail() {
   const { id } = useParams();
-  const { usuario, podeEditar } = useAuth();
+  const { usuario, podeEditar, isLoading: authLoading } = useAuth();
 
   const [departamento, setDepartamento] = useState<DepartamentoComStats | null>(null);
   const [tarefas, setTarefas] = useState<TarefaDB[]>([]);
@@ -44,8 +44,9 @@ export default function DepartamentoDetail() {
     );
   }
 
-  // Guard: bloqueia acesso a departamentos que o usuário não tem permissão
-  if (departamento && !usuario?.isAdmin && !podeEditar(departamento.id)) {
+  // Guard: só bloqueia quando o auth já resolveu — evita "Acesso Restrito"
+  // durante transições de sessão (buildUsuario ainda em andamento)
+  if (!authLoading && departamento && !usuario?.isAdmin && !podeEditar(departamento.id)) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] p-8 flex flex-col items-center justify-center gap-4">
         <div className="w-16 h-16 rounded-2xl bg-[#ec5d5e]/10 flex items-center justify-center">

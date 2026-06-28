@@ -150,10 +150,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Com sessionStorage como storage do cliente Supabase, cada aba tem sua
-      // própria sessão isolada. SIGNED_OUT agora significa apenas que o usuário
-      // saiu explicitamente ou o refresh token expirou — não há mais conflito
-      // de multi-aba nem necessidade de recovery.
+      // Com chaves únicas por tab em localStorage, o listener interno do Supabase
+      // (e.key === storageKey) nunca dispara por eventos de outros tabs.
+      // SIGNED_OUT agora significa apenas logout explícito ou refresh token expirado.
 
       if (event === "TOKEN_REFRESHED") {
         if (session?.user) supabaseUserRef.current = session.user;
@@ -173,6 +172,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         event === "USER_UPDATED"
       ) {
         if (session?.user) {
+          // Guard: SIGNED_IN/USER_UPDATED de outro usuário (não deve ocorrer com
+          // chaves por tab, mas mantido como rede de segurança)
+          if (
+            (event === "SIGNED_IN" || event === "USER_UPDATED") &&
+            supabaseUserRef.current &&
+            session.user.id !== supabaseUserRef.current.id
+          ) {
+            setIsLoading(false);
+            return;
+          }
+
+          // Sinaliza transição de auth: impede que guards de permissão em páginas
+          // como DepartamentoDetail mostrem "Acesso Restrito" enquanto buildUsuario
+          // está em andamento (especialmente durante re-autenticação após refresh)
+          setIsLoading(true);
           supabaseUserRef.current = session.user;
           try {
             const u = await buildUsuario(session.user, { usarFallback: true });
