@@ -94,13 +94,15 @@ export default function Departamentos() {
               Gerencie os espaços de trabalho de cada departamento
             </p>
           </div>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-[#14E9BC] text-[#000] px-6 py-3 rounded-lg font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] flex items-center gap-2 hover:bg-[#12d4a8] transition-colors"
-          >
-            <Plus size={20} />
-            Novo Departamento
-          </button>
+          {usuario?.isAdmin && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-[#14E9BC] text-[#000] px-6 py-3 rounded-lg font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] flex items-center gap-2 hover:bg-[#12d4a8] transition-colors"
+            >
+              <Plus size={20} />
+              Novo Departamento
+            </button>
+          )}
         </div>
 
         {/* Departments Grid */}

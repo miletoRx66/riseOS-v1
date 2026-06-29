@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useRef, useCallback } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase, TAB_AUTH_KEY, userSessionKey, clearSessionCache } from "../../lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
 interface Usuario {
@@ -37,9 +37,6 @@ const DEPARTAMENTOS = ["marketing", "ops", "comercial", "produto", "financeiro",
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = (table: string) => supabase.from(table) as any;
 
-// Tenta executar a promise até `tentativas` vezes antes de lançar.
-// Timeout reduzido para 4s: Supabase REST responde em <500ms normalmente;
-// esperar 10s bloqueava o login por até 20 segundos no pior caso.
 async function withRetry<T>(fn: () => Promise<T>, tentativas = 2, timeoutMs = 4000): Promise<T> {
   let ultimo: unknown;
   for (let i = 0; i < tentativas; i++) {
@@ -112,7 +109,6 @@ async function buildUsuario(user: User, { usarFallback = true } = {}): Promise<U
       isAdmin,
     };
   } catch {
-    // Após todas as tentativas: fallback no login inicial, null no refresh (não rebaixa permissões)
     return usarFallback ? fallback : null;
   }
 }
@@ -120,40 +116,69 @@ async function buildUsuario(user: User, { usarFallback = true } = {}): Promise<U
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Ref ao User do Supabase para poder chamar buildUsuario no listener de Realtime
   const supabaseUserRef = useRef<User | null>(null);
 
   const refreshUsuario = useCallback(async () => {
     const user = supabaseUserRef.current;
     if (!user) return;
     try {
-      // usarFallback: false → se o banco não responder, retorna null em vez de
-      // rebaixar o usuário para isAdmin:false (evita "Acesso Restrito" por timeout)
       const u = await buildUsuario(user, { usarFallback: false });
       if (u) setUsuario(u);
-    } catch {
-      // silencioso
-    }
+    } catch {}
   }, []);
 
-  // Polling a cada 5 minutos para recarregar permissões.
-  // Substituímos a subscrição Realtime para evitar ciclos de WebSocket que
-  // interferiam com o refresh de token JWT e causavam SIGNED_OUT espúrios.
+  // Polling a cada 5 minutos para recarregar permissões do banco
   useEffect(() => {
     if (!usuario?.id) return;
     const id = setInterval(() => { refreshUsuario(); }, 5 * 60 * 1000);
     return () => clearInterval(id);
   }, [usuario?.id, refreshUsuario]);
 
+  // Sincronização cross-tab de token para o mesmo usuário.
+  //
+  // PROBLEMA: com chaves únicas por tab, quando Tab A renova o token (R1 → R2),
+  // o Tab B ainda tem R1. Após 1h, Tab B tenta renovar com R1 (já rotacionado
+  // pelo Tab A) e recebe SIGNED_OUT. Sessão dura apenas 1 hora por tab.
+  //
+  // SOLUÇÃO: no setItem do adapter, gravamos riseos-auth-user-{uid}. Aqui
+  // escutamos o storage event dessa chave. Quando a chave muda (outro tab do
+  // mesmo usuário renovou), sincronizamos os tokens novos para o TAB_AUTH_KEY
+  // deste tab e chamamos setSession() para atualizar o estado in-memory do
+  // Supabase — sem disparar buildUsuario desnecessário.
+  useEffect(() => {
+    if (!usuario?.id) return;
+
+    const myUserKey = userSessionKey(usuario.id);
+
+    const handleCrossTabSync = (e: StorageEvent) => {
+      if (e.key !== myUserKey || !e.newValue) return;
+
+      const current = localStorage.getItem(TAB_AUTH_KEY);
+      if (current === e.newValue) return; // Já atualizado (este tab foi o que escreveu)
+
+      try {
+        const newSession = JSON.parse(e.newValue);
+        if (newSession?.user?.id !== usuario.id) return; // Segurança: confirmar mesmo usuário
+
+        // Sincroniza os novos tokens para o storage deste tab
+        localStorage.setItem(TAB_AUTH_KEY, e.newValue);
+        // Atualiza o estado in-memory do Supabase (dispara SIGNED_IN para mesmo usuário,
+        // tratado como shortcut no onAuthStateChange abaixo — sem buildUsuario)
+        supabase.auth.setSession({
+          access_token: newSession.access_token,
+          refresh_token: newSession.refresh_token,
+        });
+      } catch {}
+    };
+
+    window.addEventListener("storage", handleCrossTabSync);
+    return () => window.removeEventListener("storage", handleCrossTabSync);
+  }, [usuario?.id]);
+
   useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Com chaves únicas por tab em localStorage, o listener interno do Supabase
-      // (e.key === storageKey) nunca dispara por eventos de outros tabs.
-      // SIGNED_OUT agora significa apenas logout explícito ou refresh token expirado.
-
       if (event === "TOKEN_REFRESHED") {
         if (session?.user) supabaseUserRef.current = session.user;
         return;
@@ -172,8 +197,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         event === "USER_UPDATED"
       ) {
         if (session?.user) {
-          // Guard: SIGNED_IN/USER_UPDATED de outro usuário (não deve ocorrer com
-          // chaves por tab, mas mantido como rede de segurança)
+          // Shortcut: SIGNED_IN do mesmo usuário (vindo de setSession() na sincronização
+          // cross-tab). Apenas atualiza o ref — permissões não mudaram, não precisa
+          // rebuildar o usuario nem exibir spinner de loading.
+          if (
+            event === "SIGNED_IN" &&
+            supabaseUserRef.current &&
+            session.user.id === supabaseUserRef.current.id
+          ) {
+            supabaseUserRef.current = session.user;
+            setIsLoading(false);
+            return;
+          }
+
+          // Guard: SIGNED_IN/USER_UPDATED de outro usuário (não ocorre com chaves por
+          // tab, mas mantido como rede de segurança para edge cases)
           if (
             (event === "SIGNED_IN" || event === "USER_UPDATED") &&
             supabaseUserRef.current &&
@@ -183,9 +221,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return;
           }
 
-          // Sinaliza transição de auth: impede que guards de permissão em páginas
-          // como DepartamentoDetail mostrem "Acesso Restrito" enquanto buildUsuario
-          // está em andamento (especialmente durante re-autenticação após refresh)
+          // Novo login ou atualização de perfil: sinaliza transição de auth para que
+          // guards de permissão (ex: DepartamentoDetail) não mostrem "Acesso Restrito"
+          // enquanto buildUsuario está em andamento
           setIsLoading(true);
           supabaseUserRef.current = session.user;
           try {
@@ -275,12 +313,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    // scope:"local" invalida SOMENTE a sessão desta aba/dispositivo.
-    // scope:"global" (padrão) apagaria TODOS os refresh tokens do usuário no
-    // servidor, causando "refresh_token_not_found" em outros dispositivos/abas
-    // e disparando SIGNED_OUT cascata — que era a causa raiz do "desloga ao salvar AUM".
+    const uid = supabaseUserRef.current?.id;
     supabaseUserRef.current = null;
     setUsuario(null);
+    // Limpa seed e chave por usuário para que outros tabs não herdem esta sessão
+    clearSessionCache(uid);
     await supabase.auth.signOut({ scope: "local" });
   };
 
