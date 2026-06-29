@@ -63,11 +63,11 @@ export default function DepartamentoDetail() {
     );
   }
 
-  if (departamento?.nome?.toLowerCase() === "financeiro") {
+  if (id === "financeiro" || departamento?.nome?.toLowerCase() === "financeiro") {
     return <DepartamentoFinanceiro />;
   }
 
-  if (departamento?.nome?.toLowerCase() === "comercial") {
+  if (id === "comercial" || departamento?.nome?.toLowerCase() === "comercial") {
     return <DepartamentoComercial />;
   }
 

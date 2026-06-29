@@ -37,12 +37,9 @@ export function MetricCard({ title, value, variation, isPositive = true, gradien
 
         <div className="content-stretch flex items-center justify-between pt-[12px] relative shrink-0 w-full">
           <div aria-hidden="true" className="absolute border-[#333] border-solid border-t inset-0 pointer-events-none" />
-          <div className="content-stretch flex flex-[1_0_0] gap-[2px] items-center leading-[1.3] min-h-px min-w-px not-italic relative text-[14px]">
-            <p className={`font-['Inter:Semi_Bold',sans-serif] font-semibold relative shrink-0 ${isPositive ? 'text-[#28d939]' : 'text-[#ec5d5e]'}`}>
+          <div className="content-stretch flex flex-[1_0_0] gap-[2px] items-center leading-[1.3] min-h-px min-w-px not-italic relative text-[14px] overflow-hidden">
+            <p className={`font-['Inter:Medium',sans-serif] font-medium relative shrink-0 truncate text-[12px] ${isPositive ? 'text-[#28d939]' : 'text-[#ec5d5e]'}`}>
               {variation}
-            </p>
-            <p className="font-['Inter:Medium',sans-serif] font-medium relative shrink-0 text-[#bdbdbd]">
-              {variation.includes('última') ? '' : 'do que no mês passado'}
             </p>
           </div>
           <div className="relative shrink-0 size-[20px]">

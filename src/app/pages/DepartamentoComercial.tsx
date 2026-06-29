@@ -46,7 +46,6 @@ export default function DepartamentoComercial() {
   const [loading, setLoading]       = useState(true);
 
   const [filtroStatus, setFiltroStatus] = useState("todos");
-  const [subTabClientes, setSubTabClientes] = useState<"pj" | "pf">("pj");
   const [modalCliente, setModalCliente] = useState(false);
   const [modalOp, setModalOp]           = useState(false);
   const [detalheCliente, setDetalheCliente] = useState<CRMCliente | null>(null);
@@ -124,13 +123,9 @@ export default function DepartamentoComercial() {
 
   // ── Filtered lists ───────────────────────────────────────────────
 
-  const clientesPJ = clientes.filter((c: CRMCliente) =>
-    c.tipo === "pj" && (filtroStatus === "todos" || c.status === filtroStatus)
+  const clientesVisiveis = clientes.filter((c: CRMCliente) =>
+    filtroStatus === "todos" || c.status === filtroStatus
   );
-  const clientesPF = clientes.filter((c: CRMCliente) =>
-    c.tipo === "pf" && (filtroStatus === "todos" || c.status === filtroStatus)
-  );
-  const clientesVisiveis = subTabClientes === "pj" ? clientesPJ : clientesPF;
 
   const opFiltradas = operacoes.filter((o) =>
     filtroStatus === "todos" ? true : o.status === filtroStatus
@@ -278,7 +273,7 @@ export default function DepartamentoComercial() {
               className="bg-[#14E9BC] text-[#000] px-5 py-2.5 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:bg-[#12d4a8] transition-colors mt-1"
             >
               <Plus size={18} />
-              {tab === "clientes" ? "Novo Cliente" : "Nova Operação"}
+              {tab === "clientes" ? "Novo Investidor" : "Nova Operação"}
             </button>
           )}
         </div>
@@ -298,37 +293,43 @@ export default function DepartamentoComercial() {
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-5">
+        {/* Tabs — underline style, sem caixas */}
+        <div className="flex gap-0 mb-5 border-b border-[#1e1e1e]">
           {([
-            ["clientes",  "Clientes",         <Users size={15} />,      clientes.length],
-            ["operacoes", "Operações",         <TrendingUp size={15} />, operacoes.length],
-            ["pipeline",  "Pipeline Parceiros", <Network size={15} />,   null],
+            ["clientes",  "Investidores",      <Users size={14} />,      clientes.length],
+            ["operacoes", "Operações",          <TrendingUp size={14} />, operacoes.length],
+            ["pipeline",  "Pipeline Parceiros", <Network size={14} />,    null],
           ] as const).map(([t, label, icon, count]) => (
             <button key={t} onClick={() => { setTab(t as typeof tab); setFiltroStatus("todos"); }}
-              className={`px-5 py-2.5 rounded-lg text-[14px] font-semibold transition-colors ${
+              className={`flex items-center gap-1.5 px-5 py-2.5 text-[13px] font-semibold transition-all border-b-2 -mb-px ${
                 tab === t
-                  ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]"
-                  : "bg-[#0f0f0f] border border-[#333] text-[#bdbdbd] hover:text-[#eee]"
+                  ? "border-[#14E9BC] text-[#14E9BC]"
+                  : "border-transparent text-[#555] hover:text-[#bdbdbd]"
               }`}>
-              <span className="flex items-center gap-2">
-                {icon}{label}{count !== null && `(${count})`}
-              </span>
+              {icon}
+              {label}
+              {count !== null && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-0.5 ${
+                  tab === t ? "bg-[#14E9BC]/20 text-[#14E9BC]" : "bg-[#1a1a1a] text-[#444]"
+                }`}>{count}</span>
+              )}
             </button>
           ))}
         </div>
 
-        {/* Filtro — oculto na aba Pipeline (tem sua própria toolbar) */}
+        {/* Filtro inline — sem caixa separada */}
         {tab !== "pipeline" && (
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg px-5 py-3 mb-5 flex items-center gap-3 flex-wrap">
-            <Filter size={14} className="text-[#555]" />
+          <div className="flex items-center gap-1.5 mb-5 flex-wrap">
+            <Filter size={12} className="text-[#444] mr-1" />
             {(tab === "clientes"
               ? [{ v: "todos", l: "Todos" }, ...Object.entries(CLIENTE_STATUS).map(([v, c]) => ({ v, l: c.label }))]
               : [{ v: "todos", l: "Todos" }, ...Object.entries(OP_STATUS).map(([v, c]) => ({ v, l: c.label }))]
             ).map(({ v, l }) => (
               <button key={v} onClick={() => setFiltroStatus(v)}
-                className={`px-3 py-1 rounded-lg text-[12px] font-medium transition-colors ${
-                  filtroStatus === v ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]" : "text-[#666] hover:text-[#bdbdbd]"
+                className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors ${
+                  filtroStatus === v
+                    ? "bg-[#14E9BC]/15 text-[#14E9BC]"
+                    : "text-[#555] hover:text-[#bdbdbd]"
                 }`}>
                 {l}
               </button>
@@ -345,30 +346,11 @@ export default function DepartamentoComercial() {
           </div>
         ) : tab === "clientes" ? (
 
-          /* ── Clientes (B2B / PF) ── */
+          /* ── Investidores ── */
           <div>
-            {/* Sub-tabs */}
-            <div className="flex gap-1 mb-5 bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-1 w-fit">
-              {([["pj", "B2B — Pessoa Jurídica"], ["pf", "PF — Pessoa Física"]] as const).map(([v, label]) => (
-                <button key={v} onClick={() => setSubTabClientes(v)}
-                  className="px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-all"
-                  style={subTabClientes === v
-                    ? { backgroundColor: "#14E9BC", color: "#000" }
-                    : { color: "#555" }}>
-                  {label}
-                  <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                    style={subTabClientes === v
-                      ? { backgroundColor: "#00000030", color: "#000" }
-                      : { backgroundColor: "#1a1a1a", color: "#444" }}>
-                    {v === "pj" ? clientesPJ.length : clientesPF.length}
-                  </span>
-                </button>
-              ))}
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {clientesVisiveis.length === 0 ? (
-              <div className="col-span-3 text-center py-16 text-[#444]">Nenhum cliente {subTabClientes === "pj" ? "B2B" : "PF"} encontrado</div>
+              <div className="col-span-3 text-center py-16 text-[#444]">Nenhum investidor encontrado</div>
             ) : clientesVisiveis.map((cliente: CRMCliente) => {
               const st = CLIENTE_STATUS[cliente.status];
               const pr = PRIORIDADE_COLOR[cliente.prioridade as keyof typeof PRIORIDADE_COLOR] ?? "#555";
