@@ -82,31 +82,31 @@ export default function Departamentos() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-[#0a0a0a] px-4 py-6 sm:px-6 sm:py-8 lg:p-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[32px] mb-2">
+            <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[24px] sm:text-[32px] mb-1">
               Departamentos
             </h1>
-            <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[16px]">
+            <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] sm:text-[16px]">
               Gerencie os espaços de trabalho de cada departamento
             </p>
           </div>
           {usuario?.isAdmin && (
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-[#14E9BC] text-[#000] px-6 py-3 rounded-lg font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] flex items-center gap-2 hover:bg-[#12d4a8] transition-colors"
+              className="bg-[#14E9BC] text-[#000] px-5 py-2.5 rounded-lg font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] sm:text-[14px] flex items-center gap-2 hover:bg-[#12d4a8] transition-colors flex-shrink-0"
             >
-              <Plus size={20} />
+              <Plus size={18} />
               Novo Departamento
             </button>
           )}
         </div>
 
         {/* Departments Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
           {carregando ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg p-6 animate-pulse h-[148px]" />
@@ -140,11 +140,11 @@ export default function Departamentos() {
         </div>
 
         {/* Overview Stats */}
-        <div className="mt-12 bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
-          <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[20px] mb-6">
+        <div className="mt-8 sm:mt-12 bg-[#0f0f0f] border border-[#333] rounded-lg p-4 sm:p-6">
+          <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[18px] sm:text-[20px] mb-4 sm:mb-6">
             Visão Geral
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
             <div>
               <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px] mb-2">
                 Total de Membros

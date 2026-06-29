@@ -38,14 +38,14 @@ export default function Dashboard() {
   const recentTasks = tarefas.filter((t) => t.status === "em-andamento").slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-[#0a0a0a] px-4 py-6 sm:px-6 sm:py-8 lg:p-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[32px] mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[24px] sm:text-[32px] mb-1 sm:mb-2">
             Dashboard
           </h1>
-          <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[16px]">
+          <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] sm:text-[16px]">
             Visão geral do sistema administrativo Rise
           </p>
         </div>

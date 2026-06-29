@@ -87,7 +87,7 @@ export function DepartmentCard({ id, nome, cor, icon, membros, tarefasAbertas, d
 
   if (locked) {
     return (
-      <div className="bg-[#0c0c0c] border border-[#1e1e1e] rounded-lg p-6 cursor-not-allowed opacity-60">
+      <div className="bg-[#0c0c0c] border border-[#1e1e1e] rounded-lg p-4 sm:p-6 cursor-not-allowed opacity-60">
         {inner}
       </div>
     );
@@ -96,7 +96,7 @@ export function DepartmentCard({ id, nome, cor, icon, membros, tarefasAbertas, d
   return (
     <Link
       to={destino}
-      className={`bg-[#0f0f0f] border rounded-lg p-6 hover:border-[#555] transition-all hover:shadow-lg group ${
+      className={`bg-[#0f0f0f] border rounded-lg p-4 sm:p-6 hover:border-[#555] transition-all hover:shadow-lg group block ${
         isOwn ? "border-[#14E9BC]/30" : "border-[#333]"
       }`}
     >
