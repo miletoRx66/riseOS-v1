@@ -225,7 +225,7 @@ export function MainLayout() {
       </aside>
 
       {/* ── Main Content ── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0">
 
         {/* Topbar mobile (hamburger) */}
         <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-[#111] border-b border-[#333] flex-shrink-0">

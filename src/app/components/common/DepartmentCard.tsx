@@ -68,14 +68,14 @@ export function DepartmentCard({ id, nome, cor, icon, membros, tarefasAbertas, d
         {nome}
       </h3>
 
-      <div className={`flex items-center gap-4 ${locked ? "text-[#333]" : "text-[#bdbdbd]"}`}>
-        <div className="flex items-center gap-2">
-          <CheckSquare size={16} />
-          <span className="font-['Inter:Regular',sans-serif] text-[14px]">{tarefasAbertas} tarefas</span>
+      <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${locked ? "text-[#333]" : "text-[#bdbdbd]"}`}>
+        <div className="flex items-center gap-1.5">
+          <CheckSquare size={14} />
+          <span className="font-['Inter:Regular',sans-serif] text-[13px]">{tarefasAbertas} tarefas</span>
         </div>
-        <div className="flex items-center gap-2">
-          <FileText size={16} />
-          <span className="font-['Inter:Regular',sans-serif] text-[14px]">{documentos} docs</span>
+        <div className="flex items-center gap-1.5">
+          <FileText size={14} />
+          <span className="font-['Inter:Regular',sans-serif] text-[13px]">{documentos} docs</span>
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export function DepartmentCard({ id, nome, cor, icon, membros, tarefasAbertas, d
 
   if (locked) {
     return (
-      <div className="bg-[#0c0c0c] border border-[#1e1e1e] rounded-lg p-4 sm:p-6 cursor-not-allowed opacity-60">
+      <div className="w-full bg-[#0c0c0c] border border-[#1e1e1e] rounded-lg p-4 sm:p-6 cursor-not-allowed opacity-60">
         {inner}
       </div>
     );
@@ -96,7 +96,7 @@ export function DepartmentCard({ id, nome, cor, icon, membros, tarefasAbertas, d
   return (
     <Link
       to={destino}
-      className={`bg-[#0f0f0f] border rounded-lg p-4 sm:p-6 hover:border-[#555] transition-all hover:shadow-lg group block ${
+      className={`w-full block bg-[#0f0f0f] border rounded-lg p-4 sm:p-6 hover:border-[#555] transition-all hover:shadow-lg group ${
         isOwn ? "border-[#14E9BC]/30" : "border-[#333]"
       }`}
     >
