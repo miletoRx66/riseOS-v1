@@ -1,7 +1,16 @@
 import { supabase } from "../supabase";
+import { formatBRLCompact } from "../format";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = (table: string) => supabase.from(table) as any;
+
+export type CRMSegmento = "b2b_ofertas" | "b2b_infra" | "b2c";
+
+export const SEGMENTO_CONFIG: Record<CRMSegmento, { label: string; color: string }> = {
+  b2b_ofertas: { label: "B2B Ofertas", color: "#14E9BC" },
+  b2b_infra:   { label: "B2B Infra",   color: "#6B8AFF" },
+  b2c:         { label: "B2C",         color: "#f59e0b" },
+};
 
 export interface CRMCliente {
   id: string;
@@ -10,6 +19,7 @@ export interface CRMCliente {
   telefone: string | null;
   empresa: string | null;
   tipo: "pj" | "pf";
+  segmento: CRMSegmento | null;
   status: "lead" | "prospecto" | "qualificado" | "ativo" | "inativo";
   responsavel_id: string | null;
   originador_id: string | null;
@@ -56,6 +66,7 @@ export interface CRMComentario {
 export async function getClientes(filtros?: {
   status?: string;
   tipo?: string;
+  segmento?: string;
 }): Promise<CRMCliente[]> {
   let q = db("crm_clientes")
     .select("*, responsavel:profiles!responsavel_id(id,nome,avatar_url), originador:profiles!originador_id(id,nome,avatar_url)")
@@ -63,6 +74,7 @@ export async function getClientes(filtros?: {
 
   if (filtros?.status && filtros.status !== "todos") q = q.eq("status", filtros.status);
   if (filtros?.tipo && filtros.tipo !== "todos") q = q.eq("tipo", filtros.tipo);
+  if (filtros?.segmento && filtros.segmento !== "todos") q = q.eq("segmento", filtros.segmento);
 
   const { data, error } = await q;
   if (error) throw error;
@@ -137,8 +149,4 @@ export async function criarComentario(
   return data;
 }
 
-export function fmtValor(v: number): string {
-  if (v >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `R$ ${(v / 1_000).toFixed(0)}K`;
-  return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}`;
-}
+export const fmtValor = formatBRLCompact;

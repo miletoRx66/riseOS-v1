@@ -3,7 +3,8 @@ import {
   getClientes, criarCliente, atualizarCliente,
   getOperacoes, criarOperacao, atualizarOperacao,
   getComentarios, criarComentario, fmtValor,
-  type CRMCliente, type CRMOperacao, type CRMComentario,
+  SEGMENTO_CONFIG,
+  type CRMCliente, type CRMOperacao, type CRMComentario, type CRMSegmento,
 } from "../../lib/services/crm";
 import { getUsuarios, type UsuarioDB } from "../../lib/services/usuarios";
 import { useAuth } from "../context/AuthContext";
@@ -62,9 +63,12 @@ export default function DepartamentoComercial() {
   const [novoComentario, setNovoComentario] = useState("");
   const [enviandoComentario, setEnviandoComentario] = useState(false);
 
+  const [segmentoAtivo, setSegmentoAtivo] = useState<"todos" | CRMSegmento>("todos");
+
   const [formCliente, setFormCliente] = useState({
     nome: "", email: "", telefone: "", empresa: "",
     tipo: "pj" as CRMCliente["tipo"],
+    segmento: "b2b_ofertas" as CRMSegmento,
     status: "lead" as CRMCliente["status"],
     responsavel_id: "", originador_id: "",
     persona: [] as string[],
@@ -123,9 +127,11 @@ export default function DepartamentoComercial() {
 
   // ── Filtered lists ───────────────────────────────────────────────
 
-  const clientesVisiveis = clientes.filter((c: CRMCliente) =>
-    filtroStatus === "todos" || c.status === filtroStatus
-  );
+  const clientesVisiveis = clientes.filter((c: CRMCliente) => {
+    if (segmentoAtivo !== "todos" && (c.segmento ?? "b2b_ofertas") !== segmentoAtivo) return false;
+    if (filtroStatus !== "todos" && c.status !== filtroStatus) return false;
+    return true;
+  });
 
   const opFiltradas = operacoes.filter((o) =>
     filtroStatus === "todos" ? true : o.status === filtroStatus
@@ -143,6 +149,7 @@ export default function DepartamentoComercial() {
         telefone: formCliente.telefone || null,
         empresa: formCliente.empresa || null,
         tipo: formCliente.tipo,
+        segmento: formCliente.segmento,
         status: formCliente.status,
         responsavel_id: formCliente.responsavel_id || null,
         originador_id: formCliente.originador_id || null,
@@ -153,7 +160,7 @@ export default function DepartamentoComercial() {
         notas: formCliente.notas || null,
       });
       setModalCliente(false);
-      setFormCliente({ nome: "", email: "", telefone: "", empresa: "", tipo: "pj", status: "lead", responsavel_id: "", originador_id: "", persona: [], prioridade: "media", prazo: "", notas: "" });
+      setFormCliente({ nome: "", email: "", telefone: "", empresa: "", tipo: "pj", segmento: "b2b_ofertas", status: "lead", responsavel_id: "", originador_id: "", persona: [], prioridade: "media", prazo: "", notas: "" });
       await reloadAll();
     } finally { setSalvando(false); }
   }
@@ -300,7 +307,7 @@ export default function DepartamentoComercial() {
             ["operacoes", "Operações",          <TrendingUp size={14} />, operacoes.length],
             ["pipeline",  "Pipeline Parceiros", <Network size={14} />,    null],
           ] as const).map(([t, label, icon, count]) => (
-            <button key={t} onClick={() => { setTab(t as typeof tab); setFiltroStatus("todos"); }}
+            <button key={t} onClick={() => { setTab(t as typeof tab); setFiltroStatus("todos"); setSegmentoAtivo("todos"); }}
               className={`flex items-center gap-1.5 px-5 py-2.5 text-[13px] font-semibold transition-all border-b-2 -mb-px ${
                 tab === t
                   ? "border-[#14E9BC] text-[#14E9BC]"
@@ -316,6 +323,44 @@ export default function DepartamentoComercial() {
             </button>
           ))}
         </div>
+
+        {/* Sub-tabs de segmento (apenas Investidores) */}
+        {tab === "clientes" && (
+          <div className="flex items-center gap-1 mb-4 flex-wrap">
+            {(["todos", "b2b_ofertas", "b2b_infra", "b2c"] as const).map((seg) => {
+              const cfg = seg === "todos" ? null : SEGMENTO_CONFIG[seg];
+              const count = seg === "todos"
+                ? clientes.length
+                : clientes.filter((c) => (c.segmento ?? "b2b_ofertas") === seg).length;
+              const isActive = segmentoAtivo === seg;
+              return (
+                <button
+                  key={seg}
+                  onClick={() => { setSegmentoAtivo(seg); setFiltroStatus("todos"); }}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all border ${
+                    isActive
+                      ? "border-current"
+                      : "border-transparent text-[#555] hover:text-[#bdbdbd] hover:bg-[#1a1a1a]"
+                  }`}
+                  style={isActive ? {
+                    backgroundColor: cfg ? `${cfg.color}15` : "#1a1a1a",
+                    color: cfg ? cfg.color : "#eee",
+                    borderColor: cfg ? `${cfg.color}40` : "#333",
+                  } : undefined}
+                >
+                  {seg === "todos" ? "Todos" : cfg!.label}
+                  <span
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                    style={{
+                      backgroundColor: isActive ? (cfg ? `${cfg.color}25` : "#333") : "#1a1a1a",
+                      color: isActive ? (cfg ? cfg.color : "#eee") : "#444",
+                    }}
+                  >{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Filtro inline — sem caixa separada */}
         {tab !== "pipeline" && (
@@ -367,10 +412,16 @@ export default function DepartamentoComercial() {
                         style={{ backgroundColor: `${st.color}18`, color: st.color }}>
                         {st.label}
                       </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
-                        style={{ backgroundColor: cliente.tipo === "pj" ? "#6B8AFF18" : "#f59e0b18", color: cliente.tipo === "pj" ? "#6B8AFF" : "#f59e0b" }}>
-                        {cliente.tipo === "pj" ? "B2B" : "PF"}
-                      </span>
+                      {(() => {
+                        const seg = cliente.segmento ?? "b2b_ofertas";
+                        const cfg = SEGMENTO_CONFIG[seg];
+                        return (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                            style={{ backgroundColor: `${cfg.color}18`, color: cfg.color }}>
+                            {cfg.label}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -547,6 +598,29 @@ export default function DepartamentoComercial() {
             </div>
 
             <div className="space-y-4">
+              {/* Segmento */}
+              <div>
+                <label className="text-[#bdbdbd] text-[12px] mb-2 block">Segmento</label>
+                <div className="flex gap-2">
+                  {(Object.entries(SEGMENTO_CONFIG) as [CRMSegmento, { label: string; color: string }][]).map(([v, cfg]) => (
+                    <button key={v} type="button"
+                      onClick={() => setFormCliente((f) => ({ ...f, segmento: v }))}
+                      className={`flex-1 py-2 rounded-lg text-[12px] font-semibold border transition-all ${
+                        formCliente.segmento === v
+                          ? "border-current"
+                          : "bg-[#1a1a1a] border-[#333] text-[#666] hover:border-[#555]"
+                      }`}
+                      style={formCliente.segmento === v ? {
+                        backgroundColor: `${cfg.color}15`,
+                        borderColor: `${cfg.color}50`,
+                        color: cfg.color,
+                      } : undefined}>
+                      {cfg.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Tipo: B2B / PF */}
               <div>
                 <label className="text-[#bdbdbd] text-[12px] mb-2 block">Tipo de Cliente</label>
