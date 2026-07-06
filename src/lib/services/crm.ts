@@ -35,15 +35,38 @@ export interface CRMCliente {
   operacoes?: CRMOperacao[];
 }
 
+export type CRMOpStatus =
+  | "em_estruturacao"
+  | "lancada"
+  | "distribuindo"
+  | "meta_atingida"
+  | "pausada"
+  | "encerrada";
+
+export const OP_STATUS_CONFIG: Record<CRMOpStatus, { label: string; color: string }> = {
+  em_estruturacao: { label: "Em Estruturação", color: "#6B8AFF" },
+  lancada:         { label: "Lançada",          color: "#f59e0b" },
+  distribuindo:    { label: "Distribuindo",      color: "#14E9BC" },
+  meta_atingida:   { label: "Meta Atingida",     color: "#28d939" },
+  pausada:         { label: "Pausada",           color: "#ff6b6b" },
+  encerrada:       { label: "Encerrada",         color: "#555"    },
+};
+
+export const OP_FLOW: CRMOpStatus[] = ["em_estruturacao", "lancada", "distribuindo", "meta_atingida"];
+
 export interface CRMOperacao {
   id: string;
   cliente_id: string | null;
   titulo: string;
   tipo: string | null;
-  status: "aberta" | "negociacao" | "proposta" | "fechada" | "perdida";
+  status: CRMOpStatus;
   responsavel_id: string | null;
   originador_id: string | null;
   valor: number;
+  valor_estruturado: number | null;
+  valor_distribuido: number | null;
+  data_inicio: string | null;
+  proximo_followup: string | null;
   prioridade: "baixa" | "media" | "alta";
   prazo: string | null;
   descricao: string | null;
