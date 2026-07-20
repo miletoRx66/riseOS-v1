@@ -10,6 +10,7 @@ export type PipelineStatus =
   | "em_producao"
   | "on_hold"
   | "lancado"
+  | "distribuicao_consolidada"
   | "perdido";
 
 export type Classificacao = "originador" | "distribuidor" | "infra_outros";
@@ -21,8 +22,10 @@ export interface PipelineParceiro {
   produto: string;
   classificacao: Classificacao;
   responsavel_nome: string | null;
+  originador: string | null;
   nda_assinado: boolean;
   aum: number;
+  valor_distribuido: number | null;
   status: PipelineStatus;
   data_inicial: string | null;
   estimativa_lancamento: string | null;
@@ -39,6 +42,16 @@ export interface PipelineParceiro {
   atualizado_em: string;
 }
 
+export interface PipelineHistoricoDistribuicao {
+  id: string;
+  parceiro_id: string;
+  valor_anterior: number | null;
+  valor_novo: number;
+  observacao: string | null;
+  criado_em: string;
+  usuario?: { id: string; nome: string } | null;
+}
+
 export interface PipelineComentario {
   id: string;
   parceiro_id: string;
@@ -49,13 +62,14 @@ export interface PipelineComentario {
 }
 
 export const PIPELINE_STATUS: Record<PipelineStatus, { label: string; color: string; bg: string }> = {
-  conversa:      { label: "Em Conversa",  color: "#6B8AFF", bg: "rgba(107,138,255,0.12)" },
-  em_avanco:     { label: "Em Avanço",    color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
-  em_listagem:   { label: "Em Listagem",  color: "#E879F9", bg: "rgba(232,121,249,0.12)" },
-  em_producao:   { label: "Em Produção",  color: "#14E9BC", bg: "rgba(20,233,188,0.12)" },
-  on_hold:       { label: "On Hold",      color: "#888",    bg: "rgba(136,136,136,0.12)" },
-  lancado:       { label: "Lançado",      color: "#28d939", bg: "rgba(40,217,57,0.12)" },
-  perdido:       { label: "Perdido",      color: "#ec5d5e", bg: "rgba(236,93,94,0.12)" },
+  on_hold:                  { label: "On Hold",                  color: "#888",    bg: "rgba(136,136,136,0.12)" },
+  conversa:                 { label: "Em Conversa",              color: "#6B8AFF", bg: "rgba(107,138,255,0.12)" },
+  em_avanco:                { label: "Em Avanço",                color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
+  em_listagem:              { label: "Em Listagem",              color: "#E879F9", bg: "rgba(232,121,249,0.12)" },
+  em_producao:              { label: "Em Produção",              color: "#14E9BC", bg: "rgba(20,233,188,0.12)" },
+  lancado:                  { label: "Lançado",                  color: "#28d939", bg: "rgba(40,217,57,0.12)" },
+  distribuicao_consolidada: { label: "Distribuição Consolidada", color: "#04d95f", bg: "rgba(4,217,95,0.12)"  },
+  perdido:                  { label: "Perdido",                  color: "#ec5d5e", bg: "rgba(236,93,94,0.12)" },
 };
 
 export const CLASSIFICACAO_LABEL: Record<Classificacao, string> = {
@@ -124,6 +138,30 @@ export async function criarComentarioParceiro(
     .single();
   if (error) throw error;
   return data;
+}
+
+export async function getHistoricoDistribuicao(parceiroId: string): Promise<PipelineHistoricoDistribuicao[]> {
+  const { data, error } = await db("pipeline_historico_distribuicao")
+    .select("*, usuario:profiles!usuario_id(id,nome)")
+    .eq("parceiro_id", parceiroId)
+    .order("criado_em", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function atualizarDistribuicao(
+  parceiroId: string,
+  valorNovo: number,
+  observacao?: string,
+): Promise<void> {
+  const { error } = await db("pipeline_parceiros")
+    .update({ valor_distribuido: valorNovo, atualizado_em: new Date().toISOString() })
+    .eq("id", parceiroId);
+  if (error) throw error;
+  if (observacao) {
+    await db("pipeline_historico_distribuicao")
+      .insert({ parceiro_id: parceiroId, valor_novo: valorNovo, observacao });
+  }
 }
 
 export function fmtAum(v: number): string {

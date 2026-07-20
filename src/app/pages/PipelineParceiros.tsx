@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import {
   getParceiros, criarParceiro, atualizarParceiro, deletarParceiro,
-  getComentariosParceiro, criarComentarioParceiro,
+  getComentariosParceiro, criarComentarioParceiro, atualizarDistribuicao,
   PIPELINE_STATUS, CLASSIFICACAO_LABEL, IMPACTO_COLOR, fmtAum, fmtForecast,
   type PipelineParceiro, type PipelineComentario, type PipelineStatus, type Classificacao, type Impacto,
 } from "../../lib/services/pipeline";
+import { formatBRLCompact } from "../../lib/format";
 import { useAuth } from "../context/AuthContext";
 import {
   Plus, X, Filter, Loader2, Send, ChevronRight, Edit2, Trash2,
@@ -16,7 +17,7 @@ import {
 // ── Constantes ───────────────────────────────────────────────────────────────
 
 const KANBAN_COLUNAS: PipelineStatus[] = [
-  "conversa", "em_avanco", "em_listagem", "em_producao", "on_hold", "lancado",
+  "on_hold", "conversa", "em_avanco", "em_listagem", "em_producao", "lancado", "distribuicao_consolidada",
 ];
 
 const CLASSIFICACAO_COLOR: Record<Classificacao, string> = {
@@ -27,7 +28,8 @@ const CLASSIFICACAO_COLOR: Record<Classificacao, string> = {
 
 const FORM_INICIAL = {
   parceiro: "", produto: "", classificacao: "originador" as Classificacao,
-  responsavel_nome: "", nda_assinado: false, aum: "", status: "conversa" as PipelineStatus,
+  responsavel_nome: "", originador: "", nda_assinado: false, aum: "", valor_distribuido: "",
+  status: "conversa" as PipelineStatus,
   data_inicial: "", estimativa_lancamento: "", proximos_passos: "",
   gargalo: "", impacto: "alto" as Impacto, forecast_anual: "", fee_parceiro: "",
   despesas: "", forecast_ytd: "", observacoes: "", ordem: 0,
@@ -43,6 +45,43 @@ function fmtData(d: string | null | undefined): string {
 
 function avatarInicial(nome: string): string {
   return nome ? nome[0].toUpperCase() : "?";
+}
+
+// ── Sub-componente: Column Summary ───────────────────────────────────────────
+
+function ColumnSummary({
+  cards, isDistribuicao,
+}: {
+  cards: PipelineParceiro[];
+  isDistribuicao: boolean;
+}) {
+  const numDeals    = cards.length;
+  const aumTotal    = cards.reduce((s, c) => s + (c.aum || 0), 0);
+  const aumDist     = cards.reduce((s, c) => s + (c.valor_distribuido || 0), 0);
+  const forecast    = cards.reduce((s, c) => s + (c.forecast_anual || 0), 0);
+  const aumLabel    = isDistribuicao ? "AuM distribuído"  : "AuM potencial";
+  const aumValor    = isDistribuicao ? aumDist            : aumTotal;
+  const fcastLabel  = isDistribuicao ? "Forecast consolidado" : "Forecast da esteira";
+
+  return (
+    <div className="mx-2 mb-2 rounded-xl border border-dashed border-rise-line-3 p-3 bg-rise-bg/60">
+      <p className="text-[10px] font-semibold text-rise-fg-4 uppercase tracking-wide mb-2">Resumo</p>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] text-rise-fg-4">Número de deals</span>
+          <span className="text-[11px] font-bold text-rise-fg">{numDeals}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] text-rise-fg-4">{aumLabel}</span>
+          <span className="text-[11px] font-bold text-[#04d95f]">{aumValor > 0 ? formatBRLCompact(aumValor) : "—"}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] text-rise-fg-4">{fcastLabel}</span>
+          <span className="text-[11px] font-bold text-rise-fg-2">{forecast > 0 ? formatBRLCompact(forecast) : "—"}</span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ── Sub-componente: Card Kanban ───────────────────────────────────────────────
@@ -111,6 +150,13 @@ function KanbanCard({
           <p className="font-bold text-[#28d939]">{fmtForecast(p.forecast_anual)}</p>
         </div>
       </div>
+
+      {/* Originador */}
+      {p.originador && (
+        <p className="text-[10px] text-rise-fg-4 mb-2">
+          Originador: <span className="text-rise-fg-3 font-medium">{p.originador}</span>
+        </p>
+      )}
 
       {/* Footer: responsável + NDA + estimativa */}
       <div className="flex items-center justify-between border-t border-rise-line-2 pt-3 mt-1">
@@ -587,6 +633,12 @@ export default function PipelineParceiros() {
   const [salvandoNovo, setSalvandoNovo] = useState(false);
   const [formNovo, setFormNovo] = useState<typeof FORM_INICIAL>({ ...FORM_INICIAL });
 
+  const [modalDist, setModalDist] = useState(false);
+  const [distParceiroId, setDistParceiroId] = useState("");
+  const [distValorNovo, setDistValorNovo] = useState("");
+  const [distObs, setDistObs] = useState("");
+  const [salvandoDist, setSalvandoDist] = useState(false);
+
   // drag-and-drop kanban
   const draggingRef = useRef<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -598,11 +650,38 @@ export default function PipelineParceiros() {
 
   // ── KPIs ─────────────────────────────────────────────────────────────────────
 
-  const totalAum = parceiros.reduce((s, p) => s + p.aum, 0);
-  const totalForecast = parceiros.reduce((s, p) => s + p.forecast_anual, 0);
-  const emProducao = parceiros.filter((p) => p.status === "em_producao").length;
-  const totalParceiros = parceiros.length;
+  const totalParceiros   = parceiros.length;
+  const aumPotencialTotal = parceiros.reduce((s, p) => s + (p.aum || 0), 0);
+
+  const dealsLancados    = parceiros.filter((p) => p.status === "lancado" || p.status === "distribuicao_consolidada");
+  const aumEfetLancado   = dealsLancados.reduce((s, p) => s + (p.aum || 0), 0);
+
+  const dealsDist        = parceiros.filter((p) => p.status === "distribuicao_consolidada");
+  const aumDistribuido   = dealsDist.reduce((s, p) => s + (p.valor_distribuido || 0), 0);
+  const forecastDist     = dealsDist.reduce((s, p) => s + (p.forecast_anual || 0), 0);
+
+  const pctLancadoVsPot  = aumPotencialTotal > 0
+    ? ((aumEfetLancado / aumPotencialTotal) * 100).toFixed(1) : "0";
+  const pctDistVsLancado = aumEfetLancado > 0
+    ? ((aumDistribuido / aumEfetLancado) * 100).toFixed(1) : "0";
+
   const responsaveis = [...new Set(parceiros.map((p) => p.responsavel_nome).filter(Boolean))] as string[];
+
+  // ── Atualizar distribuição ────────────────────────────────────────────────────
+
+  async function handleAtualizarDistribuicao() {
+    const val = parseFloat(distValorNovo);
+    if (!distParceiroId || isNaN(val)) return;
+    setSalvandoDist(true);
+    try {
+      await atualizarDistribuicao(distParceiroId, val, distObs || undefined);
+      setParceiros((prev) =>
+        prev.map((p) => p.id === distParceiroId ? { ...p, valor_distribuido: val } : p)
+      );
+      setModalDist(false);
+      setDistParceiroId(""); setDistValorNovo(""); setDistObs("");
+    } finally { setSalvandoDist(false); }
+  }
 
   // ── Filtros ───────────────────────────────────────────────────────────────────
 
@@ -670,8 +749,10 @@ export default function PipelineParceiros() {
         produto: formNovo.produto,
         classificacao: formNovo.classificacao,
         responsavel_nome: formNovo.responsavel_nome || null,
+        originador: formNovo.originador || null,
         nda_assinado: formNovo.nda_assinado,
         aum: parseFloat(formNovo.aum) || 0,
+        valor_distribuido: parseFloat(formNovo.valor_distribuido) || null,
         status: formNovo.status,
         data_inicial: formNovo.data_inicial || null,
         estimativa_lancamento: formNovo.estimativa_lancamento || null,
@@ -710,21 +791,56 @@ export default function PipelineParceiros() {
   return (
     <div>
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: "Parceiros Totais", value: totalParceiros,            color: "#6B8AFF",  icon: <Users size={16} /> },
-          { label: "AuM Total",        value: fmtAum(totalAum),          color: "#14E9BC",  icon: <DollarSign size={16} /> },
-          { label: "Forecast Anual",   value: fmtForecast(totalForecast), color: "#28d939", icon: <TrendingUp size={16} /> },
-          { label: "Em Produção",      value: emProducao,                color: "#f59e0b",  icon: <Target size={16} /> },
-        ].map((k) => (
-          <div key={k.label} className="bg-rise-surface border border-rise-line-2 rounded-xl p-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-rise-fg-4 text-[12px]">{k.label}</p>
-              <span style={{ color: k.color }}>{k.icon}</span>
-            </div>
-            <p className="text-[22px] font-bold" style={{ color: k.color }}>{k.value}</p>
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {/* 1 — Número de deals */}
+        <div className="bg-rise-surface border border-rise-line-2 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-rise-fg-4 text-[12px]">Número de deals</p>
+            <Users size={16} className="text-[#6B8AFF]" />
           </div>
-        ))}
+          <p className="text-[22px] font-bold text-[#6B8AFF]">{totalParceiros}</p>
+          <p className="text-[10px] text-rise-fg-4 mt-1">Soma de todas as colunas</p>
+        </div>
+
+        {/* 2 — AuM Potencial Total */}
+        <div className="bg-rise-surface border border-rise-line-2 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-rise-fg-4 text-[12px]">AuM potencial total</p>
+            <DollarSign size={16} className="text-[#14E9BC]" />
+          </div>
+          <p className="text-[22px] font-bold text-[#14E9BC]">{fmtAum(aumPotencialTotal)}</p>
+          <p className="text-[10px] text-rise-fg-4 mt-1">Captação e infraestrutura</p>
+        </div>
+
+        {/* 3 — AuM Efetivamente Lançado */}
+        <div className="bg-rise-surface border border-rise-line-2 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-rise-fg-4 text-[12px]">AuM efetivamente lançado</p>
+            <TrendingUp size={16} className="text-[#04d95f]" />
+          </div>
+          <p className="text-[22px] font-bold text-[#04d95f]">{fmtAum(aumEfetLancado)}</p>
+          <p className="text-[10px] text-rise-fg-4 mt-1">{pctLancadoVsPot}% do AuM potencial</p>
+        </div>
+
+        {/* 4 — AuM Distribuído */}
+        <div className="bg-rise-surface border border-rise-line-2 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-rise-fg-4 text-[12px]">AuM distribuído</p>
+            <CheckCircle size={16} className="text-[#28d939]" />
+          </div>
+          <p className="text-[22px] font-bold text-[#28d939]">{fmtAum(aumDistribuido)}</p>
+          <p className="text-[10px] text-rise-fg-4 mt-1">{pctDistVsLancado}% do AuM lançado</p>
+        </div>
+
+        {/* 5 — Forecast Distribuição Consolidada */}
+        <div className="bg-rise-surface border border-rise-line-2 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-rise-fg-4 text-[12px]">Forecast distribuição consolidada</p>
+            <Target size={16} className="text-[#f59e0b]" />
+          </div>
+          <p className="text-[22px] font-bold text-[#f59e0b]">{fmtForecast(forecastDist)}</p>
+          <p className="text-[10px] text-rise-fg-4 mt-1">Baseado no volume distribuído</p>
+        </div>
       </div>
 
       {/* Toolbar */}
@@ -777,6 +893,12 @@ export default function PipelineParceiros() {
           </div>
 
           <button
+            onClick={() => setModalDist(true)}
+            className="border border-[#04d95f]/40 text-[#04d95f] px-4 py-2 rounded-lg font-semibold text-[13px] flex items-center gap-1.5 hover:bg-[#04d95f]/10 transition-colors"
+          >
+            <TrendingUp size={15} /> Atualizar Distribuição
+          </button>
+          <button
             onClick={() => setModalNovo(true)}
             className="bg-[#14E9BC] text-[#000] px-4 py-2 rounded-lg font-semibold text-[13px] flex items-center gap-1.5 hover:bg-[#12d4a8] transition-colors"
           >
@@ -821,6 +943,12 @@ export default function PipelineParceiros() {
                     {cards.length}
                   </span>
                 </div>
+
+                {/* Column Summary */}
+                <ColumnSummary
+                  cards={cards}
+                  isDistribuicao={col === "distribuicao_consolidada"}
+                />
 
                 {/* Drop area */}
                 <div
@@ -907,6 +1035,94 @@ export default function PipelineParceiros() {
         </div>
       )}
 
+      {/* Modal Atualizar Distribuição */}
+      {modalDist && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setModalDist(false); }}>
+          <div className="bg-rise-surface border border-rise-line-2 rounded-2xl w-full max-w-[480px]">
+            <div className="flex items-center justify-between p-6 border-b border-rise-line-2">
+              <div>
+                <h2 className="font-bold text-rise-fg text-[18px]">Atualizar Distribuição</h2>
+                <p className="text-rise-fg-4 text-[12px] mt-0.5">Registra o novo valor e mantém histórico</p>
+              </div>
+              <button onClick={() => setModalDist(false)} className="text-rise-fg-4 hover:text-rise-fg"><X size={18} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Selecionar deal */}
+              <div>
+                <label className="text-rise-fg-4 text-[12px] mb-1 block">Deal *</label>
+                <select
+                  value={distParceiroId}
+                  onChange={(e) => {
+                    setDistParceiroId(e.target.value);
+                    setDistValorNovo("");
+                  }}
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#04d95f]"
+                >
+                  <option value="">Selecionar deal...</option>
+                  {parceiros
+                    .filter((p) => p.status === "lancado" || p.status === "distribuicao_consolidada")
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>{p.parceiro} — {p.produto}</option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Valor atual (read-only) */}
+              {distParceiroId && (() => {
+                const p = parceiros.find((x) => x.id === distParceiroId);
+                return p ? (
+                  <div>
+                    <label className="text-rise-fg-4 text-[12px] mb-1 block">Valor atual distribuído</label>
+                    <div className="bg-rise-raised border border-rise-line rounded-lg px-3 py-2 text-rise-fg-3 text-[14px]">
+                      {p.valor_distribuido != null ? fmtAum(p.valor_distribuido) : "—"}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+
+              {/* Novo valor */}
+              <div>
+                <label className="text-rise-fg-4 text-[12px] mb-1 block">Novo valor distribuído (R$) *</label>
+                <input
+                  type="number" step="0.01" min="0"
+                  value={distValorNovo}
+                  onChange={(e) => setDistValorNovo(e.target.value)}
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#04d95f]"
+                  placeholder="0.00"
+                />
+              </div>
+
+              {/* Observação */}
+              <div>
+                <label className="text-rise-fg-4 text-[12px] mb-1 block">Observação (opcional)</label>
+                <textarea
+                  rows={2}
+                  value={distObs}
+                  onChange={(e) => setDistObs(e.target.value)}
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#04d95f] resize-none"
+                  placeholder="Ex: Atualização referente ao mês de Julho..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  onClick={handleAtualizarDistribuicao}
+                  disabled={salvandoDist || !distParceiroId || !distValorNovo}
+                  className="flex-1 bg-[#04d95f] text-[#000] py-2.5 rounded-lg font-semibold text-[14px] hover:bg-[#03c254] transition-colors disabled:opacity-50"
+                >
+                  {salvandoDist ? "Salvando..." : "Confirmar atualização"}
+                </button>
+                <button onClick={() => setModalDist(false)}
+                  className="px-5 py-2.5 bg-rise-raised text-rise-fg-2 rounded-lg font-semibold text-[14px] hover:bg-rise-subtle transition-colors">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal novo parceiro */}
       {modalNovo && (
         <div
@@ -932,6 +1148,12 @@ export default function PipelineParceiros() {
                     className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]"
                     placeholder="Nome do responsável" />
                 </div>
+              </div>
+              <div>
+                <label className="text-rise-fg-4 text-[12px] mb-1 block">Originador</label>
+                <input value={formNovo.originador} onChange={(e) => setFormNovo({ ...formNovo, originador: e.target.value })}
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]"
+                  placeholder="Nome do originador (opcional)" />
               </div>
               <div>
                 <label className="text-rise-fg-4 text-[12px] mb-1 block">Produto / Descrição *</label>
