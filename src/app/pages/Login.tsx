@@ -45,7 +45,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-rise-bg flex items-center justify-center p-4">
       {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden opacity-5">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#14E9BC] rounded-full blur-3xl" />
@@ -53,19 +53,19 @@ export default function Login() {
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        <div className="bg-[#111] border border-[#333] rounded-2xl p-8 lg:p-12">
+        <div className="bg-rise-surface border border-rise-line rounded-2xl p-8 lg:p-12">
           {/* Logo */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 bg-gradient-to-br from-[#14E9BC] to-[#28d939] rounded-xl flex items-center justify-center">
                 <span className="font-bold text-[#000] text-[24px]">R</span>
               </div>
-              <span className="font-bold text-[#eee] text-[28px]">Rise Admin</span>
+              <span className="font-bold text-rise-fg text-[28px]">Rise Admin</span>
             </div>
-            <h1 className="font-bold text-[#eee] text-[28px] mb-2">
+            <h1 className="font-bold text-rise-fg text-[28px] mb-2">
               Bem-vindo de volta
             </h1>
-            <p className="text-[#bdbdbd] text-[15px]">
+            <p className="text-rise-fg-2 text-[15px]">
               Acesse sua conta para continuar
             </p>
           </div>
@@ -74,18 +74,18 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
-              <label className="block font-semibold text-[#eee] text-[13px] mb-2">
+              <label className="block font-semibold text-rise-fg text-[13px] mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#666]" />
+                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-rise-fg-3" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@risefinance.com.br"
                   required
-                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg pl-11 pr-4 py-3 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none transition-colors"
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg pl-11 pr-4 py-3 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none transition-colors"
                   disabled={carregando}
                 />
               </div>
@@ -94,7 +94,7 @@ export default function Login() {
             {/* Senha */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="font-semibold text-[#eee] text-[13px]">
+                <label className="font-semibold text-rise-fg text-[13px]">
                   Senha
                 </label>
                 <Link
@@ -105,20 +105,20 @@ export default function Login() {
                 </Link>
               </div>
               <div className="relative">
-                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#666]" />
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-rise-fg-3" />
                 <input
                   type={mostrarSenha ? "text" : "password"}
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg pl-11 pr-12 py-3 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none transition-colors"
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg pl-11 pr-12 py-3 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none transition-colors"
                   disabled={carregando}
                 />
                 <button
                   type="button"
                   onClick={() => setMostrarSenha(!mostrarSenha)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#666] hover:text-[#eee] transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-rise-fg-3 hover:text-rise-fg transition-colors"
                   disabled={carregando}
                 >
                   {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -153,14 +153,14 @@ export default function Login() {
           </form>
 
           {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-[#1e1e1e] text-center space-y-3">
-            <p className="text-[#555] text-[13px]">
+          <div className="mt-8 pt-6 border-t border-rise-line-2 text-center space-y-3">
+            <p className="text-rise-fg-4 text-[13px]">
               Não tem uma conta?{" "}
               <Link to="/criar-conta" className="text-[#14E9BC] hover:opacity-80 transition-opacity font-semibold">
                 Criar conta
               </Link>
             </p>
-            <p className="text-[#444] text-[12px]">
+            <p className="text-rise-fg-4 text-[12px]">
               Rise Finance · Sistema Administrativo Operacional
             </p>
           </div>

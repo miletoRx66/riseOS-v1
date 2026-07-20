@@ -44,10 +44,10 @@ export function DepartmentCard({ id, nome, cor, icon, membros, tarefasAbertas, d
       <div className="flex items-start justify-between mb-4">
         <div
           className="w-12 h-12 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: locked ? "#1a1a1a" : `${cor}20` }}
+          style={{ backgroundColor: locked ? "var(--rise-raised)" : `${cor}20` }}
         >
           {locked
-            ? <Lock size={20} className="text-[#333]" />
+            ? <Lock size={20} className="text-rise-fg-4" />
             : <Icon size={24} style={{ color: cor }} />
           }
         </div>
@@ -57,18 +57,18 @@ export function DepartmentCard({ id, nome, cor, icon, membros, tarefasAbertas, d
               Meu dept
             </span>
           )}
-          <div className="flex items-center gap-1.5 text-[#bdbdbd]">
+          <div className="flex items-center gap-1.5 text-rise-fg-2">
             <Users size={16} />
             <span className="font-['Inter:Medium',sans-serif] text-[14px]">{membros}</span>
           </div>
         </div>
       </div>
 
-      <h3 className={`font-['Inter:Semi_Bold',sans-serif] font-semibold text-[18px] mb-4 ${locked ? "text-[#444]" : "text-[#eee]"}`}>
+      <h3 className={`font-['Inter:Semi_Bold',sans-serif] font-semibold text-[18px] mb-4 ${locked ? "text-rise-fg-4" : "text-rise-fg"}`}>
         {nome}
       </h3>
 
-      <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${locked ? "text-[#333]" : "text-[#bdbdbd]"}`}>
+      <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${locked ? "text-rise-fg-4" : "text-rise-fg-2"}`}>
         <div className="flex items-center gap-1.5">
           <CheckSquare size={14} />
           <span className="font-['Inter:Regular',sans-serif] text-[13px]">{tarefasAbertas} tarefas</span>
@@ -80,14 +80,14 @@ export function DepartmentCard({ id, nome, cor, icon, membros, tarefasAbertas, d
       </div>
 
       {locked && (
-        <p className="text-[#333] text-[11px] mt-3">Acesso restrito</p>
+        <p className="text-rise-fg-4 text-[11px] mt-3">Acesso restrito</p>
       )}
     </>
   );
 
   if (locked) {
     return (
-      <div className="w-full bg-[#0c0c0c] border border-[#1e1e1e] rounded-lg p-4 sm:p-6 cursor-not-allowed opacity-60">
+      <div className="w-full bg-rise-bg border border-rise-line-2 rounded-lg p-4 sm:p-6 cursor-not-allowed opacity-60">
         {inner}
       </div>
     );
@@ -96,8 +96,8 @@ export function DepartmentCard({ id, nome, cor, icon, membros, tarefasAbertas, d
   return (
     <Link
       to={destino}
-      className={`w-full block bg-[#0f0f0f] border rounded-lg p-4 sm:p-6 hover:border-[#555] transition-all hover:shadow-lg group ${
-        isOwn ? "border-[#14E9BC]/30" : "border-[#333]"
+      className={`w-full block bg-rise-surface border rounded-lg p-4 sm:p-6 hover:border-rise-fg-4 transition-all hover:shadow-lg group ${
+        isOwn ? "border-[#14E9BC]/30" : "border-rise-line"
       }`}
     >
       {inner}

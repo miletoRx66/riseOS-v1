@@ -10,17 +10,17 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-12 text-center">
+    <div className="bg-rise-surface border border-rise-line rounded-lg p-12 text-center">
       {icon && (
-        <div className="flex items-center justify-center mb-4 text-[#333]">
+        <div className="flex items-center justify-center mb-4 text-rise-fg-4">
           {icon}
         </div>
       )}
-      <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[18px] mb-2">
+      <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[18px] mb-2">
         {title}
       </h3>
       {description && (
-        <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] mb-6">
+        <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] mb-6">
           {description}
         </p>
       )}

@@ -104,21 +104,21 @@ export default function TarefasKanban() {
   const semDept = getSemDept();
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-full mx-auto">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6 max-w-[1400px]">
           <div>
-            <h1 className="font-bold text-[#eee] text-[32px] mb-1">Tarefas por Área</h1>
-            <p className="text-[#bdbdbd] text-[15px]">
+            <h1 className="font-bold text-rise-fg text-[32px] mb-1">Tarefas por Área</h1>
+            <p className="text-rise-fg-2 text-[15px]">
               Cada coluna representa um departamento — arraste para transferir
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Link
               to="/tarefas"
-              className="bg-[#1a1a1a] border border-[#333] text-[#bdbdbd] px-4 py-2 rounded-lg text-[14px] flex items-center gap-2 hover:bg-[#222] hover:text-[#eee] transition-colors"
+              className="bg-rise-raised border border-rise-line text-rise-fg-2 px-4 py-2 rounded-lg text-[14px] flex items-center gap-2 hover:bg-rise-subtle hover:text-rise-fg transition-colors"
             >
               <List size={16} />
               Todas as Tarefas
@@ -133,8 +133,8 @@ export default function TarefasKanban() {
         </div>
 
         {/* Filtro por status */}
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg px-5 py-3 mb-6 max-w-[1400px] flex items-center gap-4">
-          <div className="flex items-center gap-2 text-[#bdbdbd]">
+        <div className="bg-rise-surface border border-rise-line rounded-lg px-5 py-3 mb-6 max-w-[1400px] flex items-center gap-4">
+          <div className="flex items-center gap-2 text-rise-fg-2">
             <Filter size={16} />
             <span className="text-[14px]">Status:</span>
           </div>
@@ -151,7 +151,7 @@ export default function TarefasKanban() {
               className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${
                 filtroStatus === opt.value
                   ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]"
-                  : "text-[#777] hover:text-[#bdbdbd]"
+                  : "text-rise-fg-3 hover:text-rise-fg-2"
               }`}
             >
               {opt.label}
@@ -166,7 +166,7 @@ export default function TarefasKanban() {
               )}
             </button>
           ))}
-          <span className="ml-auto text-[#555] text-[12px]">
+          <span className="ml-auto text-rise-fg-4 text-[12px]">
             {tarefasFiltradas.length} tarefa{tarefasFiltradas.length !== 1 ? "s" : ""}
           </span>
         </div>
@@ -239,10 +239,10 @@ export default function TarefasKanban() {
                       className={`border border-dashed rounded-xl p-6 text-center transition-colors ${
                         isOver
                           ? "border-[#14E9BC]/40 bg-[#14E9BC]/5"
-                          : "border-[#222]"
+                          : "border-rise-line-2"
                       }`}
                     >
-                      <p className="text-[#444] text-[12px]">
+                      <p className="text-rise-fg-4 text-[12px]">
                         {isOver ? "Soltar aqui" : "Sem tarefas"}
                       </p>
                     </div>
@@ -264,16 +264,16 @@ export default function TarefasKanban() {
               <div
                 className={`rounded-xl p-4 mb-3 border transition-colors ${
                   dragOverDept === "__sem_dept__"
-                    ? "border-[#555] bg-[#1a1a1a]"
-                    : "border-[#2a2a2a] bg-[#0f0f0f]"
+                    ? "border-rise-fg-4 bg-rise-raised"
+                    : "border-rise-line-2 bg-rise-surface"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-[#555]" />
-                    <span className="text-[#555] font-semibold text-[14px]">Sem Área</span>
+                    <span className="text-rise-fg-4 font-semibold text-[14px]">Sem Área</span>
                   </div>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#222] text-[#555]">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rise-subtle text-rise-fg-4">
                     {semDept.length}
                   </span>
                 </div>
@@ -326,7 +326,7 @@ function KanbanCard({
       className={`transition-all ${isDragging ? "opacity-40 scale-95" : ""}`}
     >
       <Link to={`/tarefas/${tarefa.id}`}>
-        <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-4 hover:border-[#444] transition-all cursor-grab active:cursor-grabbing group">
+        <div className="bg-rise-surface border border-rise-line-2 rounded-xl p-4 hover:border-rise-line-3 transition-all cursor-grab active:cursor-grabbing group">
 
           {/* Status badge */}
           <div className="flex items-center justify-between mb-2.5">
@@ -345,7 +345,7 @@ function KanbanCard({
           </div>
 
           {/* Título */}
-          <h4 className="text-[#eee] text-[13px] font-semibold leading-snug mb-3 group-hover:text-[#14E9BC] transition-colors line-clamp-2">
+          <h4 className="text-rise-fg text-[13px] font-semibold leading-snug mb-3 group-hover:text-[#14E9BC] transition-colors line-clamp-2">
             {tarefa.titulo}
           </h4>
 
@@ -353,10 +353,10 @@ function KanbanCard({
           {tarefa.progresso !== undefined && tarefa.progresso > 0 && (
             <div className="mb-3">
               <div className="flex justify-between items-center mb-1">
-                <span className="text-[#555] text-[10px]">Progresso</span>
+                <span className="text-rise-fg-4 text-[10px]">Progresso</span>
                 <span className="text-[#14E9BC] text-[10px] font-semibold">{tarefa.progresso}%</span>
               </div>
-              <div className="w-full bg-[#1a1a1a] rounded-full h-1">
+              <div className="w-full bg-rise-raised rounded-full h-1">
                 <div
                   className="bg-[#14E9BC] h-1 rounded-full"
                   style={{ width: `${tarefa.progresso}%` }}
@@ -366,20 +366,20 @@ function KanbanCard({
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between pt-2.5 border-t border-[#1a1a1a]">
+          <div className="flex items-center justify-between pt-2.5 border-t border-rise-raised">
             <div className="flex items-center gap-1.5">
               <div className="w-5 h-5 rounded-full bg-[#14E9BC]/15 flex items-center justify-center">
                 <span className="text-[#14E9BC] text-[9px] font-bold">
                   {tarefa.responsavel?.nome?.charAt(0) ?? "?"}
                 </span>
               </div>
-              <span className="text-[#666] text-[11px]">
+              <span className="text-rise-fg-3 text-[11px]">
                 {tarefa.responsavel?.nome?.split(" ")[0] ?? "—"}
               </span>
             </div>
             {tarefa.prazo && (
               <span
-                className={`text-[10px] font-medium ${atrasada ? "text-[#ec5d5e]" : "text-[#666]"}`}
+                className={`text-[10px] font-medium ${atrasada ? "text-[#ec5d5e]" : "text-rise-fg-3"}`}
               >
                 {atrasada ? "⚠ " : ""}{formatarData(tarefa.prazo)}
               </span>

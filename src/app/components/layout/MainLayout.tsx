@@ -96,16 +96,16 @@ export function MainLayout() {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="p-6 border-b border-[#333] flex items-center justify-between">
+      <div className="p-6 border-b border-rise-line flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-br from-[#14E9BC] to-[#28d939] rounded-lg flex items-center justify-center">
             <span className="font-['Inter:Bold',sans-serif] font-bold text-[#000] text-[16px]">R</span>
           </div>
-          <span className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[18px]">Rise Admin</span>
+          <span className="font-['Inter:Bold',sans-serif] font-bold text-rise-fg text-[18px]">Rise Admin</span>
         </div>
         {/* Fechar drawer (mobile) */}
         <button
-          className="md:hidden text-[#555] hover:text-[#eee] transition-colors"
+          className="md:hidden text-rise-fg-4 hover:text-rise-fg transition-colors"
           onClick={() => setSidebarOpen(false)}
         >
           <X size={20} />
@@ -113,18 +113,18 @@ export function MainLayout() {
       </div>
 
       {/* User Profile */}
-      <div className="p-4 border-b border-[#333]">
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-[#1a1a1a]">
+      <div className="p-4 border-b border-rise-line">
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-rise-raised">
           <img
             src={usuario?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin"}
             alt={usuario?.nome || "Admin"}
-            className="w-10 h-10 rounded-full bg-[#333] flex-shrink-0"
+            className="w-10 h-10 rounded-full bg-rise-line flex-shrink-0"
           />
           <div className="flex-1 min-w-0">
-            <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px] truncate">
+            <p className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[14px] truncate">
               {usuario?.nome || "Admin Rise"}
             </p>
-            <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px] truncate">
+            <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[12px] truncate">
               {usuario?.cargo || "Administrador"}
             </p>
           </div>
@@ -132,7 +132,7 @@ export function MainLayout() {
 
         <button
           onClick={handleLogout}
-          className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[#ec5d5e] hover:bg-[#1a1a1a] transition-colors border border-[#333] hover:border-[#ec5d5e]/40"
+          className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[#ec5d5e] hover:bg-rise-raised transition-colors border border-rise-line hover:border-[#ec5d5e]/40"
         >
           <LogOut size={16} />
           <span className="font-['Inter:Medium',sans-serif] text-[13px]">Sair</span>
@@ -152,8 +152,8 @@ export function MainLayout() {
                 to={item.path}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   active
-                    ? "bg-[#1a1a1a] text-[#14E9BC] border border-[#14E9BC]/30"
-                    : "text-[#bdbdbd] hover:bg-[#1a1a1a] hover:text-[#eee]"
+                    ? "bg-rise-raised text-[#14E9BC] border border-[#14E9BC]/30"
+                    : "text-rise-fg-2 hover:bg-rise-raised hover:text-rise-fg"
                 }`}
               >
                 <div className="relative flex-shrink-0">
@@ -172,14 +172,14 @@ export function MainLayout() {
       </nav>
 
       {/* Notificações + Perfil + Tema */}
-      <div className="p-4 border-t border-[#333] space-y-1">
+      <div className="p-4 border-t border-rise-line space-y-1">
         {usuario && <NotificacoesBell userId={usuario.id} />}
         <Link
           to="/perfil"
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
             isActive("/perfil")
-              ? "bg-[#1a1a1a] text-[#14E9BC] border border-[#14E9BC]/30"
-              : "text-[#bdbdbd] hover:bg-[#1a1a1a] hover:text-[#eee]"
+              ? "bg-rise-raised text-[#14E9BC] border border-[#14E9BC]/30"
+              : "text-rise-fg-2 hover:bg-rise-raised hover:text-rise-fg"
           }`}
         >
           <UserCircle size={20} />
@@ -187,7 +187,7 @@ export function MainLayout() {
         </Link>
         <button
           onClick={toggleTheme}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[#bdbdbd] hover:bg-[#1a1a1a] hover:text-[#eee] transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-rise-fg-2 hover:bg-rise-raised hover:text-rise-fg transition-colors"
         >
           {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
           <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">
@@ -199,10 +199,10 @@ export function MainLayout() {
   );
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0a]">
+    <div className="flex min-h-screen bg-rise-bg">
 
       {/* ── Sidebar desktop (sempre visível em md+) ── */}
-      <aside className="hidden md:flex md:flex-col w-[240px] flex-shrink-0 bg-[#111] border-r border-[#333]">
+      <aside className="hidden md:flex md:flex-col w-[240px] flex-shrink-0 bg-rise-surface border-r border-rise-line">
         {sidebarContent}
       </aside>
 
@@ -215,7 +215,7 @@ export function MainLayout() {
       )}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-[260px] bg-[#111] border-r border-[#333]
+          fixed top-0 left-0 h-full w-[260px] bg-rise-surface border-r border-rise-line
           flex flex-col z-50 md:hidden
           transition-transform duration-200 ease-in-out
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
@@ -228,10 +228,10 @@ export function MainLayout() {
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Topbar mobile (hamburger) */}
-        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-[#111] border-b border-[#333] flex-shrink-0">
+        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-rise-surface border-b border-rise-line flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="text-[#bdbdbd] hover:text-[#eee] transition-colors"
+            className="text-rise-fg-2 hover:text-rise-fg transition-colors"
           >
             <Menu size={22} />
           </button>
@@ -239,7 +239,7 @@ export function MainLayout() {
             <div className="w-6 h-6 bg-gradient-to-br from-[#14E9BC] to-[#28d939] rounded flex items-center justify-center">
               <span className="font-bold text-[#000] text-[11px]">R</span>
             </div>
-            <span className="font-bold text-[#eee] text-[15px]">Rise Admin</span>
+            <span className="font-bold text-rise-fg text-[15px]">Rise Admin</span>
           </div>
         </header>
 

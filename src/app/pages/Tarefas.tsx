@@ -284,29 +284,29 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[32px] mb-2">
+            <h1 className="font-['Inter:Bold',sans-serif] font-bold text-rise-fg text-[32px] mb-2">
               Tarefas
             </h1>
-            <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[16px]">
+            <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[16px]">
               Gerencie todas as tarefas dos departamentos
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Link
               to="/tarefas/kanban"
-              className="bg-[#1a1a1a] border border-[#333] text-[#eee] px-4 py-2 rounded-lg font-['Inter:Medium',sans-serif] text-[14px] flex items-center gap-2 hover:bg-[#222] hover:border-[#14E9BC] transition-colors"
+              className="bg-rise-raised border border-rise-line text-rise-fg px-4 py-2 rounded-lg font-['Inter:Medium',sans-serif] text-[14px] flex items-center gap-2 hover:bg-rise-subtle hover:border-[#14E9BC] transition-colors"
             >
               <LayoutGrid size={18} />
               Ver Kanban por Área
             </Link>
             <button
               onClick={handleOpenImportModal}
-              className="bg-[#1a1a1a] border border-[#333] text-[#eee] px-5 py-2.5 rounded-lg font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] flex items-center gap-2 hover:bg-[#222] hover:border-[#14E9BC] transition-colors"
+              className="bg-rise-raised border border-rise-line text-rise-fg px-5 py-2.5 rounded-lg font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] flex items-center gap-2 hover:bg-rise-subtle hover:border-[#14E9BC] transition-colors"
             >
               <Upload size={18} />
               Importar Tarefas
@@ -321,13 +321,13 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 mb-6 bg-[#0f0f0f] border border-[#333] rounded-lg p-1 w-fit">
+        <div className="flex items-center gap-1 mb-6 bg-rise-surface border border-rise-line rounded-lg p-1 w-fit">
           <button
             onClick={() => setActiveTab("todas")}
             className={`px-5 py-2 rounded-md font-['Inter:Medium',sans-serif] text-[14px] transition-colors ${
               activeTab === "todas"
                 ? "bg-[#14E9BC] text-[#000]"
-                : "text-[#bdbdbd] hover:text-[#eee]"
+                : "text-rise-fg-2 hover:text-rise-fg"
             }`}
           >
             Todas as Tarefas
@@ -337,7 +337,7 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
             className={`flex items-center gap-2 px-5 py-2 rounded-md font-['Inter:Medium',sans-serif] text-[14px] transition-colors ${
               activeTab === "minhas"
                 ? "bg-[#14E9BC] text-[#000]"
-                : "text-[#bdbdbd] hover:text-[#eee]"
+                : "text-rise-fg-2 hover:text-rise-fg"
             }`}
           >
             <User size={16} />
@@ -349,61 +349,61 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <button
             onClick={() => toggleStatus("planejamento")}
-            className={`bg-[#0f0f0f] border rounded-lg p-6 text-left transition-colors hover:border-[#6B8AFF]/60 ${selectedStatus === "planejamento" ? "border-[#6B8AFF]" : "border-[#333]"}`}
+            className={`bg-rise-surface border rounded-lg p-6 text-left transition-colors hover:border-[#6B8AFF]/60 ${selectedStatus === "planejamento" ? "border-[#6B8AFF]" : "border-rise-line"}`}
           >
             <div className="flex items-center justify-between mb-2">
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Planejamento
               </p>
               <span className="px-2 py-1 rounded bg-[#6B8AFF]/20 text-[#6B8AFF] text-[12px] font-['Inter:Semi_Bold',sans-serif]">
                 {statusCount.planejamento}
               </span>
             </div>
-            <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+            <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
               {statusCount.planejamento}
             </p>
           </button>
 
           <button
             onClick={() => toggleStatus("em-andamento")}
-            className={`bg-[#0f0f0f] border rounded-lg p-6 text-left transition-colors hover:border-[#28d939]/60 ${selectedStatus === "em-andamento" ? "border-[#28d939]" : "border-[#333]"}`}
+            className={`bg-rise-surface border rounded-lg p-6 text-left transition-colors hover:border-[#28d939]/60 ${selectedStatus === "em-andamento" ? "border-[#28d939]" : "border-rise-line"}`}
           >
             <div className="flex items-center justify-between mb-2">
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Em Andamento
               </p>
               <span className="px-2 py-1 rounded bg-[#28d939]/20 text-[#28d939] text-[12px] font-['Inter:Semi_Bold',sans-serif]">
                 {statusCount["em-andamento"]}
               </span>
             </div>
-            <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+            <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
               {statusCount["em-andamento"]}
             </p>
           </button>
 
           <button
             onClick={() => toggleStatus("concluido")}
-            className={`bg-[#0f0f0f] border rounded-lg p-6 text-left transition-colors hover:border-[#bdbdbd]/60 ${selectedStatus === "concluido" ? "border-[#bdbdbd]" : "border-[#333]"}`}
+            className={`bg-rise-surface border rounded-lg p-6 text-left transition-colors hover:border-[#bdbdbd]/60 ${selectedStatus === "concluido" ? "border-[#bdbdbd]" : "border-rise-line"}`}
           >
             <div className="flex items-center justify-between mb-2">
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Concluídas
               </p>
-              <span className="px-2 py-1 rounded bg-[#bdbdbd]/20 text-[#bdbdbd] text-[12px] font-['Inter:Semi_Bold',sans-serif]">
+              <span className="px-2 py-1 rounded bg-[#bdbdbd]/20 text-rise-fg-2 text-[12px] font-['Inter:Semi_Bold',sans-serif]">
                 {statusCount.concluido}
               </span>
             </div>
-            <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+            <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
               {statusCount.concluido}
             </p>
           </button>
 
           <button
             onClick={() => toggleStatus("atrasadas")}
-            className={`bg-[#0f0f0f] border rounded-lg p-6 text-left transition-colors hover:border-[#ec5d5e]/60 ${selectedStatus === "atrasadas" ? "border-[#ec5d5e]" : "border-[#333]"}`}
+            className={`bg-rise-surface border rounded-lg p-6 text-left transition-colors hover:border-[#ec5d5e]/60 ${selectedStatus === "atrasadas" ? "border-[#ec5d5e]" : "border-rise-line"}`}
           >
             <div className="flex items-center justify-between mb-2">
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Atrasadas
               </p>
               <span className="px-2 py-1 rounded bg-[#ec5d5e]/20 text-[#ec5d5e] text-[12px] font-['Inter:Semi_Bold',sans-serif]">
@@ -417,31 +417,31 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
         </div>
 
         {/* Filters */}
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-4 mb-6">
+        <div className="bg-rise-surface border border-rise-line rounded-lg p-4 mb-6">
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2 flex-shrink-0">
-              <Filter size={20} className="text-[#bdbdbd]" />
-              <span className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <Filter size={20} className="text-rise-fg-2" />
+              <span className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Filtros:
               </span>
             </div>
 
             {/* Search */}
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-rise-fg-4" />
               <input
                 type="text"
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
                 placeholder="Buscar tarefas..."
-                className="bg-[#1a1a1a] border border-[#333] rounded pl-9 pr-4 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none w-52"
+                className="bg-rise-raised border border-rise-line rounded pl-9 pr-4 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none w-52"
               />
             </div>
 
             <select
               value={selectedDept}
               onChange={(e) => setSelectedDept(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#333] rounded px-4 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+              className="bg-rise-raised border border-rise-line rounded px-4 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
             >
               <option value="todos">Todos os Departamentos</option>
               {departamentos.map((dept) => (
@@ -454,7 +454,7 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#333] rounded px-4 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+              className="bg-rise-raised border border-rise-line rounded px-4 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
             >
               <option value="todos">Todos os Status</option>
               <option value="planejamento">Planejamento</option>
@@ -466,7 +466,7 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
             <select
               value={selectedPrioridade}
               onChange={(e) => setSelectedPrioridade(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#333] rounded px-4 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+              className="bg-rise-raised border border-rise-line rounded px-4 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
             >
               <option value="todos">Todas as Prioridades</option>
               <option value="alta">Alta</option>
@@ -477,7 +477,7 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
             <select
               value={selectedTipo}
               onChange={(e) => setSelectedTipo(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#333] rounded px-4 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+              className="bg-rise-raised border border-rise-line rounded px-4 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
             >
               <option value="todos">Todos os Tipos</option>
               <option value="backend">Backend</option>
@@ -529,8 +529,8 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
             })}
           </div>
         ) : (
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-12 text-center">
-            <p className="text-[#bdbdbd] font-['Inter:Regular',sans-serif] text-[16px]">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-12 text-center">
+            <p className="text-rise-fg-2 font-['Inter:Regular',sans-serif] text-[16px]">
               Nenhuma tarefa encontrada com os filtros selecionados
             </p>
           </div>
@@ -540,14 +540,14 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
       {/* Modal de Importação */}
       {isImportModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-xl max-w-[900px] w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-rise-surface border border-rise-line rounded-xl max-w-[900px] w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-[#333]">
+            <div className="flex items-center justify-between p-6 border-b border-rise-line">
               <div>
-                <h2 className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px]">
+                <h2 className="font-['Inter:Bold',sans-serif] text-rise-fg text-[24px]">
                   Importar Tarefas via CSV
                 </h2>
-                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] mt-1">
+                <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] mt-1">
                   {importStep === "upload" && "Faça upload do arquivo CSV com suas tarefas"}
                   {importStep === "preview" && `${parsedData.length} tarefas encontradas - Revise antes de importar`}
                   {importStep === "success" && "Importação concluída com sucesso!"}
@@ -555,9 +555,9 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
               </div>
               <button
                 onClick={handleCloseImportModal}
-                className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[#1a1a1a] transition-colors"
+                className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-rise-raised transition-colors"
               >
-                <X size={20} className="text-[#bdbdbd]" />
+                <X size={20} className="text-rise-fg-2" />
               </button>
             </div>
 
@@ -565,17 +565,17 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
             {importStep === "upload" && (
               <div className="p-6">
                 {/* Instruções */}
-                <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 mb-6">
-                  <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px] mb-3">
+                <div className="bg-rise-raised border border-rise-line rounded-lg p-4 mb-6">
+                  <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[14px] mb-3">
                     Formato do arquivo CSV
                   </h3>
-                  <div className="space-y-2 text-[13px] font-['Inter:Regular',sans-serif] text-[#bdbdbd]">
-                    <p>• <strong className="text-[#eee]">Colunas obrigatórias:</strong> titulo, departamento, responsavel, prazo</p>
-                    <p>• <strong className="text-[#eee]">Colunas opcionais:</strong> status, prioridade, descricao</p>
-                    <p>• <strong className="text-[#eee]">Departamentos válidos:</strong> marketing, ops, comercial, produto</p>
-                    <p>• <strong className="text-[#eee]">Status válidos:</strong> planejamento, em-andamento, concluido</p>
-                    <p>• <strong className="text-[#eee]">Prioridades válidas:</strong> baixa, media, alta</p>
-                    <p>• <strong className="text-[#eee]">Formato de data:</strong> AAAA-MM-DD (ex: 2026-03-15)</p>
+                  <div className="space-y-2 text-[13px] font-['Inter:Regular',sans-serif] text-rise-fg-2">
+                    <p>• <strong className="text-rise-fg">Colunas obrigatórias:</strong> titulo, departamento, responsavel, prazo</p>
+                    <p>• <strong className="text-rise-fg">Colunas opcionais:</strong> status, prioridade, descricao</p>
+                    <p>• <strong className="text-rise-fg">Departamentos válidos:</strong> marketing, ops, comercial, produto</p>
+                    <p>• <strong className="text-rise-fg">Status válidos:</strong> planejamento, em-andamento, concluido</p>
+                    <p>• <strong className="text-rise-fg">Prioridades válidas:</strong> baixa, media, alta</p>
+                    <p>• <strong className="text-rise-fg">Formato de data:</strong> AAAA-MM-DD (ex: 2026-03-15)</p>
                   </div>
                   <button
                     onClick={downloadExemploCSV}
@@ -594,7 +594,7 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
                   className={`border-2 border-dashed rounded-lg p-10 text-center transition-all cursor-pointer ${
                     isDragging
                       ? "border-[#14E9BC] bg-[#14E9BC]/10"
-                      : "border-[#333] hover:border-[#555] hover:bg-[#1a1a1a]"
+                      : "border-rise-line hover:border-rise-fg-4 hover:bg-rise-raised"
                   }`}
                 >
                   <input
@@ -613,22 +613,22 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
                     </div>
                     {csvFile ? (
                       <div>
-                        <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px] mb-1">
+                        <p className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[16px] mb-1">
                           {csvFile.name}
                         </p>
-                        <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px]">
+                        <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px]">
                           {(csvFile.size / 1024).toFixed(1)} KB
                         </p>
                       </div>
                     ) : (
                       <>
-                        <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[18px] mb-2">
+                        <p className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[18px] mb-2">
                           Arraste e solte seu arquivo CSV aqui
                         </p>
-                        <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] mb-3">
+                        <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] mb-3">
                           ou clique para selecionar
                         </p>
-                        <p className="font-['Inter:Regular',sans-serif] text-[#555] text-[12px]">
+                        <p className="font-['Inter:Regular',sans-serif] text-rise-fg-4 text-[12px]">
                           Apenas arquivos .csv
                         </p>
                       </>
@@ -665,35 +665,35 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
             {/* Step: Preview */}
             {importStep === "preview" && (
               <div className="p-6">
-                <div className="bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden mb-6">
+                <div className="bg-rise-raised border border-rise-line rounded-lg overflow-hidden mb-6">
                   <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
                     <table className="w-full">
-                      <thead className="bg-[#0f0f0f] sticky top-0">
+                      <thead className="bg-rise-surface sticky top-0">
                         <tr>
-                          <th className="px-4 py-3 text-left font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[13px] border-b border-[#333]">
+                          <th className="px-4 py-3 text-left font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[13px] border-b border-rise-line">
                             Título
                           </th>
-                          <th className="px-4 py-3 text-left font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[13px] border-b border-[#333]">
+                          <th className="px-4 py-3 text-left font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[13px] border-b border-rise-line">
                             Departamento
                           </th>
-                          <th className="px-4 py-3 text-left font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[13px] border-b border-[#333]">
+                          <th className="px-4 py-3 text-left font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[13px] border-b border-rise-line">
                             Status
                           </th>
-                          <th className="px-4 py-3 text-left font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[13px] border-b border-[#333]">
+                          <th className="px-4 py-3 text-left font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[13px] border-b border-rise-line">
                             Prioridade
                           </th>
-                          <th className="px-4 py-3 text-left font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[13px] border-b border-[#333]">
+                          <th className="px-4 py-3 text-left font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[13px] border-b border-rise-line">
                             Responsável
                           </th>
-                          <th className="px-4 py-3 text-left font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[13px] border-b border-[#333]">
+                          <th className="px-4 py-3 text-left font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[13px] border-b border-rise-line">
                             Prazo
                           </th>
                         </tr>
                       </thead>
                       <tbody>
                         {parsedData.map((task, index) => (
-                          <tr key={index} className="border-b border-[#333] hover:bg-[#1a1a1a]">
-                            <td className="px-4 py-3 font-['Inter:Regular',sans-serif] text-[#eee] text-[13px]">
+                          <tr key={index} className="border-b border-rise-line hover:bg-rise-raised">
+                            <td className="px-4 py-3 font-['Inter:Regular',sans-serif] text-rise-fg text-[13px]">
                               {task.titulo}
                             </td>
                             <td className="px-4 py-3">
@@ -713,7 +713,7 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
                               })()}
                             </td>
                             <td className="px-4 py-3">
-                              <span className="px-2 py-1 rounded bg-[#1a1a1a] text-[#bdbdbd] text-[11px] font-['Inter:Regular',sans-serif]">
+                              <span className="px-2 py-1 rounded bg-rise-raised text-rise-fg-2 text-[11px] font-['Inter:Regular',sans-serif]">
                                 {statusLabels[task.status]}
                               </span>
                             </td>
@@ -730,10 +730,10 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
                                 {prioridadeLabels[task.prioridade]}
                               </span>
                             </td>
-                            <td className="px-4 py-3 font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[13px]">
+                            <td className="px-4 py-3 font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[13px]">
                               {task.responsavel}
                             </td>
-                            <td className="px-4 py-3 font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[13px]">
+                            <td className="px-4 py-3 font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[13px]">
                               {new Date(task.prazo).toLocaleDateString("pt-BR")}
                             </td>
                           </tr>
@@ -746,7 +746,7 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
                 <div className="flex items-center justify-between bg-[#14E9BC]/10 border border-[#14E9BC]/30 rounded-lg p-4">
                   <div className="flex items-center gap-3">
                     <CheckCircle size={20} className="text-[#14E9BC]" />
-                    <p className="font-['Inter:Medium',sans-serif] text-[#eee] text-[14px]">
+                    <p className="font-['Inter:Medium',sans-serif] text-rise-fg text-[14px]">
                       {parsedData.length} {parsedData.length === 1 ? "tarefa pronta" : "tarefas prontas"} para importação
                     </p>
                   </div>
@@ -760,10 +760,10 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
                 <div className="w-20 h-20 bg-[#28d939]/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle size={40} className="text-[#28d939]" />
                 </div>
-                <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[24px] mb-3">
+                <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[24px] mb-3">
                   {parsedData.length} {parsedData.length === 1 ? "Tarefa Importada" : "Tarefas Importadas"}!
                 </h3>
-                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[15px]">
+                <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[15px]">
                   As tarefas foram adicionadas com sucesso ao sistema.
                 </p>
               </div>
@@ -771,10 +771,10 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
 
             {/* Modal Footer */}
             {importStep !== "success" && (
-              <div className="flex items-center justify-end gap-3 p-6 border-t border-[#333]">
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-rise-line">
                 <button
                   onClick={handleCloseImportModal}
-                  className="px-5 py-2.5 rounded-lg bg-[#1a1a1a] text-[#bdbdbd] font-['Inter:Semi_Bold',sans-serif] text-[14px] hover:bg-[#292929] transition-colors"
+                  className="px-5 py-2.5 rounded-lg bg-rise-raised text-rise-fg-2 font-['Inter:Semi_Bold',sans-serif] text-[14px] hover:bg-rise-raised transition-colors"
                 >
                   Cancelar
                 </button>

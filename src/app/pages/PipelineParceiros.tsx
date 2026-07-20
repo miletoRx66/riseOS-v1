@@ -69,15 +69,15 @@ function KanbanCard({
       onDragStart={(e) => onDragStart(e, p.id)}
       onDragEnd={onDragEnd}
       onClick={onClick}
-      className={`bg-[#111] border rounded-xl p-4 cursor-pointer transition-all select-none ${
-        dragging ? "opacity-40 scale-95" : "hover:border-[#444] hover:bg-[#141414]"
+      className={`bg-rise-surface border rounded-xl p-4 cursor-pointer transition-all select-none ${
+        dragging ? "opacity-40 scale-95" : "hover:border-rise-line-3 hover:bg-rise-surface"
       }`}
       style={{ borderColor: "#2a2a2a" }}
     >
       {/* Topo: parceiro + classificação */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <div>
-          <p className="font-bold text-[#eee] text-[14px] leading-tight">{p.parceiro}</p>
+          <p className="font-bold text-rise-fg text-[14px] leading-tight">{p.parceiro}</p>
           <span
             className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-0.5 inline-block"
             style={{
@@ -98,30 +98,30 @@ function KanbanCard({
       </div>
 
       {/* Produto */}
-      <p className="text-[#666] text-[12px] mb-3 line-clamp-2 leading-relaxed">{p.produto}</p>
+      <p className="text-rise-fg-3 text-[12px] mb-3 line-clamp-2 leading-relaxed">{p.produto}</p>
 
       {/* Métricas */}
       <div className="flex items-center justify-between text-[11px] mb-3">
         <div>
-          <p className="text-[#444]">AuM</p>
+          <p className="text-rise-fg-4">AuM</p>
           <p className="font-bold text-[#14E9BC]">{fmtAum(p.aum)}</p>
         </div>
         <div className="text-right">
-          <p className="text-[#444]">Forecast anual</p>
+          <p className="text-rise-fg-4">Forecast anual</p>
           <p className="font-bold text-[#28d939]">{fmtForecast(p.forecast_anual)}</p>
         </div>
       </div>
 
       {/* Footer: responsável + NDA + estimativa */}
-      <div className="flex items-center justify-between border-t border-[#1e1e1e] pt-3 mt-1">
+      <div className="flex items-center justify-between border-t border-rise-line-2 pt-3 mt-1">
         <div className="flex items-center gap-1.5">
           <div
             className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-            style={{ background: "#1a1a1a", color: "#888" }}
+            style={{ background: "var(--rise-raised)", color: "var(--rise-fg-3)" }}
           >
             {avatarInicial(p.responsavel_nome ?? "?")}
           </div>
-          <span className="text-[11px] text-[#555] truncate max-w-[80px]">{p.responsavel_nome ?? "—"}</span>
+          <span className="text-[11px] text-rise-fg-4 truncate max-w-[80px]">{p.responsavel_nome ?? "—"}</span>
         </div>
         <div className="flex items-center gap-2">
           {p.nda_assinado && (
@@ -130,7 +130,7 @@ function KanbanCard({
             </span>
           )}
           {p.estimativa_lancamento && (
-            <span className="text-[#555] text-[10px] flex items-center gap-0.5">
+            <span className="text-rise-fg-4 text-[10px] flex items-center gap-0.5">
               <Calendar size={9} /> {fmtData(p.estimativa_lancamento)}
             </span>
           )}
@@ -231,12 +231,12 @@ function ModalDetalhe({
       className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-[#111] border border-[#2a2a2a] rounded-2xl w-full max-w-[760px] max-h-[90vh] flex flex-col">
+      <div className="bg-rise-surface border border-rise-line-2 rounded-2xl w-full max-w-[760px] max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-[#1e1e1e]">
+        <div className="flex items-start justify-between p-6 border-b border-rise-line-2">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h2 className="font-bold text-[#eee] text-[22px]">{parceiro.parceiro}</h2>
+              <h2 className="font-bold text-rise-fg text-[22px]">{parceiro.parceiro}</h2>
               <span
                 className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
                 style={{ background: st.bg, color: st.color }}
@@ -253,28 +253,28 @@ function ModalDetalhe({
                 {CLASSIFICACAO_LABEL[parceiro.classificacao]}
               </span>
             </div>
-            <p className="text-[#555] text-[13px]">{parceiro.produto}</p>
+            <p className="text-rise-fg-4 text-[13px]">{parceiro.produto}</p>
           </div>
           <div className="flex items-center gap-2">
             {!editando && (
               <>
                 <button
                   onClick={() => setEditando(true)}
-                  className="p-2 rounded-lg bg-[#1a1a1a] text-[#888] hover:text-[#14E9BC] transition-colors"
+                  className="p-2 rounded-lg bg-rise-raised text-rise-fg-3 hover:text-[#14E9BC] transition-colors"
                 >
                   <Edit2 size={15} />
                 </button>
                 {podeGerenciarPipeline && (
                   <button
                     onClick={() => { if (confirm(`Deletar ${parceiro.parceiro}?`)) { onDeletar(parceiro.id); onClose(); }}}
-                    className="p-2 rounded-lg bg-[#1a1a1a] text-[#888] hover:text-[#ec5d5e] transition-colors"
+                    className="p-2 rounded-lg bg-rise-raised text-rise-fg-3 hover:text-[#ec5d5e] transition-colors"
                   >
                     <Trash2 size={15} />
                   </button>
                 )}
               </>
             )}
-            <button onClick={onClose} className="p-2 rounded-lg bg-[#1a1a1a] text-[#888] hover:text-[#eee] transition-colors">
+            <button onClick={onClose} className="p-2 rounded-lg bg-rise-raised text-rise-fg-3 hover:text-rise-fg transition-colors">
               <X size={15} />
             </button>
           </div>
@@ -293,12 +293,12 @@ function ModalDetalhe({
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold transition-colors ${
                 tabDetalhe === v
                   ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]"
-                  : "text-[#555] hover:text-[#bdbdbd]"
+                  : "text-rise-fg-4 hover:text-rise-fg-2"
               }`}
             >
               {icon}{label}
               {v === "comentarios" && comentarios.length > 0 && (
-                <span className="bg-[#333] text-[#888] text-[10px] px-1.5 rounded-full">{comentarios.length}</span>
+                <span className="bg-rise-line text-rise-fg-3 text-[10px] px-1.5 rounded-full">{comentarios.length}</span>
               )}
             </button>
           ))}
@@ -311,44 +311,44 @@ function ModalDetalhe({
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Parceiro *</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Parceiro *</label>
                   <input value={form.parceiro} onChange={(e) => setForm({ ...form, parceiro: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
                 </div>
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Responsável</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Responsável</label>
                   <input value={form.responsavel_nome} onChange={(e) => setForm({ ...form, responsavel_nome: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
                 </div>
               </div>
               <div>
-                <label className="text-[#555] text-[12px] mb-1 block">Produto / Descrição *</label>
+                <label className="text-rise-fg-4 text-[12px] mb-1 block">Produto / Descrição *</label>
                 <input value={form.produto} onChange={(e) => setForm({ ...form, produto: e.target.value })}
-                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Classificação</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Classificação</label>
                   <select value={form.classificacao} onChange={(e) => setForm({ ...form, classificacao: e.target.value as Classificacao })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]">
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]">
                     <option value="originador">Originador</option>
                     <option value="distribuidor">Distribuidor</option>
                     <option value="infra_outros">Infra / Outros</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Status</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Status</label>
                   <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as PipelineStatus })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]">
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]">
                     {Object.entries(PIPELINE_STATUS).map(([k, v]) => (
                       <option key={k} value={k}>{v.label}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Impacto</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Impacto</label>
                   <select value={form.impacto} onChange={(e) => setForm({ ...form, impacto: e.target.value as Impacto })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]">
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]">
                     <option value="alto">Alto</option>
                     <option value="medio">Médio</option>
                     <option value="baixo">Baixo</option>
@@ -357,64 +357,64 @@ function ModalDetalhe({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">AuM (R$)</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">AuM (R$)</label>
                   <input type="number" value={form.aum} onChange={(e) => setForm({ ...form, aum: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
                 </div>
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Forecast Anual (R$)</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Forecast Anual (R$)</label>
                   <input type="number" value={form.forecast_anual} onChange={(e) => setForm({ ...form, forecast_anual: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Fee Parceiro (R$)</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Fee Parceiro (R$)</label>
                   <input type="number" value={form.fee_parceiro} onChange={(e) => setForm({ ...form, fee_parceiro: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
                 </div>
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Despesas (R$)</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Despesas (R$)</label>
                   <input type="number" value={form.despesas} onChange={(e) => setForm({ ...form, despesas: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
                 </div>
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Forecast YTD (R$)</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Forecast YTD (R$)</label>
                   <input type="number" value={form.forecast_ytd} onChange={(e) => setForm({ ...form, forecast_ytd: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Data Inicial</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Data Inicial</label>
                   <input type="date" value={form.data_inicial} onChange={(e) => setForm({ ...form, data_inicial: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
                 </div>
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Estimativa de Lançamento</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Estimativa de Lançamento</label>
                   <input type="date" value={form.estimativa_lancamento} onChange={(e) => setForm({ ...form, estimativa_lancamento: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
                 </div>
               </div>
               <div>
-                <label className="text-[#555] text-[12px] mb-1 block">Gargalo</label>
+                <label className="text-rise-fg-4 text-[12px] mb-1 block">Gargalo</label>
                 <input value={form.gargalo} onChange={(e) => setForm({ ...form, gargalo: e.target.value })}
-                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
               </div>
               <div>
-                <label className="text-[#555] text-[12px] mb-1 block">Próximos Passos</label>
+                <label className="text-rise-fg-4 text-[12px] mb-1 block">Próximos Passos</label>
                 <textarea rows={4} value={form.proximos_passos} onChange={(e) => setForm({ ...form, proximos_passos: e.target.value })}
-                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC] resize-none" />
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC] resize-none" />
               </div>
               <div>
-                <label className="text-[#555] text-[12px] mb-1 block">Observações / Condicional</label>
+                <label className="text-rise-fg-4 text-[12px] mb-1 block">Observações / Condicional</label>
                 <textarea rows={2} value={form.observacoes} onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
-                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC] resize-none" />
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC] resize-none" />
               </div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="nda_edit" checked={form.nda_assinado} onChange={(e) => setForm({ ...form, nda_assinado: e.target.checked })}
                   className="accent-[#14E9BC]" />
-                <label htmlFor="nda_edit" className="text-[#bdbdbd] text-[13px]">NDA Assinado</label>
+                <label htmlFor="nda_edit" className="text-rise-fg-2 text-[13px]">NDA Assinado</label>
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={handleSalvar} disabled={salvando}
@@ -422,7 +422,7 @@ function ModalDetalhe({
                   {salvando ? "Salvando..." : "Salvar Alterações"}
                 </button>
                 <button onClick={() => setEditando(false)}
-                  className="px-5 py-2.5 bg-[#1a1a1a] text-[#bdbdbd] rounded-lg font-semibold text-[14px] hover:bg-[#222] transition-colors">
+                  className="px-5 py-2.5 bg-rise-raised text-rise-fg-2 rounded-lg font-semibold text-[14px] hover:bg-rise-subtle transition-colors">
                   Cancelar
                 </button>
               </div>
@@ -438,8 +438,8 @@ function ModalDetalhe({
                   { label: "Fee Parceiro",    value: fmtForecast(parceiro.fee_parceiro),    color: "#f59e0b" },
                   { label: "Forecast YTD",    value: fmtForecast(parceiro.forecast_ytd),    color: "#6B8AFF" },
                 ].map((k) => (
-                  <div key={k.label} className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl p-3">
-                    <p className="text-[#444] text-[11px] mb-1">{k.label}</p>
+                  <div key={k.label} className="bg-rise-bg border border-rise-line-2 rounded-xl p-3">
+                    <p className="text-rise-fg-4 text-[11px] mb-1">{k.label}</p>
                     <p className="font-bold text-[18px]" style={{ color: k.color }}>{k.value}</p>
                   </div>
                 ))}
@@ -462,14 +462,14 @@ function ModalDetalhe({
                     <AlertCircle size={14} className="text-[#ec5d5e]" />
                     <p className="text-[#ec5d5e] text-[12px] font-semibold uppercase tracking-wide">Gargalo</p>
                   </div>
-                  <p className="text-[#bdbdbd] text-[13px] leading-relaxed">{parceiro.gargalo}</p>
+                  <p className="text-rise-fg-2 text-[13px] leading-relaxed">{parceiro.gargalo}</p>
                 </div>
               )}
 
               {parceiro.observacoes && (
                 <div className="bg-[#f59e0b]/5 border border-[#f59e0b]/20 rounded-xl p-4">
                   <p className="text-[#f59e0b] text-[12px] font-semibold uppercase tracking-wide mb-2">OBS / Condicional</p>
-                  <p className="text-[#bdbdbd] text-[13px] leading-relaxed">{parceiro.observacoes}</p>
+                  <p className="text-rise-fg-2 text-[13px] leading-relaxed">{parceiro.observacoes}</p>
                 </div>
               )}
             </div>
@@ -477,7 +477,7 @@ function ModalDetalhe({
             /* Próximos passos */
             <div>
               {parceiro.proximos_passos ? (
-                <div className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl p-5">
+                <div className="bg-rise-bg border border-rise-line-2 rounded-xl p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <CheckCircle size={15} className="text-[#14E9BC]" />
                     <p className="text-[#14E9BC] text-[13px] font-semibold uppercase tracking-wide">Próximos Passos</p>
@@ -485,14 +485,14 @@ function ModalDetalhe({
                   <div className="space-y-2">
                     {parceiro.proximos_passos.split("\n").filter(Boolean).map((linha, i) => (
                       <div key={i} className="flex items-start gap-2">
-                        <ChevronRight size={14} className="text-[#555] mt-0.5 flex-shrink-0" />
-                        <p className="text-[#bdbdbd] text-[13px] leading-relaxed">{linha}</p>
+                        <ChevronRight size={14} className="text-rise-fg-4 mt-0.5 flex-shrink-0" />
+                        <p className="text-rise-fg-2 text-[13px] leading-relaxed">{linha}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-12 text-[#444]">
+                <div className="text-center py-12 text-rise-fg-4">
                   <CheckSquare size={32} className="mx-auto mb-3 opacity-30" />
                   <p>Nenhum próximo passo definido</p>
                   <button onClick={() => { setEditando(true); setTabDetalhe("info"); }}
@@ -506,33 +506,33 @@ function ModalDetalhe({
             /* Comentários */
             <div className="space-y-4">
               {comentarios.length === 0 && (
-                <div className="text-center py-8 text-[#444]">
+                <div className="text-center py-8 text-rise-fg-4">
                   <MessageCircle size={28} className="mx-auto mb-2 opacity-30" />
                   <p>Nenhum comentário ainda</p>
                 </div>
               )}
               {comentarios.map((c) => (
                 <div key={c.id} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[12px] font-bold text-[#888] flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-rise-raised flex items-center justify-center text-[12px] font-bold text-rise-fg-3 flex-shrink-0">
                     {c.usuario?.nome ? c.usuario.nome[0].toUpperCase() : "?"}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[#bdbdbd] text-[13px] font-semibold">{c.usuario?.nome ?? "Usuário"}</span>
-                      <span className="text-[#444] text-[11px]">
+                      <span className="text-rise-fg-2 text-[13px] font-semibold">{c.usuario?.nome ?? "Usuário"}</span>
+                      <span className="text-rise-fg-4 text-[11px]">
                         {new Date(c.criado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </div>
-                    <div className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl px-4 py-3">
-                      <p className="text-[#bdbdbd] text-[13px] leading-relaxed whitespace-pre-wrap">{c.conteudo}</p>
+                    <div className="bg-rise-bg border border-rise-line-2 rounded-xl px-4 py-3">
+                      <p className="text-rise-fg-2 text-[13px] leading-relaxed whitespace-pre-wrap">{c.conteudo}</p>
                     </div>
                   </div>
                 </div>
               ))}
 
               {/* Input novo comentário */}
-              <div className="flex gap-3 pt-2 border-t border-[#1e1e1e]">
-                <div className="w-8 h-8 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[12px] font-bold text-[#888] flex-shrink-0">
+              <div className="flex gap-3 pt-2 border-t border-rise-line-2">
+                <div className="w-8 h-8 rounded-full bg-rise-raised flex items-center justify-center text-[12px] font-bold text-rise-fg-3 flex-shrink-0">
                   {usuario?.nome ? usuario.nome[0].toUpperCase() : "?"}
                 </div>
                 <div className="flex-1 flex gap-2">
@@ -542,7 +542,7 @@ function ModalDetalhe({
                     onChange={(e) => setNovoComentario(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEnviarComentario(); }}}
                     placeholder="Escreva uma atualização sobre este parceiro..."
-                    className="flex-1 bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-[#eee] text-[13px] outline-none focus:border-[#14E9BC] resize-none"
+                    className="flex-1 bg-rise-bg border border-rise-line-2 rounded-xl px-4 py-3 text-rise-fg text-[13px] outline-none focus:border-[#14E9BC] resize-none"
                   />
                   <button
                     onClick={handleEnviarComentario}
@@ -564,8 +564,8 @@ function ModalDetalhe({
 function Row({ label, value, valueColor }: { label: string; value: string | null | undefined; valueColor?: string }) {
   return (
     <div>
-      <p className="text-[#444] text-[11px] mb-0.5">{label}</p>
-      <p className="text-[13px] font-medium" style={{ color: valueColor ?? "#bdbdbd" }}>{value || "—"}</p>
+      <p className="text-rise-fg-4 text-[11px] mb-0.5">{label}</p>
+      <p className="text-[13px] font-medium" style={{ color: valueColor ?? "var(--rise-fg-2)" }}>{value || "—"}</p>
     </div>
   );
 }
@@ -717,9 +717,9 @@ export default function PipelineParceiros() {
           { label: "Forecast Anual",   value: fmtForecast(totalForecast), color: "#28d939", icon: <TrendingUp size={16} /> },
           { label: "Em Produção",      value: emProducao,                color: "#f59e0b",  icon: <Target size={16} /> },
         ].map((k) => (
-          <div key={k.label} className="bg-[#0f0f0f] border border-[#222] rounded-xl p-5">
+          <div key={k.label} className="bg-rise-surface border border-rise-line-2 rounded-xl p-5">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[#555] text-[12px]">{k.label}</p>
+              <p className="text-rise-fg-4 text-[12px]">{k.label}</p>
               <span style={{ color: k.color }}>{k.icon}</span>
             </div>
             <p className="text-[22px] font-bold" style={{ color: k.color }}>{k.value}</p>
@@ -730,13 +730,13 @@ export default function PipelineParceiros() {
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
-          <Filter size={14} className="text-[#555]" />
+          <Filter size={14} className="text-rise-fg-4" />
 
           {/* Impacto */}
           <div className="flex gap-1">
             {[["todos","Todos"],["alto","Alto"],["medio","Médio"],["baixo","Baixo"]].map(([v,l]) => (
               <button key={v} onClick={() => setFiltroImpacto(v)}
-                className={`px-3 py-1 rounded-lg text-[12px] font-medium transition-colors ${filtroImpacto === v ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]" : "text-[#666] hover:text-[#bdbdbd]"}`}>
+                className={`px-3 py-1 rounded-lg text-[12px] font-medium transition-colors ${filtroImpacto === v ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]" : "text-rise-fg-3 hover:text-rise-fg-2"}`}>
                 {l}
               </button>
             ))}
@@ -746,7 +746,7 @@ export default function PipelineParceiros() {
           <div className="flex gap-1">
             {[["todos","Todos"],["originador","Orig."],["distribuidor","Distr."],["infra_outros","Infra"]].map(([v,l]) => (
               <button key={v} onClick={() => setFiltroClass(v)}
-                className={`px-3 py-1 rounded-lg text-[12px] font-medium transition-colors ${filtroClass === v ? "bg-[#6B8AFF]/15 border border-[#6B8AFF]/40 text-[#6B8AFF]" : "text-[#666] hover:text-[#bdbdbd]"}`}>
+                className={`px-3 py-1 rounded-lg text-[12px] font-medium transition-colors ${filtroClass === v ? "bg-[#6B8AFF]/15 border border-[#6B8AFF]/40 text-[#6B8AFF]" : "text-rise-fg-3 hover:text-rise-fg-2"}`}>
                 {l}
               </button>
             ))}
@@ -756,7 +756,7 @@ export default function PipelineParceiros() {
           <select
             value={filtroResp}
             onChange={(e) => setFiltroResp(e.target.value)}
-            className="bg-[#0f0f0f] border border-[#333] rounded-lg px-3 py-1 text-[12px] text-[#bdbdbd] outline-none"
+            className="bg-rise-surface border border-rise-line rounded-lg px-3 py-1 text-[12px] text-rise-fg-2 outline-none"
           >
             <option value="todos">Todos responsáveis</option>
             {responsaveis.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -765,13 +765,13 @@ export default function PipelineParceiros() {
 
         <div className="flex items-center gap-2">
           {/* Toggle view */}
-          <div className="flex gap-1 bg-[#0f0f0f] border border-[#333] rounded-lg p-1">
+          <div className="flex gap-1 bg-rise-surface border border-rise-line rounded-lg p-1">
             <button onClick={() => setView("kanban")}
-              className={`p-1.5 rounded-md transition-colors ${view === "kanban" ? "bg-[#1e1e1e] text-[#14E9BC]" : "text-[#555]"}`}>
+              className={`p-1.5 rounded-md transition-colors ${view === "kanban" ? "bg-rise-subtle text-[#14E9BC]" : "text-rise-fg-4"}`}>
               <LayoutGrid size={14} />
             </button>
             <button onClick={() => setView("lista")}
-              className={`p-1.5 rounded-md transition-colors ${view === "lista" ? "bg-[#1e1e1e] text-[#14E9BC]" : "text-[#555]"}`}>
+              className={`p-1.5 rounded-md transition-colors ${view === "lista" ? "bg-rise-subtle text-[#14E9BC]" : "text-rise-fg-4"}`}>
               <List size={14} />
             </button>
           </div>
@@ -825,7 +825,7 @@ export default function PipelineParceiros() {
                 {/* Drop area */}
                 <div
                   className={`flex-1 flex flex-col gap-2 p-2 rounded-b-xl transition-colors min-h-[120px] ${
-                    isOver ? "bg-[#14E9BC]/5 border border-dashed border-[#14E9BC]/30" : "bg-[#0a0a0a]/40"
+                    isOver ? "bg-[#14E9BC]/5 border border-dashed border-[#14E9BC]/30" : "bg-rise-bg/40"
                   }`}
                 >
                   {cards.map((p) => (
@@ -850,12 +850,12 @@ export default function PipelineParceiros() {
         </div>
       ) : (
         /* ── Lista / Tabela ── */
-        <div className="bg-[#0f0f0f] border border-[#222] rounded-xl overflow-hidden">
+        <div className="bg-rise-surface border border-rise-line-2 rounded-xl overflow-hidden">
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-[#1e1e1e]">
+              <tr className="border-b border-rise-line-2">
                 {["Parceiro", "Produto", "Classif.", "Responsável", "AuM", "Forecast", "Status", "Lançamento", "Impacto", "NDA"].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 text-[#444] font-semibold text-[11px] uppercase tracking-wide">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-rise-fg-4 font-semibold text-[11px] uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -866,17 +866,17 @@ export default function PipelineParceiros() {
                   <tr
                     key={p.id}
                     onClick={() => setDetalhe(p)}
-                    className="border-b border-[#111] hover:bg-[#111] cursor-pointer transition-colors"
+                    className="border-b border-[#111] hover:bg-rise-surface cursor-pointer transition-colors"
                   >
-                    <td className="px-4 py-3 font-semibold text-[#eee]">{p.parceiro}</td>
-                    <td className="px-4 py-3 text-[#666] max-w-[200px] truncate">{p.produto}</td>
+                    <td className="px-4 py-3 font-semibold text-rise-fg">{p.parceiro}</td>
+                    <td className="px-4 py-3 text-rise-fg-3 max-w-[200px] truncate">{p.produto}</td>
                     <td className="px-4 py-3">
                       <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
                         style={{ background: CLASSIFICACAO_COLOR[p.classificacao] + "22", color: CLASSIFICACAO_COLOR[p.classificacao] }}>
                         {CLASSIFICACAO_LABEL[p.classificacao]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[#888]">{p.responsavel_nome ?? "—"}</td>
+                    <td className="px-4 py-3 text-rise-fg-3">{p.responsavel_nome ?? "—"}</td>
                     <td className="px-4 py-3 font-semibold text-[#14E9BC]">{fmtAum(p.aum)}</td>
                     <td className="px-4 py-3 font-semibold text-[#28d939]">{fmtForecast(p.forecast_anual)}</td>
                     <td className="px-4 py-3">
@@ -885,7 +885,7 @@ export default function PipelineParceiros() {
                         {st.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[#555]">{fmtData(p.estimativa_lancamento)}</td>
+                    <td className="px-4 py-3 text-rise-fg-4">{fmtData(p.estimativa_lancamento)}</td>
                     <td className="px-4 py-3">
                       <span className="text-[12px] font-semibold" style={{ color: IMPACTO_COLOR[p.impacto] }}>
                         {p.impacto.charAt(0).toUpperCase() + p.impacto.slice(1)}
@@ -894,7 +894,7 @@ export default function PipelineParceiros() {
                     <td className="px-4 py-3">
                       {p.nda_assinado
                         ? <CheckCircle size={14} className="text-[#28d939]" />
-                        : <Clock size={14} className="text-[#555]" />}
+                        : <Clock size={14} className="text-rise-fg-4" />}
                     </td>
                   </tr>
                 );
@@ -902,7 +902,7 @@ export default function PipelineParceiros() {
             </tbody>
           </table>
           {parceirosVisiveis.length === 0 && (
-            <div className="text-center py-12 text-[#444]">Nenhum parceiro encontrado com os filtros selecionados</div>
+            <div className="text-center py-12 text-rise-fg-4">Nenhum parceiro encontrado com os filtros selecionados</div>
           )}
         </div>
       )}
@@ -913,55 +913,55 @@ export default function PipelineParceiros() {
           className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setModalNovo(false); }}
         >
-          <div className="bg-[#111] border border-[#2a2a2a] rounded-2xl w-full max-w-[600px] max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-[#1e1e1e]">
-              <h2 className="font-bold text-[#eee] text-[18px]">Novo Parceiro</h2>
-              <button onClick={() => setModalNovo(false)} className="text-[#555] hover:text-[#eee]"><X size={18} /></button>
+          <div className="bg-rise-surface border border-rise-line-2 rounded-2xl w-full max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-rise-line-2">
+              <h2 className="font-bold text-rise-fg text-[18px]">Novo Parceiro</h2>
+              <button onClick={() => setModalNovo(false)} className="text-rise-fg-4 hover:text-rise-fg"><X size={18} /></button>
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Parceiro *</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Parceiro *</label>
                   <input value={formNovo.parceiro} onChange={(e) => setFormNovo({ ...formNovo, parceiro: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]"
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]"
                     placeholder="Nome do parceiro" />
                 </div>
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Responsável</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Responsável</label>
                   <input value={formNovo.responsavel_nome} onChange={(e) => setFormNovo({ ...formNovo, responsavel_nome: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]"
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]"
                     placeholder="Nome do responsável" />
                 </div>
               </div>
               <div>
-                <label className="text-[#555] text-[12px] mb-1 block">Produto / Descrição *</label>
+                <label className="text-rise-fg-4 text-[12px] mb-1 block">Produto / Descrição *</label>
                 <input value={formNovo.produto} onChange={(e) => setFormNovo({ ...formNovo, produto: e.target.value })}
-                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]"
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]"
                   placeholder="Descrição do produto ou operação" />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Classificação</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Classificação</label>
                   <select value={formNovo.classificacao} onChange={(e) => setFormNovo({ ...formNovo, classificacao: e.target.value as Classificacao })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]">
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]">
                     <option value="originador">Originador</option>
                     <option value="distribuidor">Distribuidor</option>
                     <option value="infra_outros">Infra / Outros</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Status Inicial</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Status Inicial</label>
                   <select value={formNovo.status} onChange={(e) => setFormNovo({ ...formNovo, status: e.target.value as PipelineStatus })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]">
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]">
                     {Object.entries(PIPELINE_STATUS).map(([k, v]) => (
                       <option key={k} value={k}>{v.label}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Impacto</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Impacto</label>
                   <select value={formNovo.impacto} onChange={(e) => setFormNovo({ ...formNovo, impacto: e.target.value as Impacto })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]">
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]">
                     <option value="alto">Alto</option>
                     <option value="medio">Médio</option>
                     <option value="baixo">Baixo</option>
@@ -970,30 +970,30 @@ export default function PipelineParceiros() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">AuM (R$)</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">AuM (R$)</label>
                   <input type="number" value={formNovo.aum} onChange={(e) => setFormNovo({ ...formNovo, aum: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
                 </div>
                 <div>
-                  <label className="text-[#555] text-[12px] mb-1 block">Forecast Anual (R$)</label>
+                  <label className="text-rise-fg-4 text-[12px] mb-1 block">Forecast Anual (R$)</label>
                   <input type="number" value={formNovo.forecast_anual} onChange={(e) => setFormNovo({ ...formNovo, forecast_anual: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                    className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
                 </div>
               </div>
               <div>
-                <label className="text-[#555] text-[12px] mb-1 block">Estimativa de Lançamento</label>
+                <label className="text-rise-fg-4 text-[12px] mb-1 block">Estimativa de Lançamento</label>
                 <input type="date" value={formNovo.estimativa_lancamento} onChange={(e) => setFormNovo({ ...formNovo, estimativa_lancamento: e.target.value })}
-                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC]" />
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]" />
               </div>
               <div>
-                <label className="text-[#555] text-[12px] mb-1 block">Próximos Passos</label>
+                <label className="text-rise-fg-4 text-[12px] mb-1 block">Próximos Passos</label>
                 <textarea rows={3} value={formNovo.proximos_passos} onChange={(e) => setFormNovo({ ...formNovo, proximos_passos: e.target.value })}
-                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] outline-none focus:border-[#14E9BC] resize-none" />
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC] resize-none" />
               </div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="nda_novo" checked={formNovo.nda_assinado} onChange={(e) => setFormNovo({ ...formNovo, nda_assinado: e.target.checked })}
                   className="accent-[#14E9BC]" />
-                <label htmlFor="nda_novo" className="text-[#bdbdbd] text-[13px]">NDA Assinado</label>
+                <label htmlFor="nda_novo" className="text-rise-fg-2 text-[13px]">NDA Assinado</label>
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={handleCriar} disabled={salvandoNovo || !formNovo.parceiro.trim()}
@@ -1001,7 +1001,7 @@ export default function PipelineParceiros() {
                   {salvandoNovo ? "Criando..." : "Criar Parceiro"}
                 </button>
                 <button onClick={() => setModalNovo(false)}
-                  className="px-5 py-2.5 bg-[#1a1a1a] text-[#bdbdbd] rounded-lg font-semibold text-[14px] hover:bg-[#222] transition-colors">
+                  className="px-5 py-2.5 bg-rise-raised text-rise-fg-2 rounded-lg font-semibold text-[14px] hover:bg-rise-subtle transition-colors">
                   Cancelar
                 </button>
               </div>

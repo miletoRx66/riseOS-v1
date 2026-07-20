@@ -161,15 +161,15 @@ export default function Documentos() {
   const isOwner = (doc: DocumentoDB) => doc.autor_id === usuario?.id;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[32px] mb-1">
+            <h1 className="font-['Inter:Bold',sans-serif] font-bold text-rise-fg text-[32px] mb-1">
               Documentos
             </h1>
-            <p className="text-[#bdbdbd] text-[16px] font-['Inter:Regular',sans-serif]">
+            <p className="text-rise-fg-2 text-[16px] font-['Inter:Regular',sans-serif]">
               {documentos.length} documento{documentos.length !== 1 ? "s" : ""} cadastrado{documentos.length !== 1 ? "s" : ""}
             </p>
           </div>
@@ -185,22 +185,22 @@ export default function Documentos() {
         {/* Filtros */}
         <div className="flex items-center gap-4 mb-6 flex-wrap">
           <div className="relative flex-1 min-w-[220px]">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-rise-fg-4" />
             <input
               type="text"
               placeholder="Buscar documentos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#0f0f0f] border border-[#333] rounded-lg pl-10 pr-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+              className="w-full bg-rise-surface border border-rise-line rounded-lg pl-10 pr-4 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <Filter size={16} className="text-[#bdbdbd]" />
+            <Filter size={16} className="text-rise-fg-2" />
             <select
               value={selectedDept}
               onChange={(e) => setSelectedDept(e.target.value)}
-              className="bg-[#0f0f0f] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+              className="bg-rise-surface border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none"
             >
               <option value="todos">Todos os Departamentos</option>
               {departamentos.map((d) => (
@@ -209,16 +209,16 @@ export default function Documentos() {
             </select>
           </div>
 
-          <div className="flex items-center gap-1 bg-[#0f0f0f] border border-[#333] rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-rise-surface border border-rise-line rounded-lg p-1">
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 rounded-md transition-colors ${viewMode === "list" ? "bg-[#14E9BC] text-[#000]" : "text-[#bdbdbd] hover:text-[#eee]"}`}
+              className={`p-2 rounded-md transition-colors ${viewMode === "list" ? "bg-[#14E9BC] text-[#000]" : "text-rise-fg-2 hover:text-rise-fg"}`}
             >
               <List size={16} />
             </button>
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-md transition-colors ${viewMode === "grid" ? "bg-[#14E9BC] text-[#000]" : "text-[#bdbdbd] hover:text-[#eee]"}`}
+              className={`p-2 rounded-md transition-colors ${viewMode === "grid" ? "bg-[#14E9BC] text-[#000]" : "text-rise-fg-2 hover:text-rise-fg"}`}
             >
               <Grid size={16} />
             </button>
@@ -228,31 +228,31 @@ export default function Documentos() {
         {/* Conteúdo */}
         {carregando ? (
           <div className="flex items-center justify-center py-20">
-            <p className="text-[#555] text-[16px]">Carregando documentos...</p>
+            <p className="text-rise-fg-4 text-[16px]">Carregando documentos...</p>
           </div>
         ) : filtrados.length === 0 ? (
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-16 text-center">
-            <FileText size={48} className="text-[#333] mx-auto mb-4" />
-            <p className="text-[#eee] text-[18px] font-['Inter:Semi_Bold',sans-serif] mb-2">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-16 text-center">
+            <FileText size={48} className="text-rise-fg-4 mx-auto mb-4" />
+            <p className="text-rise-fg text-[18px] font-['Inter:Semi_Bold',sans-serif] mb-2">
               {searchTerm || selectedDept !== "todos" ? "Nenhum documento encontrado" : "Nenhum documento cadastrado"}
             </p>
-            <p className="text-[#555] text-[14px] mb-6">
+            <p className="text-rise-fg-4 text-[14px] mb-6">
               {searchTerm || selectedDept !== "todos"
                 ? "Tente ajustar os filtros"
                 : "Adicione o primeiro documento clicando em Novo Documento"}
             </p>
           </div>
         ) : viewMode === "list" ? (
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg overflow-hidden">
+          <div className="bg-rise-surface border border-rise-line rounded-lg overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#222]">
-                  <th className="text-left px-6 py-3 text-[#555] text-[12px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Documento</th>
-                  <th className="text-left px-6 py-3 text-[#555] text-[12px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Tipo</th>
-                  <th className="text-left px-6 py-3 text-[#555] text-[12px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Departamento</th>
-                  <th className="text-left px-6 py-3 text-[#555] text-[12px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Autor</th>
-                  <th className="text-left px-6 py-3 text-[#555] text-[12px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Tamanho</th>
-                  <th className="text-left px-6 py-3 text-[#555] text-[12px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Data</th>
+                <tr className="border-b border-rise-line-2">
+                  <th className="text-left px-6 py-3 text-rise-fg-4 text-[12px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Documento</th>
+                  <th className="text-left px-6 py-3 text-rise-fg-4 text-[12px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Tipo</th>
+                  <th className="text-left px-6 py-3 text-rise-fg-4 text-[12px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Departamento</th>
+                  <th className="text-left px-6 py-3 text-rise-fg-4 text-[12px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Autor</th>
+                  <th className="text-left px-6 py-3 text-rise-fg-4 text-[12px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Tamanho</th>
+                  <th className="text-left px-6 py-3 text-rise-fg-4 text-[12px] uppercase tracking-wider font-['Inter:Medium',sans-serif]">Data</th>
                   <th className="px-6 py-3" />
                 </tr>
               </thead>
@@ -260,21 +260,21 @@ export default function Documentos() {
                 {filtrados.map((doc, i) => (
                   <tr
                     key={doc.id}
-                    className={`hover:bg-[#141414] transition-colors ${i !== 0 ? "border-t border-[#1a1a1a]" : ""}`}
+                    className={`hover:bg-rise-surface transition-colors ${i !== 0 ? "border-t border-rise-raised" : ""}`}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{TIPO_ICONE[doc.tipo] ?? "📄"}</span>
                         <div>
-                          <p className="text-[#eee] text-[14px] font-['Inter:Medium',sans-serif]">{doc.titulo}</p>
+                          <p className="text-rise-fg text-[14px] font-['Inter:Medium',sans-serif]">{doc.titulo}</p>
                           {doc.gitbook_url && (
-                            <p className="text-[#555] text-[11px] truncate max-w-[200px]">{doc.gitbook_url}</p>
+                            <p className="text-rise-fg-4 text-[11px] truncate max-w-[200px]">{doc.gitbook_url}</p>
                           )}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="bg-[#1a1a1a] text-[#bdbdbd] px-2 py-1 rounded text-[12px]">
+                      <span className="bg-rise-raised text-rise-fg-2 px-2 py-1 rounded text-[12px]">
                         {TIPO_LABELS[doc.tipo] ?? doc.tipo}
                       </span>
                     </td>
@@ -283,12 +283,12 @@ export default function Documentos() {
                         {doc.departamento && (
                           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: doc.departamento.cor }} />
                         )}
-                        <span className="text-[#bdbdbd] text-[13px]">{doc.departamento?.nome ?? "—"}</span>
+                        <span className="text-rise-fg-2 text-[13px]">{doc.departamento?.nome ?? "—"}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-[#bdbdbd] text-[13px]">{doc.autor?.nome ?? "—"}</td>
-                    <td className="px-6 py-4 text-[#bdbdbd] text-[13px]">{formatarTamanho(doc.tamanho_bytes)}</td>
-                    <td className="px-6 py-4 text-[#555] text-[13px]">
+                    <td className="px-6 py-4 text-rise-fg-2 text-[13px]">{doc.autor?.nome ?? "—"}</td>
+                    <td className="px-6 py-4 text-rise-fg-2 text-[13px]">{formatarTamanho(doc.tamanho_bytes)}</td>
+                    <td className="px-6 py-4 text-rise-fg-4 text-[13px]">
                       {new Date(doc.criado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
                     </td>
                     <td className="px-6 py-4">
@@ -296,7 +296,7 @@ export default function Documentos() {
                         {(doc.storage_path || doc.gitbook_url) && (
                           <button
                             onClick={() => handleDownload(doc)}
-                            className="p-1.5 text-[#bdbdbd] hover:text-[#14E9BC] transition-colors"
+                            className="p-1.5 text-rise-fg-2 hover:text-[#14E9BC] transition-colors"
                             title={doc.gitbook_url ? "Abrir link" : "Download"}
                           >
                             {doc.gitbook_url ? <ExternalLink size={15} /> : <Download size={15} />}
@@ -306,7 +306,7 @@ export default function Documentos() {
                           <button
                             onClick={() => handleExcluir(doc)}
                             disabled={excluindo === doc.id}
-                            className="p-1.5 text-[#bdbdbd] hover:text-[#ec5d5e] transition-colors disabled:opacity-40"
+                            className="p-1.5 text-rise-fg-2 hover:text-[#ec5d5e] transition-colors disabled:opacity-40"
                             title="Excluir"
                           >
                             <Trash2 size={15} />
@@ -324,7 +324,7 @@ export default function Documentos() {
             {filtrados.map((doc) => (
               <div
                 key={doc.id}
-                className="bg-[#0f0f0f] border border-[#333] rounded-lg p-5 hover:border-[#555] transition-all flex flex-col"
+                className="bg-rise-surface border border-rise-line rounded-lg p-5 hover:border-rise-fg-4 transition-all flex flex-col"
               >
                 <div className="flex items-start justify-between mb-3">
                   <span className="text-3xl">{TIPO_ICONE[doc.tipo] ?? "📄"}</span>
@@ -332,7 +332,7 @@ export default function Documentos() {
                     {(doc.storage_path || doc.gitbook_url) && (
                       <button
                         onClick={() => handleDownload(doc)}
-                        className="p-1.5 text-[#555] hover:text-[#14E9BC] transition-colors"
+                        className="p-1.5 text-rise-fg-4 hover:text-[#14E9BC] transition-colors"
                       >
                         {doc.gitbook_url ? <ExternalLink size={14} /> : <Download size={14} />}
                       </button>
@@ -341,22 +341,22 @@ export default function Documentos() {
                       <button
                         onClick={() => handleExcluir(doc)}
                         disabled={excluindo === doc.id}
-                        className="p-1.5 text-[#555] hover:text-[#ec5d5e] transition-colors disabled:opacity-40"
+                        className="p-1.5 text-rise-fg-4 hover:text-[#ec5d5e] transition-colors disabled:opacity-40"
                       >
                         <Trash2 size={14} />
                       </button>
                     )}
                   </div>
                 </div>
-                <h3 className="text-[#eee] text-[14px] font-['Inter:Medium',sans-serif] mb-2 line-clamp-2">{doc.titulo}</h3>
-                <div className="mt-auto pt-3 border-t border-[#1a1a1a] flex items-center justify-between">
+                <h3 className="text-rise-fg text-[14px] font-['Inter:Medium',sans-serif] mb-2 line-clamp-2">{doc.titulo}</h3>
+                <div className="mt-auto pt-3 border-t border-rise-raised flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     {doc.departamento && (
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: doc.departamento.cor }} />
                     )}
-                    <span className="text-[#555] text-[12px]">{doc.departamento?.nome ?? "—"}</span>
+                    <span className="text-rise-fg-4 text-[12px]">{doc.departamento?.nome ?? "—"}</span>
                   </div>
-                  <span className="text-[#555] text-[11px]">{formatarTamanho(doc.tamanho_bytes)}</span>
+                  <span className="text-rise-fg-4 text-[11px]">{formatarTamanho(doc.tamanho_bytes)}</span>
                 </div>
               </div>
             ))}
@@ -367,17 +367,17 @@ export default function Documentos() {
       {/* Modal novo documento */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-[#000]/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg w-full max-w-[560px]">
-            <div className="flex items-center justify-between p-6 border-b border-[#333]">
+          <div className="bg-rise-surface border border-rise-line rounded-lg w-full max-w-[560px]">
+            <div className="flex items-center justify-between p-6 border-b border-rise-line">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-[#14E9BC]/20 flex items-center justify-center">
                   <FileText size={18} className="text-[#14E9BC]" />
                 </div>
-                <h2 className="text-[#eee] text-[20px] font-['Inter:Semi_Bold',sans-serif]">Novo Documento</h2>
+                <h2 className="text-rise-fg text-[20px] font-['Inter:Semi_Bold',sans-serif]">Novo Documento</h2>
               </div>
               <button
                 onClick={() => { setIsModalOpen(false); resetForm(); }}
-                className="text-[#bdbdbd] hover:text-[#eee] transition-colors"
+                className="text-rise-fg-2 hover:text-rise-fg transition-colors"
               >
                 <X size={20} />
               </button>
@@ -385,14 +385,14 @@ export default function Documentos() {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {/* Tipo de upload */}
-              <div className="flex gap-2 bg-[#1a1a1a] rounded-lg p-1">
+              <div className="flex gap-2 bg-rise-raised rounded-lg p-1">
                 {(["arquivo", "link"] as const).map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => setUploadType(t)}
                     className={`flex-1 py-2 rounded-md text-[13px] font-['Inter:Medium',sans-serif] flex items-center justify-center gap-2 transition-all ${
-                      uploadType === t ? "bg-[#14E9BC] text-[#000]" : "text-[#bdbdbd] hover:text-[#eee]"
+                      uploadType === t ? "bg-[#14E9BC] text-[#000]" : "text-rise-fg-2 hover:text-rise-fg"
                     }`}
                   >
                     {t === "arquivo" ? <FileUp size={14} /> : <Link2 size={14} />}
@@ -403,24 +403,24 @@ export default function Documentos() {
 
               {/* Título */}
               <div>
-                <label className="block text-[#bdbdbd] text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">Título *</label>
+                <label className="block text-rise-fg-2 text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">Título *</label>
                 <input
                   type="text"
                   value={form.titulo}
                   onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
                   placeholder="Nome do documento"
-                  className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                  className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none"
                 />
               </div>
 
               {/* Departamento + Tipo */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#bdbdbd] text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">Departamento *</label>
+                  <label className="block text-rise-fg-2 text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">Departamento *</label>
                   <select
                     value={form.departamento_id}
                     onChange={(e) => setForm((f) => ({ ...f, departamento_id: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   >
                     {departamentos.map((d) => (
                       <option key={d.id} value={d.id}>{d.nome}</option>
@@ -428,11 +428,11 @@ export default function Documentos() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[#bdbdbd] text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">Tipo</label>
+                  <label className="block text-rise-fg-2 text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">Tipo</label>
                   <select
                     value={form.tipo}
                     onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   >
                     {Object.entries(TIPO_LABELS).map(([val, label]) => (
                       <option key={val} value={val}>{label}</option>
@@ -444,36 +444,36 @@ export default function Documentos() {
               {/* Arquivo ou Link */}
               {uploadType === "arquivo" ? (
                 <div>
-                  <label className="block text-[#bdbdbd] text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">Arquivo *</label>
+                  <label className="block text-rise-fg-2 text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">Arquivo *</label>
                   <div
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
                     className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-                      isDragging ? "border-[#14E9BC] bg-[#14E9BC]/5" : "border-[#333] hover:border-[#555]"
+                      isDragging ? "border-[#14E9BC] bg-[#14E9BC]/5" : "border-rise-line hover:border-rise-fg-4"
                     }`}
                   >
                     {form.file ? (
                       <div className="flex items-center justify-center gap-3">
                         <File size={20} className="text-[#14E9BC]" />
                         <div className="text-left">
-                          <p className="text-[#eee] text-[13px] font-['Inter:Medium',sans-serif]">{form.file.name}</p>
-                          <p className="text-[#555] text-[11px]">{formatarTamanho(form.file.size)}</p>
+                          <p className="text-rise-fg text-[13px] font-['Inter:Medium',sans-serif]">{form.file.name}</p>
+                          <p className="text-rise-fg-4 text-[11px]">{formatarTamanho(form.file.size)}</p>
                         </div>
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setForm((f) => ({ ...f, file: null })); }}
-                          className="ml-2 text-[#555] hover:text-[#ec5d5e]"
+                          className="ml-2 text-rise-fg-4 hover:text-[#ec5d5e]"
                         >
                           <X size={14} />
                         </button>
                       </div>
                     ) : (
                       <>
-                        <Upload size={24} className="text-[#555] mx-auto mb-2" />
-                        <p className="text-[#bdbdbd] text-[13px]">Arraste um arquivo ou <span className="text-[#14E9BC]">clique aqui</span></p>
-                        <p className="text-[#555] text-[11px] mt-1">PDF, Word, Excel, PowerPoint, imagens — até 50MB</p>
+                        <Upload size={24} className="text-rise-fg-4 mx-auto mb-2" />
+                        <p className="text-rise-fg-2 text-[13px]">Arraste um arquivo ou <span className="text-[#14E9BC]">clique aqui</span></p>
+                        <p className="text-rise-fg-4 text-[11px] mt-1">PDF, Word, Excel, PowerPoint, imagens — até 50MB</p>
                       </>
                     )}
                   </div>
@@ -481,13 +481,13 @@ export default function Documentos() {
                 </div>
               ) : (
                 <div>
-                  <label className="block text-[#bdbdbd] text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">URL do Documento *</label>
+                  <label className="block text-rise-fg-2 text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">URL do Documento *</label>
                   <input
                     type="url"
                     value={form.url}
                     onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
                     placeholder="https://..."
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   />
                 </div>
               )}
@@ -500,7 +500,7 @@ export default function Documentos() {
                 <button
                   type="button"
                   onClick={() => { setIsModalOpen(false); resetForm(); }}
-                  className="flex-1 py-2.5 border border-[#333] rounded-lg text-[#bdbdbd] text-[14px] hover:text-[#eee] hover:border-[#555] transition-colors"
+                  className="flex-1 py-2.5 border border-rise-line rounded-lg text-rise-fg-2 text-[14px] hover:text-rise-fg hover:border-rise-fg-4 transition-colors"
                 >
                   Cancelar
                 </button>

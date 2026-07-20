@@ -82,15 +82,15 @@ export default function Departamentos() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] px-4 py-6 sm:px-6 sm:py-8 lg:p-8">
+    <div className="min-h-screen bg-rise-bg px-4 py-6 sm:px-6 sm:py-8 lg:p-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[24px] sm:text-[32px] mb-1">
+            <h1 className="font-['Inter:Bold',sans-serif] font-bold text-rise-fg text-[24px] sm:text-[32px] mb-1">
               Departamentos
             </h1>
-            <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] sm:text-[16px]">
+            <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] sm:text-[16px]">
               Gerencie os espaços de trabalho de cada departamento
             </p>
           </div>
@@ -109,10 +109,10 @@ export default function Departamentos() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {carregando ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg p-6 animate-pulse h-[148px]" />
+              <div key={i} className="bg-rise-surface border border-rise-line-2 rounded-lg p-6 animate-pulse h-[148px]" />
             ))
           ) : departamentos.length === 0 ? (
-            <div className="col-span-4 py-16 text-center text-[#444] text-[14px]">
+            <div className="col-span-4 py-16 text-center text-rise-fg-4 text-[14px]">
               Nenhum departamento encontrado
             </div>
           ) : departamentos.map((dept) => {
@@ -128,7 +128,7 @@ export default function Departamentos() {
                 {usuario?.isAdmin && (
                   <button
                     onClick={() => handleAbrirEdicao(dept)}
-                    className="absolute top-3 right-3 w-8 h-8 bg-[#1a1a1a] border border-[#333] rounded-lg flex items-center justify-center text-[#bdbdbd] hover:text-[#eee] hover:border-[#555] transition-all opacity-0 group-hover/card:opacity-100"
+                    className="absolute top-3 right-3 w-8 h-8 bg-rise-raised border border-rise-line rounded-lg flex items-center justify-center text-rise-fg-2 hover:text-rise-fg hover:border-rise-fg-4 transition-all opacity-0 group-hover/card:opacity-100"
                     title="Editar departamento"
                   >
                     <Pencil size={14} />
@@ -140,40 +140,40 @@ export default function Departamentos() {
         </div>
 
         {/* Overview Stats */}
-        <div className="mt-8 sm:mt-12 bg-[#0f0f0f] border border-[#333] rounded-lg p-4 sm:p-6">
-          <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[18px] sm:text-[20px] mb-4 sm:mb-6">
+        <div className="mt-8 sm:mt-12 bg-rise-surface border border-rise-line rounded-lg p-4 sm:p-6">
+          <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-rise-fg text-[18px] sm:text-[20px] mb-4 sm:mb-6">
             Visão Geral
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
             <div>
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px] mb-2">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px] mb-2">
                 Total de Membros
               </p>
-              <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+              <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
                 {departamentos.reduce((acc, dept) => acc + dept.membros, 0)}
               </p>
             </div>
             <div>
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px] mb-2">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px] mb-2">
                 Tarefas Abertas
               </p>
-              <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+              <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
                 {departamentos.reduce((acc, dept) => acc + dept.tarefasAbertas, 0)}
               </p>
             </div>
             <div>
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px] mb-2">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px] mb-2">
                 Total de Documentos
               </p>
-              <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+              <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
                 {departamentos.reduce((acc, dept) => acc + dept.documentos, 0)}
               </p>
             </div>
             <div>
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px] mb-2">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px] mb-2">
                 Departamentos Ativos
               </p>
-              <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+              <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
                 {departamentos.length}
               </p>
             </div>
@@ -184,15 +184,15 @@ export default function Departamentos() {
       {/* Modal - Novo Departamento */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-[#000]/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg max-w-[600px] w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-rise-surface border border-rise-line rounded-lg max-w-[600px] w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-[#333]">
-              <h2 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[24px]">
+            <div className="flex items-center justify-between p-6 border-b border-rise-line">
+              <h2 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[24px]">
                 {editandoId ? "Editar Departamento" : "Novo Departamento"}
               </h2>
               <button
                 onClick={() => { setIsModalOpen(false); setEditandoId(null); setErroForm(null); }}
-                className="text-[#bdbdbd] hover:text-[#eee] transition-colors"
+                className="text-rise-fg-2 hover:text-rise-fg transition-colors"
               >
                 <X size={24} />
               </button>
@@ -203,7 +203,7 @@ export default function Departamentos() {
               <div className="space-y-6">
                 {/* Nome do Departamento */}
                 <div>
-                  <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                  <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                     Nome do Departamento *
                   </label>
                   <input
@@ -212,13 +212,13 @@ export default function Departamentos() {
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                     placeholder="Ex: Marketing, Vendas, TI..."
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   />
                 </div>
 
                 {/* Cor do Departamento */}
                 <div>
-                  <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-3">
+                  <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-3">
                     Cor do Departamento *
                   </label>
                   <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
@@ -240,7 +240,7 @@ export default function Departamentos() {
 
                 {/* Ícone do Departamento */}
                 <div>
-                  <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-3">
+                  <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-3">
                     Ícone do Departamento *
                   </label>
                   <div className="grid grid-cols-4 gap-3">
@@ -254,14 +254,14 @@ export default function Departamentos() {
                           className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
                             formData.icon === icon.id
                               ? "border-[#14E9BC] bg-[#14E9BC]/10"
-                              : "border-[#333] hover:border-[#555] bg-[#1a1a1a]"
+                              : "border-rise-line hover:border-rise-fg-4 bg-rise-raised"
                           }`}
                         >
                           <IconComponent
                             size={24}
-                            style={{ color: formData.icon === icon.id ? formData.cor : "#bdbdbd" }}
+                            style={{ color: formData.icon === icon.id ? formData.cor : "var(--rise-fg-2)" }}
                           />
-                          <span className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[10px]">
+                          <span className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[10px]">
                             {icon.name}
                           </span>
                         </button>
@@ -272,7 +272,7 @@ export default function Departamentos() {
 
                 {/* Número de Membros */}
                 <div>
-                  <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                  <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                     Número de Membros Inicial
                   </label>
                   <input
@@ -281,13 +281,13 @@ export default function Departamentos() {
                     value={formData.membros}
                     onChange={(e) => setFormData({ ...formData, membros: parseInt(e.target.value) || 0 })}
                     placeholder="0"
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   />
                 </div>
 
                 {/* Descrição */}
                 <div>
-                  <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                  <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                     Descrição (opcional)
                   </label>
                   <textarea
@@ -295,16 +295,16 @@ export default function Departamentos() {
                     onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
                     placeholder="Descreva o propósito e responsabilidades deste departamento..."
                     rows={4}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none resize-none"
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none resize-none"
                   />
                 </div>
 
                 {/* Preview */}
-                <div className="border-t border-[#333] pt-6">
-                  <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[12px] mb-3">
+                <div className="border-t border-rise-line pt-6">
+                  <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[12px] mb-3">
                     PREVIEW
                   </p>
-                  <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4">
+                  <div className="bg-rise-raised border border-rise-line rounded-lg p-4">
                     <div className="flex items-center gap-4">
                       <div
                         className="w-12 h-12 rounded-lg flex items-center justify-center"
@@ -316,10 +316,10 @@ export default function Departamentos() {
                         })()}
                       </div>
                       <div>
-                        <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px]">
+                        <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[16px]">
                           {formData.nome || "Nome do Departamento"}
                         </h3>
-                        <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[13px]">
+                        <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[13px]">
                           {formData.membros} membro{formData.membros !== 1 ? "s" : ""}
                         </p>
                       </div>
@@ -329,7 +329,7 @@ export default function Departamentos() {
               </div>
 
               {/* Modal Footer */}
-              <div className="mt-8 pt-6 border-t border-[#333]">
+              <div className="mt-8 pt-6 border-t border-rise-line">
                 {erroForm && (
                   <p className="text-[#ec5d5e] text-[13px] font-['Inter:Regular',sans-serif] mb-4 p-3 bg-[#ec5d5e]/10 border border-[#ec5d5e]/30 rounded-lg">
                     {erroForm}
@@ -339,7 +339,7 @@ export default function Departamentos() {
                   <button
                     type="button"
                     onClick={() => { setIsModalOpen(false); setEditandoId(null); setErroForm(null); }}
-                    className="px-6 py-3 rounded-lg font-['Inter:Semi_Bold',sans-serif] text-[14px] text-[#bdbdbd] hover:text-[#eee] hover:bg-[#1a1a1a] transition-colors"
+                    className="px-6 py-3 rounded-lg font-['Inter:Semi_Bold',sans-serif] text-[14px] text-rise-fg-2 hover:text-rise-fg hover:bg-rise-raised transition-colors"
                   >
                     Cancelar
                   </button>

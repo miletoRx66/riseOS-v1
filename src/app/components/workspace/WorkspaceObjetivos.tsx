@@ -74,10 +74,10 @@ export function WorkspaceObjetivos({ departamento, temPermissao }: WorkspaceObje
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px] mb-2">
+          <h2 className="font-['Inter:Bold',sans-serif] text-rise-fg text-[24px] mb-2">
             Objetivos e Metas
           </h2>
-          <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[15px]">
+          <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[15px]">
             Defina e acompanhe objetivos semanais, mensais e anuais
           </p>
         </div>
@@ -103,7 +103,7 @@ export function WorkspaceObjetivos({ departamento, temPermissao }: WorkspaceObje
             className={`px-4 py-2 rounded-lg font-['Inter:Semi_Bold',sans-serif] text-[13px] transition-all ${
               filtro === f.id
                 ? "bg-[#14E9BC] text-[#000]"
-                : "bg-[#0f0f0f] border border-[#333] text-[#bdbdbd] hover:border-[#555]"
+                : "bg-rise-surface border border-rise-line text-rise-fg-2 hover:border-rise-fg-4"
             }`}
           >
             {f.label}
@@ -118,10 +118,10 @@ export function WorkspaceObjetivos({ departamento, temPermissao }: WorkspaceObje
           return (
             <div
               key={obj.id}
-              className={`bg-[#0f0f0f] border rounded-lg p-6 transition-all ${
+              className={`bg-rise-surface border rounded-lg p-6 transition-all ${
                 obj.status === "concluido"
                   ? "border-[#28d939]/40 bg-[#28d939]/5"
-                  : "border-[#333] hover:border-[#555]"
+                  : "border-rise-line hover:border-rise-fg-4"
               }`}
             >
               <div className="flex items-start justify-between mb-4">
@@ -134,7 +134,7 @@ export function WorkspaceObjetivos({ departamento, temPermissao }: WorkspaceObje
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[18px]">
+                      <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[18px]">
                         {obj.titulo}
                       </h3>
                       <span className="px-3 py-1 rounded-full bg-[#14E9BC]/20 text-[#14E9BC] border border-[#14E9BC]/40 text-[11px] font-['Inter:Semi_Bold',sans-serif] uppercase">
@@ -146,14 +146,14 @@ export function WorkspaceObjetivos({ departamento, temPermissao }: WorkspaceObje
                         </span>
                       )}
                     </div>
-                    <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] mb-4">
+                    <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] mb-4">
                       Meta: {obj.meta}
                     </p>
                     
                     {/* Progress Bar */}
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[13px]">
+                        <span className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[13px]">
                           Progresso
                         </span>
                         <span
@@ -163,7 +163,7 @@ export function WorkspaceObjetivos({ departamento, temPermissao }: WorkspaceObje
                           {obj.progresso}%
                         </span>
                       </div>
-                      <div className="w-full bg-[#1a1a1a] rounded-full h-2 overflow-hidden">
+                      <div className="w-full bg-rise-raised rounded-full h-2 overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{ width: `${obj.progresso}%`, backgroundColor: corProgresso }}
@@ -172,7 +172,7 @@ export function WorkspaceObjetivos({ departamento, temPermissao }: WorkspaceObje
                     </div>
 
                     {/* Footer Info */}
-                    <div className="flex items-center gap-4 text-[#666] text-[13px]">
+                    <div className="flex items-center gap-4 text-rise-fg-3 text-[13px]">
                       <div className="flex items-center gap-2">
                         <Calendar size={14} />
                         <span>
@@ -188,13 +188,13 @@ export function WorkspaceObjetivos({ departamento, temPermissao }: WorkspaceObje
                 {temPermissao && obj.status !== "concluido" && (
                   <div className="flex items-center gap-2">
                     <button
-                      className="p-2 rounded-lg bg-[#1a1a1a] hover:bg-[#252525] transition-colors"
+                      className="p-2 rounded-lg bg-rise-raised hover:bg-rise-raised transition-colors"
                       title="Editar"
                     >
-                      <Edit2 size={18} className="text-[#bdbdbd]" />
+                      <Edit2 size={18} className="text-rise-fg-2" />
                     </button>
                     <button
-                      className="p-2 rounded-lg bg-[#1a1a1a] hover:bg-[#252525] transition-colors"
+                      className="p-2 rounded-lg bg-rise-raised hover:bg-rise-raised transition-colors"
                       title="Excluir"
                     >
                       <Trash2 size={18} className="text-[#ec5d5e]" />
@@ -209,36 +209,36 @@ export function WorkspaceObjetivos({ departamento, temPermissao }: WorkspaceObje
 
       {/* Stats resumo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-4">
+        <div className="bg-rise-surface border border-rise-line rounded-lg p-4">
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp size={20} className="text-[#28d939]" />
-            <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+            <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
               Em Andamento
             </p>
           </div>
-          <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px]">
+          <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[24px]">
             {objetivos.filter((o) => o.status === "em-andamento").length}
           </p>
         </div>
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-4">
+        <div className="bg-rise-surface border border-rise-line rounded-lg p-4">
           <div className="flex items-center gap-3 mb-2">
             <Target size={20} className="text-[#14E9BC]" />
-            <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+            <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
               Concluídos
             </p>
           </div>
-          <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px]">
+          <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[24px]">
             {objetivos.filter((o) => o.status === "concluido").length}
           </p>
         </div>
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-4">
+        <div className="bg-rise-surface border border-rise-line rounded-lg p-4">
           <div className="flex items-center gap-3 mb-2">
             <Calendar size={20} className="text-[#f59e0b]" />
-            <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+            <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
               Taxa de Sucesso
             </p>
           </div>
-          <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px]">
+          <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[24px]">
             {Math.round((objetivos.filter((o) => o.status === "concluido").length / objetivos.length) * 100)}%
           </p>
         </div>

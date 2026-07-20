@@ -75,16 +75,16 @@ export default function OKRDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] p-8 flex items-center justify-center">
-        <p className="text-[#bdbdbd]">Carregando...</p>
+      <div className="min-h-screen bg-rise-bg p-8 flex items-center justify-center">
+        <p className="text-rise-fg-2">Carregando...</p>
       </div>
     );
   }
 
   if (!okr) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] p-8 flex items-center justify-center">
-        <p className="text-[#bdbdbd] text-[18px]">OKR não encontrado</p>
+      <div className="min-h-screen bg-rise-bg p-8 flex items-center justify-center">
+        <p className="text-rise-fg-2 text-[18px]">OKR não encontrado</p>
       </div>
     );
   }
@@ -92,7 +92,7 @@ export default function OKRDetail() {
   const cor = dept?.cor ?? "#14E9BC";
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-[900px] mx-auto">
         {/* Back */}
         <Link
@@ -104,7 +104,7 @@ export default function OKRDetail() {
         </Link>
 
         {/* Header */}
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6 mb-6">
+        <div className="bg-rise-surface border border-rise-line rounded-lg p-6 mb-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-start gap-4 flex-1">
               <div
@@ -114,10 +114,10 @@ export default function OKRDetail() {
                 <Target size={28} />
               </div>
               <div className="flex-1">
-                <h1 className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px] mb-2">
+                <h1 className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px] mb-2">
                   {okr.titulo}
                 </h1>
-                <div className="flex items-center gap-4 flex-wrap text-[14px] text-[#bdbdbd]">
+                <div className="flex items-center gap-4 flex-wrap text-[14px] text-rise-fg-2">
                   {dept && (
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cor }} />
@@ -133,7 +133,7 @@ export default function OKRDetail() {
                     <span>{okr.responsavel?.nome ?? "—"}</span>
                   </div>
                   {(okr.data_inicio || okr.data_fim) && (
-                    <span className="text-[#555]">
+                    <span className="text-rise-fg-4">
                       {formatarData(okr.data_inicio)} — {formatarData(okr.data_fim)}
                     </span>
                   )}
@@ -142,7 +142,7 @@ export default function OKRDetail() {
             </div>
             <button
               onClick={handleExcluir}
-              className="text-[#bdbdbd] hover:text-[#ec5d5e] transition-colors p-2 ml-4"
+              className="text-rise-fg-2 hover:text-[#ec5d5e] transition-colors p-2 ml-4"
               title="Excluir OKR"
             >
               <Trash2 size={20} />
@@ -152,7 +152,7 @@ export default function OKRDetail() {
           {/* Progresso geral */}
           <div className="mt-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[#bdbdbd] text-[14px] font-['Inter:Medium',sans-serif]">
+              <span className="text-rise-fg-2 text-[14px] font-['Inter:Medium',sans-serif]">
                 Progresso Geral
               </span>
               <div className="flex items-center gap-3">
@@ -165,12 +165,12 @@ export default function OKRDetail() {
                 >
                   {getStatusLabel(okr.progresso)}
                 </span>
-                <span className="text-[#eee] text-[28px] font-['Inter:Bold',sans-serif]">
+                <span className="text-rise-fg text-[28px] font-['Inter:Bold',sans-serif]">
                   {okr.progresso}%
                 </span>
               </div>
             </div>
-            <div className="w-full bg-[#1a1a1a] rounded-full h-3">
+            <div className="w-full bg-rise-raised rounded-full h-3">
               <div
                 className="h-3 rounded-full transition-all duration-500"
                 style={{ width: `${okr.progresso}%`, backgroundColor: cor }}
@@ -180,8 +180,8 @@ export default function OKRDetail() {
         </div>
 
         {/* Key Results */}
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
-          <h2 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[18px] mb-6 uppercase tracking-wider text-[14px]">
+        <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
+          <h2 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[18px] mb-6 uppercase tracking-wider text-[14px]">
             Key Results
           </h2>
           <div className="space-y-6">
@@ -191,7 +191,7 @@ export default function OKRDetail() {
               return (
                 <div key={kr.id} className="border-l-2 pl-5 py-1" style={{ borderColor: cor }}>
                   <div className="flex items-start justify-between mb-1">
-                    <p className="font-['Inter:Medium',sans-serif] text-[#eee] text-[15px] flex-1 pr-4">
+                    <p className="font-['Inter:Medium',sans-serif] text-rise-fg text-[15px] flex-1 pr-4">
                       {kr.descricao}
                     </p>
                     <span
@@ -202,12 +202,12 @@ export default function OKRDetail() {
                     </span>
                   </div>
                   {kr.metrica && (
-                    <p className="text-[#555] text-[12px] mb-2 font-['Inter:Regular',sans-serif]">
+                    <p className="text-rise-fg-4 text-[12px] mb-2 font-['Inter:Regular',sans-serif]">
                       {kr.metrica}
                     </p>
                   )}
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="flex-1 bg-[#1a1a1a] rounded-full h-2">
+                    <div className="flex-1 bg-rise-raised rounded-full h-2">
                       <div
                         className="h-2 rounded-full transition-all duration-500"
                         style={{ width: `${kr.progresso}%`, backgroundColor: statusColor }}
@@ -215,7 +215,7 @@ export default function OKRDetail() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[#bdbdbd] text-[13px] font-['Inter:Regular',sans-serif]">
+                    <p className="text-rise-fg-2 text-[13px] font-['Inter:Regular',sans-serif]">
                       {kr.valor_atual.toLocaleString("pt-BR")} / {kr.valor_meta.toLocaleString("pt-BR")} {kr.unidade}
                     </p>
                   </div>
@@ -227,9 +227,9 @@ export default function OKRDetail() {
                         max={kr.valor_meta}
                         value={editingKr.valor}
                         onChange={(e) => setEditingKr({ ...editingKr, valor: parseFloat(e.target.value) || 0 })}
-                        className="w-32 bg-[#1a1a1a] border border-[#333] rounded px-3 py-1.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                        className="w-32 bg-rise-raised border border-rise-line rounded px-3 py-1.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none"
                       />
-                      <span className="text-[#bdbdbd] text-[12px]">/ {kr.valor_meta} {kr.unidade}</span>
+                      <span className="text-rise-fg-2 text-[12px]">/ {kr.valor_meta} {kr.unidade}</span>
                       <button
                         onClick={() => handleSalvarProgresso(kr.id, kr.valor_meta)}
                         disabled={salvandoKr}
@@ -239,7 +239,7 @@ export default function OKRDetail() {
                       </button>
                       <button
                         onClick={() => setEditingKr(null)}
-                        className="text-[#bdbdbd] hover:text-[#eee] px-2 py-1.5 text-[13px] transition-colors"
+                        className="text-rise-fg-2 hover:text-rise-fg px-2 py-1.5 text-[13px] transition-colors"
                       >
                         Cancelar
                       </button>
@@ -256,7 +256,7 @@ export default function OKRDetail() {
               );
             })}
             {(okr.key_results ?? []).length === 0 && (
-              <p className="text-[#555] text-[14px] font-['Inter:Regular',sans-serif]">
+              <p className="text-rise-fg-4 text-[14px] font-['Inter:Regular',sans-serif]">
                 Nenhum Key Result cadastrado.
               </p>
             )}

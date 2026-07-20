@@ -109,33 +109,33 @@ export default function NovaTarefa() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-[900px] mx-auto">
         {/* Header */}
         <div className="mb-6">
           <Link
             to="/tarefas"
-            className="flex items-center gap-2 text-[#bdbdbd] hover:text-[#14E9BC] transition-colors mb-4 font-['Inter:Medium',sans-serif] text-[14px]"
+            className="flex items-center gap-2 text-rise-fg-2 hover:text-[#14E9BC] transition-colors mb-4 font-['Inter:Medium',sans-serif] text-[14px]"
           >
             <ArrowLeft size={20} />
             Voltar para Tarefas
           </Link>
 
-          <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[32px] mb-2">
+          <h1 className="font-['Inter:Bold',sans-serif] font-bold text-rise-fg text-[32px] mb-2">
             Nova Tarefa
           </h1>
-          <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[16px]">
+          <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[16px]">
             Preencha os dados abaixo para criar uma nova tarefa
           </p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-8">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-8">
             <div className="space-y-6">
               {/* Título */}
               <div>
-                <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                   Título da Tarefa *
                 </label>
                 <input
@@ -143,9 +143,9 @@ export default function NovaTarefa() {
                   value={formData.titulo}
                   onChange={(e) => handleChange("titulo", e.target.value)}
                   placeholder="Ex: Campanha de lançamento Q1"
-                  className={`w-full bg-[#1a1a1a] border ${
-                    errors.titulo ? "border-[#ff6b6b]" : "border-[#333]"
-                  } rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none`}
+                  className={`w-full bg-rise-raised border ${
+                    errors.titulo ? "border-[#ff6b6b]" : "border-rise-line"
+                  } rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none`}
                 />
                 {errors.titulo && (
                   <p className="text-[#ff6b6b] text-[12px] font-['Inter:Regular',sans-serif] mt-1">
@@ -156,7 +156,7 @@ export default function NovaTarefa() {
 
               {/* Descrição */}
               <div>
-                <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                   Descrição
                 </label>
                 <textarea
@@ -164,22 +164,22 @@ export default function NovaTarefa() {
                   onChange={(e) => handleChange("descricao", e.target.value)}
                   placeholder="Descreva os detalhes e objetivos da tarefa..."
                   rows={4}
-                  className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none resize-none"
+                  className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none resize-none"
                 />
               </div>
 
               {/* Departamento e Status */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                  <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                     Departamento *
                   </label>
                   <select
                     value={formData.departamento}
                     onChange={(e) => handleChange("departamento", e.target.value)}
-                    className={`w-full bg-[#1a1a1a] border ${
-                      errors.departamento ? "border-[#ff6b6b]" : "border-[#333]"
-                    } rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none`}
+                    className={`w-full bg-rise-raised border ${
+                      errors.departamento ? "border-[#ff6b6b]" : "border-rise-line"
+                    } rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none`}
                   >
                     <option value="">Selecione um departamento</option>
                     {departamentos.map((dept) => (
@@ -196,13 +196,13 @@ export default function NovaTarefa() {
                 </div>
 
                 <div>
-                  <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                  <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                     Status
                   </label>
                   <select
                     value={formData.status}
                     onChange={(e) => handleChange("status", e.target.value)}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   >
                     <option value="planejamento">Planejamento</option>
                     <option value="em-andamento">Em Andamento</option>
@@ -215,13 +215,13 @@ export default function NovaTarefa() {
               {/* Prioridade e Responsável */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                  <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                     Prioridade
                   </label>
                   <select
                     value={formData.prioridade}
                     onChange={(e) => handleChange("prioridade", e.target.value)}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   >
                     <option value="baixa">Baixa</option>
                     <option value="media">Média</option>
@@ -230,13 +230,13 @@ export default function NovaTarefa() {
                 </div>
 
                 <div>
-                  <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                  <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                     Responsável
                   </label>
                   <select
                     value={formData.responsavel_id}
                     onChange={(e) => handleChange("responsavel_id", e.target.value)}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   >
                     <option value="">Sem responsável</option>
                     {usuarios.map((u) => (
@@ -248,7 +248,7 @@ export default function NovaTarefa() {
 
               {/* Prazo */}
               <div>
-                <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                   Data de Prazo *
                 </label>
                 <input
@@ -256,9 +256,9 @@ export default function NovaTarefa() {
                   value={formData.prazo}
                   onChange={(e) => handleChange("prazo", e.target.value)}
                   min={new Date().toISOString().split("T")[0]}
-                  className={`w-full bg-[#1a1a1a] border ${
-                    errors.prazo ? "border-[#ff6b6b]" : "border-[#333]"
-                  } rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none`}
+                  className={`w-full bg-rise-raised border ${
+                    errors.prazo ? "border-[#ff6b6b]" : "border-rise-line"
+                  } rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none`}
                 />
                 {errors.prazo && (
                   <p className="text-[#ff6b6b] text-[12px] font-['Inter:Regular',sans-serif] mt-1">
@@ -270,13 +270,13 @@ export default function NovaTarefa() {
               {/* Tipo e Visibilidade */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                  <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                     Tipo
                   </label>
                   <select
                     value={formData.tipo}
                     onChange={(e) => handleChange("tipo", e.target.value)}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   >
                     <option value="backend">Backend</option>
                     <option value="frontend">Frontend</option>
@@ -291,13 +291,13 @@ export default function NovaTarefa() {
                 </div>
 
                 <div>
-                  <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                  <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                     Visibilidade
                   </label>
                   <select
                     value={formData.visibilidade}
                     onChange={(e) => handleChange("visibilidade", e.target.value)}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   >
                     <option value="publica">Pública</option>
                     <option value="departamento">Departamento</option>
@@ -308,25 +308,25 @@ export default function NovaTarefa() {
 
               {/* Links */}
               <div>
-                <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                   Links Externos
                 </label>
 
                 {links.length > 0 && (
                   <div className="space-y-2 mb-3">
                     {links.map((link) => (
-                      <div key={link.id} className="flex items-center gap-3 bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2">
+                      <div key={link.id} className="flex items-center gap-3 bg-rise-raised border border-rise-line rounded-lg px-4 py-2">
                         <ExternalLink size={14} className="text-[#14E9BC] shrink-0" />
-                        <span className="text-[#eee] text-[13px] font-['Inter:Regular',sans-serif] flex-1 truncate">
+                        <span className="text-rise-fg text-[13px] font-['Inter:Regular',sans-serif] flex-1 truncate">
                           {link.titulo}
                         </span>
-                        <span className="text-[#666] text-[12px] font-['Inter:Regular',sans-serif] truncate max-w-[180px]">
+                        <span className="text-rise-fg-3 text-[12px] font-['Inter:Regular',sans-serif] truncate max-w-[180px]">
                           {link.url}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleRemoverLink(link.id)}
-                          className="text-[#666] hover:text-[#ff6b6b] transition-colors shrink-0"
+                          className="text-rise-fg-3 hover:text-[#ff6b6b] transition-colors shrink-0"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -341,19 +341,19 @@ export default function NovaTarefa() {
                     value={novoLink.titulo}
                     onChange={(e) => setNovoLink((prev) => ({ ...prev, titulo: e.target.value }))}
                     placeholder="Título do link"
-                    className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="bg-rise-raised border border-rise-line rounded-lg px-4 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   />
                   <input
                     type="text"
                     value={novoLink.url}
                     onChange={(e) => setNovoLink((prev) => ({ ...prev, url: e.target.value }))}
                     placeholder="URL (ex: https://...)"
-                    className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="bg-rise-raised border border-rise-line rounded-lg px-4 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   />
                   <select
                     value={novoLink.tipo}
                     onChange={(e) => setNovoLink((prev) => ({ ...prev, tipo: e.target.value as TarefaLink["tipo"] }))}
-                    className="bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                    className="bg-rise-raised border border-rise-line rounded-lg px-3 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                   >
                     <option value="figma">Figma</option>
                     <option value="drive">Drive</option>
@@ -365,7 +365,7 @@ export default function NovaTarefa() {
                   <button
                     type="button"
                     onClick={handleAdicionarLink}
-                    className="bg-[#1a1a1a] border border-[#333] text-[#14E9BC] px-4 py-2 rounded-lg hover:bg-[#222] transition-colors flex items-center gap-2 font-['Inter:Medium',sans-serif] text-[14px] whitespace-nowrap"
+                    className="bg-rise-raised border border-rise-line text-[#14E9BC] px-4 py-2 rounded-lg hover:bg-rise-subtle transition-colors flex items-center gap-2 font-['Inter:Medium',sans-serif] text-[14px] whitespace-nowrap"
                   >
                     <Plus size={16} />
                     Adicionar
@@ -375,7 +375,7 @@ export default function NovaTarefa() {
 
               {/* Tags */}
               <div>
-                <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                   Tags
                 </label>
                 <input
@@ -383,9 +383,9 @@ export default function NovaTarefa() {
                   value={formData.tags}
                   onChange={(e) => handleChange("tags", e.target.value)}
                   placeholder="Separe as tags com vírgulas (ex: campanha, marketing, Q1)"
-                  className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                  className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                 />
-                <p className="text-[#666] text-[12px] font-['Inter:Regular',sans-serif] mt-1">
+                <p className="text-rise-fg-3 text-[12px] font-['Inter:Regular',sans-serif] mt-1">
                   Use vírgulas para separar múltiplas tags
                 </p>
               </div>
@@ -404,14 +404,14 @@ export default function NovaTarefa() {
             <button
               type="button"
               onClick={() => navigate("/tarefas")}
-              className="bg-[#1a1a1a] border border-[#333] text-[#eee] px-6 py-3 rounded-lg font-['Inter:Medium',sans-serif] text-[14px] flex items-center gap-2 hover:bg-[#222] transition-colors"
+              className="bg-rise-raised border border-rise-line text-rise-fg px-6 py-3 rounded-lg font-['Inter:Medium',sans-serif] text-[14px] flex items-center gap-2 hover:bg-rise-subtle transition-colors"
             >
               <X size={20} />
               Cancelar
             </button>
           </div>
 
-          <p className="text-[#666] text-[12px] font-['Inter:Regular',sans-serif] mt-4">
+          <p className="text-rise-fg-3 text-[12px] font-['Inter:Regular',sans-serif] mt-4">
             * Campos obrigatórios
           </p>
         </form>

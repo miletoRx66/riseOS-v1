@@ -57,17 +57,17 @@ function DistributionProgress({
 
   if (size === "lg") {
     return (
-      <div className="bg-[#0f0f0f] rounded-xl p-4 mb-4">
+      <div className="bg-rise-surface rounded-xl p-4 mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[#555] text-[12px]">Distribuição</span>
+          <span className="text-rise-fg-4 text-[12px]">Distribuição</span>
           <span className="text-[13px] font-bold" style={{ color }}>{pct}%</span>
         </div>
-        <div className="w-full h-2 bg-[#1a1a1a] rounded-full overflow-hidden mb-2">
+        <div className="w-full h-2 bg-rise-raised rounded-full overflow-hidden mb-2">
           <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
         </div>
         <div className="flex justify-between text-[11px]">
           <span style={{ color }}>{formatBRL(distribuido)}</span>
-          <span className="text-[#444]">meta: {formatBRL(estruturado)}</span>
+          <span className="text-rise-fg-4">meta: {formatBRL(estruturado)}</span>
         </div>
       </div>
     );
@@ -76,15 +76,15 @@ function DistributionProgress({
   return (
     <div className="mb-2">
       <div className="flex justify-between items-center mb-1">
-        <span className="text-[10px] text-[#555]">Distribuição</span>
+        <span className="text-[10px] text-rise-fg-4">Distribuição</span>
         <span className="text-[10px] font-bold" style={{ color }}>{pct}%</span>
       </div>
-      <div className="w-full h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+      <div className="w-full h-1.5 bg-rise-raised rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
       <div className="flex justify-between mt-0.5">
-        <span className="text-[9px] text-[#555]">{fmtValor(distribuido)}</span>
-        <span className="text-[9px] text-[#444]">/ {fmtValor(estruturado)}</span>
+        <span className="text-[9px] text-rise-fg-4">{fmtValor(distribuido)}</span>
+        <span className="text-[9px] text-rise-fg-4">/ {fmtValor(estruturado)}</span>
       </div>
     </div>
   );
@@ -331,7 +331,7 @@ export default function DepartamentoComercial() {
   const formOpInvalid = !formOp.titulo.trim() || !formOp.data_inicio || !formOp.proximo_followup;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-rise-bg p-4 sm:p-6 lg:p-8">
       <div className="max-w-[1400px] mx-auto">
 
         {/* Header */}
@@ -342,8 +342,8 @@ export default function DepartamentoComercial() {
                 <TrendingUp size={20} className="text-[#28d939]" />
               </div>
               <div>
-                <h1 className="font-bold text-[#eee] text-[28px] leading-tight">CRM Comercial</h1>
-                <p className="text-[#555] text-[13px]">Departamento Comercial</p>
+                <h1 className="font-bold text-rise-fg text-[28px] leading-tight">CRM Comercial</h1>
+                <p className="text-rise-fg-4 text-[13px]">Departamento Comercial</p>
               </div>
             </div>
           </div>
@@ -366,15 +366,15 @@ export default function DepartamentoComercial() {
             { label: "Meta Atingida",   value: fmtValor(receita),  color: "#28d939",  suffix: "" },
             { label: "Taxa Conversão",  value: `${taxaConversao}%`, color: "#14E9BC", suffix: "" },
           ].map((k) => (
-            <div key={k.label} className="bg-[#0f0f0f] border border-[#222] rounded-xl p-5">
-              <p className="text-[#555] text-[12px] mb-1">{k.label}</p>
+            <div key={k.label} className="bg-rise-surface border border-rise-line-2 rounded-xl p-5">
+              <p className="text-rise-fg-4 text-[12px] mb-1">{k.label}</p>
               <p className="text-[22px] font-bold" style={{ color: k.color }}>{k.value}</p>
             </div>
           ))}
         </div>
 
         {/* Tabs principais */}
-        <div className="flex gap-0 mb-5 border-b border-[#1e1e1e]">
+        <div className="flex gap-0 mb-5 border-b border-rise-line-2">
           {([
             ["clientes",  "Investidores",      <Users size={14} />,      clientes.length],
             ["operacoes", "Operações",          <TrendingUp size={14} />, operacoes.length],
@@ -384,13 +384,13 @@ export default function DepartamentoComercial() {
               className={`flex items-center gap-1.5 px-5 py-2.5 text-[13px] font-semibold transition-all border-b-2 -mb-px ${
                 tab === t
                   ? "border-[#14E9BC] text-[#14E9BC]"
-                  : "border-transparent text-[#555] hover:text-[#bdbdbd]"
+                  : "border-transparent text-rise-fg-4 hover:text-rise-fg-2"
               }`}>
               {icon}
               {label}
               {count !== null && (
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-0.5 ${
-                  tab === t ? "bg-[#14E9BC]/20 text-[#14E9BC]" : "bg-[#1a1a1a] text-[#444]"
+                  tab === t ? "bg-[#14E9BC]/20 text-[#14E9BC]" : "bg-rise-raised text-rise-fg-4"
                 }`}>{count}</span>
               )}
             </button>
@@ -411,19 +411,19 @@ export default function DepartamentoComercial() {
                   key={seg}
                   onClick={() => { setSegmentoAtivo(seg); setFiltroStatus("todos"); }}
                   className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all border ${
-                    isActive ? "border-current" : "border-transparent text-[#555] hover:text-[#bdbdbd] hover:bg-[#1a1a1a]"
+                    isActive ? "border-current" : "border-transparent text-rise-fg-4 hover:text-rise-fg-2 hover:bg-rise-raised"
                   }`}
                   style={isActive ? {
-                    backgroundColor: cfg ? `${cfg.color}15` : "#1a1a1a",
-                    color: cfg ? cfg.color : "#eee",
-                    borderColor: cfg ? `${cfg.color}40` : "#333",
+                    backgroundColor: cfg ? `${cfg.color}15` : "var(--rise-raised)",
+                    color: cfg ? cfg.color : "var(--rise-fg)",
+                    borderColor: cfg ? `${cfg.color}40` : "var(--rise-line)",
                   } : undefined}
                 >
                   {seg === "todos" ? "Todos" : cfg!.label}
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                     style={{
-                      backgroundColor: isActive ? (cfg ? `${cfg.color}25` : "#333") : "#1a1a1a",
-                      color: isActive ? (cfg ? cfg.color : "#eee") : "#444",
+                      backgroundColor: isActive ? (cfg ? `${cfg.color}25` : "var(--rise-line)") : "var(--rise-raised)",
+                      color: isActive ? (cfg ? cfg.color : "var(--rise-fg)") : "var(--rise-fg-4)",
                     }}>{count}</span>
                 </button>
               );
@@ -434,14 +434,14 @@ export default function DepartamentoComercial() {
         {/* Filtro inline */}
         {tab !== "pipeline" && (
           <div className="flex items-center gap-1.5 mb-5 flex-wrap">
-            <Filter size={12} className="text-[#444] mr-1" />
+            <Filter size={12} className="text-rise-fg-4 mr-1" />
             {(tab === "clientes"
               ? [{ v: "todos", l: "Todos" }, ...Object.entries(CLIENTE_STATUS).map(([v, c]) => ({ v, l: c.label }))]
               : [{ v: "todos", l: "Todos" }, ...Object.entries(OP_STATUS_CONFIG).map(([v, c]) => ({ v, l: c.label }))]
             ).map(({ v, l }) => (
               <button key={v} onClick={() => setFiltroStatus(v)}
                 className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors ${
-                  filtroStatus === v ? "bg-[#14E9BC]/15 text-[#14E9BC]" : "text-[#555] hover:text-[#bdbdbd]"
+                  filtroStatus === v ? "bg-[#14E9BC]/15 text-[#14E9BC]" : "text-rise-fg-4 hover:text-rise-fg-2"
                 }`}>
                 {l}
               </button>
@@ -461,7 +461,7 @@ export default function DepartamentoComercial() {
           /* ── Investidores ── */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {clientesVisiveis.length === 0 ? (
-              <div className="col-span-3 text-center py-16 text-[#444]">Nenhum investidor encontrado</div>
+              <div className="col-span-3 text-center py-16 text-rise-fg-4">Nenhum investidor encontrado</div>
             ) : clientesVisiveis.map((cliente: CRMCliente) => {
               const st = CLIENTE_STATUS[cliente.status];
               const pr = PRIORIDADE_COLOR[cliente.prioridade as keyof typeof PRIORIDADE_COLOR] ?? "#555";
@@ -469,11 +469,11 @@ export default function DepartamentoComercial() {
               const segCfg = SEGMENTO_CONFIG[seg];
               return (
                 <div key={cliente.id} onClick={() => setDetalheCliente(cliente)}
-                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-5 hover:border-[#444] transition-all cursor-pointer">
+                  className="bg-rise-surface border border-rise-line-2 rounded-xl p-5 hover:border-rise-line-3 transition-all cursor-pointer">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0 pr-2">
-                      <h3 className="text-[#eee] font-semibold text-[15px] truncate">{cliente.nome}</h3>
-                      {cliente.empresa && <p className="text-[#555] text-[12px] mt-0.5 truncate">{cliente.empresa}</p>}
+                      <h3 className="text-rise-fg font-semibold text-[15px] truncate">{cliente.nome}</h3>
+                      {cliente.empresa && <p className="text-rise-fg-4 text-[12px] mt-0.5 truncate">{cliente.empresa}</p>}
                     </div>
                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -489,18 +489,18 @@ export default function DepartamentoComercial() {
 
                   <div className="space-y-1.5 mb-3">
                     {cliente.email && (
-                      <div className="flex items-center gap-2 text-[#666] text-[12px]">
+                      <div className="flex items-center gap-2 text-rise-fg-3 text-[12px]">
                         <Mail size={12} />{cliente.email}
                       </div>
                     )}
                     {cliente.telefone && (
-                      <div className="flex items-center gap-2 text-[#666] text-[12px]">
+                      <div className="flex items-center gap-2 text-rise-fg-3 text-[12px]">
                         <Phone size={12} />{cliente.telefone}
                       </div>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-[#1a1a1a]">
+                  <div className="flex items-center justify-between pt-3 border-t border-rise-raised">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: pr }} />
                       <span className="text-[11px]" style={{ color: pr }}>
@@ -516,7 +516,7 @@ export default function DepartamentoComercial() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-3 pt-2.5 text-[11px] text-[#555]">
+                  <div className="flex items-center gap-3 pt-2.5 text-[11px] text-rise-fg-4">
                     {cliente.responsavel && (
                       <span className="flex items-center gap-1">
                         <span className="w-4 h-4 rounded-full bg-[#14E9BC]/15 flex items-center justify-center text-[#14E9BC] text-[9px] font-bold">
@@ -526,7 +526,7 @@ export default function DepartamentoComercial() {
                       </span>
                     )}
                     {cliente.originador && (
-                      <span className="text-[#444]">via {cliente.originador.nome.split(" ")[0]}</span>
+                      <span className="text-rise-fg-4">via {cliente.originador.nome.split(" ")[0]}</span>
                     )}
                   </div>
                 </div>
@@ -576,9 +576,9 @@ export default function DepartamentoComercial() {
                     {items.length === 0 ? (
                       <div
                         className="border border-dashed rounded-xl p-5 text-center transition-all"
-                        style={{ borderColor: isOver ? stCfg.color : "#222", backgroundColor: isOver ? `${stCfg.color}08` : "transparent" }}
+                        style={{ borderColor: isOver ? stCfg.color : "var(--rise-line-2)", backgroundColor: isOver ? `${stCfg.color}08` : "transparent" }}
                       >
-                        <p className="text-[#444] text-[12px]">{isOver ? "Soltar aqui" : "Sem operações"}</p>
+                        <p className="text-rise-fg-4 text-[12px]">{isOver ? "Soltar aqui" : "Sem operações"}</p>
                       </div>
                     ) : items.map((op) => {
                       const isDragging = draggingOpId === op.id;
@@ -593,22 +593,22 @@ export default function DepartamentoComercial() {
                           onDragStart={(e) => handleOpDragStart(e, op.id)}
                           onDragEnd={handleOpDragEnd}
                           onClick={() => setDetalheOp(op)}
-                          className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-4 cursor-pointer hover:border-[#444] transition-all"
+                          className="bg-rise-surface border border-rise-line-2 rounded-xl p-4 cursor-pointer hover:border-rise-line-3 transition-all"
                           style={{ opacity: isDragging ? 0.4 : 1 }}
                         >
                           <div className="flex items-start gap-2 mb-1.5">
                             <span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: prioColor }} />
-                            <h4 className="text-[#eee] text-[13px] font-semibold line-clamp-2 leading-snug">{op.titulo}</h4>
+                            <h4 className="text-rise-fg text-[13px] font-semibold line-clamp-2 leading-snug">{op.titulo}</h4>
                           </div>
 
                           {op.tipo && (
-                            <p className="text-[#555] text-[11px] mb-1.5 flex items-center gap-1">
+                            <p className="text-rise-fg-4 text-[11px] mb-1.5 flex items-center gap-1">
                               <Tag size={9} />{op.tipo}
                             </p>
                           )}
 
                           {op.cliente && (
-                            <p className="text-[#555] text-[11px] mb-2 flex items-center gap-1">
+                            <p className="text-rise-fg-4 text-[11px] mb-2 flex items-center gap-1">
                               <Building2 size={9} />{op.cliente.nome}
                             </p>
                           )}
@@ -618,7 +618,7 @@ export default function DepartamentoComercial() {
 
                           {/* Follow-up */}
                           {op.proximo_followup && (
-                            <p className={`text-[11px] mb-1 flex items-center gap-1 ${followupVencido ? "text-[#ec5d5e]" : "text-[#555]"}`}>
+                            <p className={`text-[11px] mb-1 flex items-center gap-1 ${followupVencido ? "text-[#ec5d5e]" : "text-rise-fg-4"}`}>
                               {followupVencido
                                 ? <AlertTriangle size={9} />
                                 : <Calendar size={9} />
@@ -628,8 +628,8 @@ export default function DepartamentoComercial() {
                             </p>
                           )}
 
-                          <div className="flex items-center justify-between pt-2 border-t border-[#1a1a1a]">
-                            <div className="flex items-center gap-2 text-[11px] text-[#666]">
+                          <div className="flex items-center justify-between pt-2 border-t border-rise-raised">
+                            <div className="flex items-center gap-2 text-[11px] text-rise-fg-3">
                               {op.responsavel ? (
                                 <span className="flex items-center gap-1">
                                   <span className="w-5 h-5 rounded-full bg-[#6B8AFF]/15 flex items-center justify-center text-[#6B8AFF] text-[9px] font-bold">
@@ -638,7 +638,7 @@ export default function DepartamentoComercial() {
                                   <span className="text-[#999]">{op.responsavel.nome.split(" ")[0]}</span>
                                 </span>
                               ) : (
-                                <span className="flex items-center gap-1 text-[#333]">
+                                <span className="flex items-center gap-1 text-rise-fg-4">
                                   <User size={11} />Sem resp.
                                 </span>
                               )}
@@ -661,22 +661,22 @@ export default function DepartamentoComercial() {
       {/* ══ Modal: Novo Investidor ══ */}
       {modalCliente && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-[560px] max-h-[90vh] overflow-y-auto">
+          <div className="bg-rise-surface border border-rise-line rounded-2xl p-6 w-full max-w-[560px] max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-[#eee] text-[18px] font-semibold">Novo Investidor / Lead</h2>
-              <button onClick={() => setModalCliente(false)} className="text-[#555] hover:text-[#eee]"><X size={20} /></button>
+              <h2 className="text-rise-fg text-[18px] font-semibold">Novo Investidor / Lead</h2>
+              <button onClick={() => setModalCliente(false)} className="text-rise-fg-4 hover:text-rise-fg"><X size={20} /></button>
             </div>
 
             <div className="space-y-4">
               {/* Segmento */}
               <div>
-                <label className="text-[#bdbdbd] text-[12px] mb-2 block">Segmento</label>
+                <label className="text-rise-fg-2 text-[12px] mb-2 block">Segmento</label>
                 <div className="flex gap-2">
                   {(Object.entries(SEGMENTO_CONFIG) as [CRMSegmento, { label: string; color: string }][]).map(([v, cfg]) => (
                     <button key={v} type="button"
                       onClick={() => setFormCliente((f) => ({ ...f, segmento: v }))}
                       className={`flex-1 py-2 rounded-lg text-[12px] font-semibold border transition-all ${
-                        formCliente.segmento === v ? "border-current" : "bg-[#1a1a1a] border-[#333] text-[#666] hover:border-[#555]"
+                        formCliente.segmento === v ? "border-current" : "bg-rise-raised border-rise-line text-rise-fg-3 hover:border-rise-fg-4"
                       }`}
                       style={formCliente.segmento === v ? { backgroundColor: `${cfg.color}15`, borderColor: `${cfg.color}50`, color: cfg.color } : undefined}>
                       {cfg.label}
@@ -687,13 +687,13 @@ export default function DepartamentoComercial() {
 
               {/* Tipo */}
               <div>
-                <label className="text-[#bdbdbd] text-[12px] mb-2 block">Tipo de Cliente</label>
+                <label className="text-rise-fg-2 text-[12px] mb-2 block">Tipo de Cliente</label>
                 <div className="flex gap-2">
                   {([["pj", "B2B — Pessoa Jurídica"], ["pf", "PF — Pessoa Física"]] as const).map(([v, label]) => (
                     <button key={v} type="button"
                       onClick={() => setFormCliente((f) => ({ ...f, tipo: v }))}
                       className={`flex-1 py-2 rounded-lg text-[13px] font-semibold border transition-all ${
-                        formCliente.tipo === v ? "bg-[#14E9BC]/15 border-[#14E9BC]/50 text-[#14E9BC]" : "bg-[#1a1a1a] border-[#333] text-[#666] hover:border-[#555]"
+                        formCliente.tipo === v ? "bg-[#14E9BC]/15 border-[#14E9BC]/50 text-[#14E9BC]" : "bg-rise-raised border-rise-line text-rise-fg-3 hover:border-rise-fg-4"
                       }`}>
                       {label}
                     </button>
@@ -703,51 +703,51 @@ export default function DepartamentoComercial() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Nome *</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Nome *</label>
                   <input value={formCliente.nome} onChange={(e) => setFormCliente((f) => ({ ...f, nome: e.target.value }))}
                     placeholder="Nome completo ou razão social"
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none" />
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none" />
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Empresa</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Empresa</label>
                   <input value={formCliente.empresa} onChange={(e) => setFormCliente((f) => ({ ...f, empresa: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none" />
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Status</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Status</label>
                   <select value={formCliente.status} onChange={(e) => setFormCliente((f) => ({ ...f, status: e.target.value as CRMCliente["status"] }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none">
                     {Object.entries(CLIENTE_STATUS).map(([v, c]) => <option key={v} value={v}>{c.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Email</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Email</label>
                   <input type="email" value={formCliente.email} onChange={(e) => setFormCliente((f) => ({ ...f, email: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none" />
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Telefone</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Telefone</label>
                   <input value={formCliente.telefone} onChange={(e) => setFormCliente((f) => ({ ...f, telefone: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none" />
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Responsável</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Responsável</label>
                   <select value={formCliente.responsavel_id} onChange={(e) => setFormCliente((f) => ({ ...f, responsavel_id: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none">
                     <option value="">Nenhum</option>
                     {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Originador</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Originador</label>
                   <select value={formCliente.originador_id} onChange={(e) => setFormCliente((f) => ({ ...f, originador_id: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none">
                     <option value="">Nenhum</option>
                     {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
                   </select>
                 </div>
                 <div className="col-span-2">
-                  <label className="text-[#bdbdbd] text-[12px] mb-2 block">Persona <span className="text-[#555]">(múltipla escolha)</span></label>
+                  <label className="text-rise-fg-2 text-[12px] mb-2 block">Persona <span className="text-rise-fg-4">(múltipla escolha)</span></label>
                   <div className="flex flex-wrap gap-2">
                     {["Gestora", "Administradora", "Escritórios", "Outros"].map((p) => {
                       const ativo = formCliente.persona.includes(p);
@@ -755,7 +755,7 @@ export default function DepartamentoComercial() {
                         <button key={p} type="button"
                           onClick={() => setFormCliente((f) => ({ ...f, persona: ativo ? f.persona.filter((x) => x !== p) : [...f.persona, p] }))}
                           className={`px-4 py-2 rounded-lg text-[13px] font-medium transition-all border ${
-                            ativo ? "bg-[#14E9BC]/15 border-[#14E9BC]/50 text-[#14E9BC]" : "bg-[#1a1a1a] border-[#333] text-[#777] hover:border-[#555] hover:text-[#bdbdbd]"
+                            ativo ? "bg-[#14E9BC]/15 border-[#14E9BC]/50 text-[#14E9BC]" : "bg-rise-raised border-rise-line text-rise-fg-3 hover:border-rise-fg-4 hover:text-rise-fg-2"
                           }`}>
                           {ativo && <span className="mr-1.5">✓</span>}{p}
                         </button>
@@ -764,31 +764,31 @@ export default function DepartamentoComercial() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Prioridade</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Prioridade</label>
                   <select value={formCliente.prioridade} onChange={(e) => setFormCliente((f) => ({ ...f, prioridade: e.target.value as CRMCliente["prioridade"] }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none">
                     <option value="baixa">Baixa</option>
                     <option value="media">Média</option>
                     <option value="alta">Alta</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Prazo</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Prazo</label>
                   <input type="date" value={formCliente.prazo} onChange={(e) => setFormCliente((f) => ({ ...f, prazo: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none" />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Notas</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Notas</label>
                   <textarea value={formCliente.notas} onChange={(e) => setFormCliente((f) => ({ ...f, notas: e.target.value }))}
                     rows={2} placeholder="Observações sobre o cliente..."
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] resize-none focus:border-[#14E9BC] focus:outline-none" />
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[13px] resize-none focus:border-[#14E9BC] focus:outline-none" />
                 </div>
               </div>
             </div>
 
             <div className="flex gap-3 mt-6">
               <button onClick={() => setModalCliente(false)}
-                className="flex-1 bg-[#1a1a1a] border border-[#333] text-[#bdbdbd] py-2.5 rounded-lg text-[14px] hover:text-[#eee] transition-colors">
+                className="flex-1 bg-rise-raised border border-rise-line text-rise-fg-2 py-2.5 rounded-lg text-[14px] hover:text-rise-fg transition-colors">
                 Cancelar
               </button>
               <button onClick={handleCriarCliente} disabled={!formCliente.nome.trim() || salvando}
@@ -804,29 +804,29 @@ export default function DepartamentoComercial() {
       {/* ══ Modal: Nova Operação ══ */}
       {modalOp && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-[560px] max-h-[90vh] overflow-y-auto">
+          <div className="bg-rise-surface border border-rise-line rounded-2xl p-6 w-full max-w-[560px] max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-[#eee] text-[18px] font-semibold">Nova Operação</h2>
-              <button onClick={() => setModalOp(false)} className="text-[#555] hover:text-[#eee]"><X size={20} /></button>
+              <h2 className="text-rise-fg text-[18px] font-semibold">Nova Operação</h2>
+              <button onClick={() => setModalOp(false)} className="text-rise-fg-4 hover:text-rise-fg"><X size={20} /></button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Título *</label>
+                <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Título *</label>
                 <input value={formOp.titulo} onChange={(e) => setFormOp((f) => ({ ...f, titulo: e.target.value }))}
                   placeholder="Ex: Fundo Imobiliário XYZ — Série 2"
-                  className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none" />
+                  className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none" />
               </div>
 
               {/* Status */}
               <div>
-                <label className="text-[#bdbdbd] text-[12px] mb-2 block">Status</label>
+                <label className="text-rise-fg-2 text-[12px] mb-2 block">Status</label>
                 <div className="grid grid-cols-3 gap-2">
                   {(Object.entries(OP_STATUS_CONFIG) as [CRMOpStatus, { label: string; color: string }][]).map(([v, cfg]) => (
                     <button key={v} type="button"
                       onClick={() => setFormOp((f) => ({ ...f, status: v }))}
                       className={`py-2 rounded-lg text-[11px] font-semibold border transition-all ${
-                        formOp.status === v ? "border-current" : "bg-[#1a1a1a] border-[#2a2a2a] text-[#555] hover:border-[#444]"
+                        formOp.status === v ? "border-current" : "bg-rise-raised border-rise-line-2 text-rise-fg-4 hover:border-rise-line-3"
                       }`}
                       style={formOp.status === v ? { backgroundColor: `${cfg.color}15`, borderColor: `${cfg.color}50`, color: cfg.color } : undefined}>
                       {cfg.label}
@@ -838,83 +838,83 @@ export default function DepartamentoComercial() {
               <div className="grid grid-cols-2 gap-3">
                 {/* Valores */}
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Valor Meta (R$) *</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Valor Meta (R$) *</label>
                   <input type="number" value={formOp.valor_estruturado} onChange={(e) => setFormOp((f) => ({ ...f, valor_estruturado: e.target.value }))}
                     placeholder="10000000"
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none" />
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Distribuído (R$)</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Distribuído (R$)</label>
                   <input type="number" value={formOp.valor_distribuido} onChange={(e) => setFormOp((f) => ({ ...f, valor_distribuido: e.target.value }))}
                     placeholder="0"
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none" />
                 </div>
 
                 {/* Datas obrigatórias */}
                 <div>
-                  <label className={`text-[12px] mb-1.5 block ${!formOp.data_inicio ? "text-[#ec5d5e]" : "text-[#bdbdbd]"}`}>
+                  <label className={`text-[12px] mb-1.5 block ${!formOp.data_inicio ? "text-[#ec5d5e]" : "text-rise-fg-2"}`}>
                     Data de Início *
                   </label>
                   <input type="date" value={formOp.data_inicio} onChange={(e) => setFormOp((f) => ({ ...f, data_inicio: e.target.value }))}
-                    className={`w-full bg-[#1a1a1a] border rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:outline-none ${
-                      !formOp.data_inicio ? "border-[#ec5d5e]/50 focus:border-[#ec5d5e]" : "border-[#333] focus:border-[#14E9BC]"
+                    className={`w-full bg-rise-raised border rounded-lg px-4 py-2.5 text-rise-fg text-[13px] focus:outline-none ${
+                      !formOp.data_inicio ? "border-[#ec5d5e]/50 focus:border-[#ec5d5e]" : "border-rise-line focus:border-[#14E9BC]"
                     }`} />
                 </div>
                 <div>
-                  <label className={`text-[12px] mb-1.5 block ${!formOp.proximo_followup ? "text-[#ec5d5e]" : "text-[#bdbdbd]"}`}>
+                  <label className={`text-[12px] mb-1.5 block ${!formOp.proximo_followup ? "text-[#ec5d5e]" : "text-rise-fg-2"}`}>
                     Próximo Follow-up *
                   </label>
                   <input type="date" value={formOp.proximo_followup} onChange={(e) => setFormOp((f) => ({ ...f, proximo_followup: e.target.value }))}
-                    className={`w-full bg-[#1a1a1a] border rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:outline-none ${
-                      !formOp.proximo_followup ? "border-[#ec5d5e]/50 focus:border-[#ec5d5e]" : "border-[#333] focus:border-[#14E9BC]"
+                    className={`w-full bg-rise-raised border rounded-lg px-4 py-2.5 text-rise-fg text-[13px] focus:outline-none ${
+                      !formOp.proximo_followup ? "border-[#ec5d5e]/50 focus:border-[#ec5d5e]" : "border-rise-line focus:border-[#14E9BC]"
                     }`} />
                 </div>
 
                 {/* Cliente / Responsável / Originador */}
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Cliente</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Cliente</label>
                   <select value={formOp.cliente_id} onChange={(e) => setFormOp((f) => ({ ...f, cliente_id: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none">
                     <option value="">Nenhum</option>
                     {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Prioridade</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Prioridade</label>
                   <select value={formOp.prioridade} onChange={(e) => setFormOp((f) => ({ ...f, prioridade: e.target.value as CRMOperacao["prioridade"] }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none">
                     <option value="baixa">Baixa</option>
                     <option value="media">Média</option>
                     <option value="alta">Alta</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Responsável</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Responsável</label>
                   <select value={formOp.responsavel_id} onChange={(e) => setFormOp((f) => ({ ...f, responsavel_id: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none">
                     <option value="">Nenhum</option>
                     {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Originador</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Originador</label>
                   <select value={formOp.originador_id} onChange={(e) => setFormOp((f) => ({ ...f, originador_id: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none">
                     <option value="">Nenhum</option>
                     {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
                   </select>
                 </div>
 
                 <div className="col-span-2">
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Tipo / Produto</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Tipo / Produto</label>
                   <input value={formOp.tipo} onChange={(e) => setFormOp((f) => ({ ...f, tipo: e.target.value }))}
                     placeholder="Ex: FII, CRI, Ações..."
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none" />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Descrição</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Descrição</label>
                   <textarea value={formOp.descricao} onChange={(e) => setFormOp((f) => ({ ...f, descricao: e.target.value }))}
-                    rows={2} className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] resize-none focus:border-[#14E9BC] focus:outline-none" />
+                    rows={2} className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[13px] resize-none focus:border-[#14E9BC] focus:outline-none" />
                 </div>
               </div>
 
@@ -928,7 +928,7 @@ export default function DepartamentoComercial() {
 
             <div className="flex gap-3 mt-6">
               <button onClick={() => setModalOp(false)}
-                className="flex-1 bg-[#1a1a1a] border border-[#333] text-[#bdbdbd] py-2.5 rounded-lg text-[14px] hover:text-[#eee] transition-colors">
+                className="flex-1 bg-rise-raised border border-rise-line text-rise-fg-2 py-2.5 rounded-lg text-[14px] hover:text-rise-fg transition-colors">
                 Cancelar
               </button>
               <button onClick={handleCriarOp} disabled={formOpInvalid || salvando}
@@ -944,25 +944,25 @@ export default function DepartamentoComercial() {
       {/* ══ Modal: Detalhe Operação ══ */}
       {detalheOp && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-[540px] max-h-[90vh] overflow-y-auto">
+          <div className="bg-rise-surface border border-rise-line rounded-2xl p-6 w-full max-w-[540px] max-h-[90vh] overflow-y-auto">
 
             {/* Header */}
             <div className="flex items-start justify-between mb-5">
               <div className="flex items-start gap-3 flex-1 pr-4">
                 <span
                   className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
-                  style={{ backgroundColor: PRIORIDADE_COLOR[detalheOp.prioridade as keyof typeof PRIORIDADE_COLOR] ?? "#555" }}
+                  style={{ backgroundColor: PRIORIDADE_COLOR[detalheOp.prioridade as keyof typeof PRIORIDADE_COLOR] ?? "var(--rise-fg-4)" }}
                 />
                 <div>
-                  <h2 className="text-[#eee] text-[18px] font-semibold leading-snug">{detalheOp.titulo}</h2>
+                  <h2 className="text-rise-fg text-[18px] font-semibold leading-snug">{detalheOp.titulo}</h2>
                   {detalheOp.tipo && (
-                    <p className="text-[#555] text-[12px] mt-0.5 flex items-center gap-1.5">
+                    <p className="text-rise-fg-4 text-[12px] mt-0.5 flex items-center gap-1.5">
                       <Tag size={11} />{detalheOp.tipo}
                     </p>
                   )}
                 </div>
               </div>
-              <button onClick={() => setDetalheOp(null)} className="text-[#555] hover:text-[#eee] flex-shrink-0"><X size={20} /></button>
+              <button onClick={() => setDetalheOp(null)} className="text-rise-fg-4 hover:text-rise-fg flex-shrink-0"><X size={20} /></button>
             </div>
 
             {/* Status flow */}
@@ -977,13 +977,13 @@ export default function DepartamentoComercial() {
                   <div key={sk} className="flex items-center gap-1 flex-shrink-0">
                     <div className="px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all"
                       style={{
-                        backgroundColor: isCurrent ? sc.color : isPast ? `${sc.color}30` : "#1a1a1a",
-                        color: isCurrent ? "#000" : isPast ? sc.color : "#555",
-                        border: `1px solid ${isCurrent ? sc.color : isPast ? `${sc.color}40` : "#2a2a2a"}`,
+                        backgroundColor: isCurrent ? sc.color : isPast ? `${sc.color}30` : "var(--rise-raised)",
+                        color: isCurrent ? "#000" : isPast ? sc.color : "var(--rise-fg-4)",
+                        border: `1px solid ${isCurrent ? sc.color : isPast ? `${sc.color}40` : "var(--rise-line-2)"}`,
                       }}>
                       {sc.label}
                     </div>
-                    {i < arr.length - 1 && <ChevronRight size={10} className="text-[#333] flex-shrink-0" />}
+                    {i < arr.length - 1 && <ChevronRight size={10} className="text-rise-fg-4 flex-shrink-0" />}
                   </div>
                 );
               })}
@@ -997,8 +997,8 @@ export default function DepartamentoComercial() {
                 { label: "Responsável", value: detalheOp.responsavel?.nome ?? "—",         color: "#eee" },
                 { label: "Originador",  value: detalheOp.originador?.nome ?? "—",          color: "#bdbdbd" },
               ].map((row) => (
-                <div key={row.label} className="bg-[#0f0f0f] rounded-xl p-3">
-                  <p className="text-[#555] text-[11px] mb-1">{row.label}</p>
+                <div key={row.label} className="bg-rise-surface rounded-xl p-3">
+                  <p className="text-rise-fg-4 text-[11px] mb-1">{row.label}</p>
                   <p className="font-semibold text-[13px]" style={{ color: row.color }}>{row.value}</p>
                 </div>
               ))}
@@ -1010,9 +1010,9 @@ export default function DepartamentoComercial() {
             {/* Datas */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               {detalheOp.data_inicio && (
-                <div className="bg-[#0f0f0f] rounded-xl p-3">
-                  <p className="text-[#555] text-[11px] mb-1 flex items-center gap-1"><Calendar size={10} />Início</p>
-                  <p className="text-[#eee] font-semibold text-[13px]">
+                <div className="bg-rise-surface rounded-xl p-3">
+                  <p className="text-rise-fg-4 text-[11px] mb-1 flex items-center gap-1"><Calendar size={10} />Início</p>
+                  <p className="text-rise-fg font-semibold text-[13px]">
                     {new Date(detalheOp.data_inicio).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
                   </p>
                 </div>
@@ -1020,12 +1020,12 @@ export default function DepartamentoComercial() {
               {detalheOp.proximo_followup && (() => {
                 const vencido = isFollowupVencido(detalheOp.proximo_followup);
                 return (
-                  <div className={`rounded-xl p-3 ${vencido ? "bg-[#ec5d5e]/10 border border-[#ec5d5e]/30" : "bg-[#0f0f0f]"}`}>
-                    <p className={`text-[11px] mb-1 flex items-center gap-1 ${vencido ? "text-[#ec5d5e]" : "text-[#555]"}`}>
+                  <div className={`rounded-xl p-3 ${vencido ? "bg-[#ec5d5e]/10 border border-[#ec5d5e]/30" : "bg-rise-surface"}`}>
+                    <p className={`text-[11px] mb-1 flex items-center gap-1 ${vencido ? "text-[#ec5d5e]" : "text-rise-fg-4"}`}>
                       {vencido ? <AlertTriangle size={10} /> : <Calendar size={10} />}
                       {vencido ? "Follow-up Vencido" : "Próximo Follow-up"}
                     </p>
-                    <p className={`font-semibold text-[13px] ${vencido ? "text-[#ec5d5e]" : "text-[#eee]"}`}>
+                    <p className={`font-semibold text-[13px] ${vencido ? "text-[#ec5d5e]" : "text-rise-fg"}`}>
                       {new Date(detalheOp.proximo_followup).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
                     </p>
                   </div>
@@ -1035,9 +1035,9 @@ export default function DepartamentoComercial() {
 
             {/* Prazo */}
             {detalheOp.prazo && (
-              <div className="bg-[#0f0f0f] rounded-xl p-3 mb-4 flex items-center justify-between">
-                <span className="text-[#555] text-[12px] flex items-center gap-1"><Calendar size={11} />Prazo Final</span>
-                <span className="text-[#eee] font-semibold text-[13px]">
+              <div className="bg-rise-surface rounded-xl p-3 mb-4 flex items-center justify-between">
+                <span className="text-rise-fg-4 text-[12px] flex items-center gap-1"><Calendar size={11} />Prazo Final</span>
+                <span className="text-rise-fg font-semibold text-[13px]">
                   {new Date(detalheOp.prazo).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
                 </span>
               </div>
@@ -1045,13 +1045,13 @@ export default function DepartamentoComercial() {
 
             {/* Descrição */}
             {detalheOp.descricao && (
-              <div className="bg-[#0f0f0f] rounded-xl p-4 mb-4">
-                <p className="text-[#555] text-[11px] mb-1.5">Descrição</p>
-                <p className="text-[#bdbdbd] text-[13px] leading-relaxed">{detalheOp.descricao}</p>
+              <div className="bg-rise-surface rounded-xl p-4 mb-4">
+                <p className="text-rise-fg-4 text-[11px] mb-1.5">Descrição</p>
+                <p className="text-rise-fg-2 text-[13px] leading-relaxed">{detalheOp.descricao}</p>
               </div>
             )}
 
-            <p className="text-[#333] text-[11px] mb-5">
+            <p className="text-rise-fg-4 text-[11px] mb-5">
               Criada em {new Date(detalheOp.criado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
             </p>
 
@@ -1081,24 +1081,24 @@ export default function DepartamentoComercial() {
                 )}
                 <button
                   onClick={() => handleEncerrarOp(detalheOp)}
-                  className="px-4 bg-[#555]/10 border border-[#555]/30 text-[#555] py-2.5 rounded-lg text-[13px] font-semibold hover:bg-[#555]/20 hover:text-[#999] transition-colors flex items-center gap-1.5">
+                  className="px-4 bg-[#555]/10 border border-rise-fg-4/30 text-rise-fg-4 py-2.5 rounded-lg text-[13px] font-semibold hover:bg-[#555]/20 hover:text-[#999] transition-colors flex items-center gap-1.5">
                   <XCircle size={14} />Encerrar
                 </button>
               </div>
             )}
 
             {/* ── Comentários ── */}
-            <div className="border-t border-[#1e1e1e] pt-5">
+            <div className="border-t border-rise-line-2 pt-5">
               <div className="flex items-center gap-2 mb-4">
-                <MessageCircle size={15} className="text-[#555]" />
-                <span className="text-[#bdbdbd] text-[13px] font-semibold">Comentários</span>
+                <MessageCircle size={15} className="text-rise-fg-4" />
+                <span className="text-rise-fg-2 text-[13px] font-semibold">Comentários</span>
                 {comentarios.length > 0 && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#1a1a1a] text-[#555]">{comentarios.length}</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rise-raised text-rise-fg-4">{comentarios.length}</span>
                 )}
               </div>
 
               {comentarios.length === 0 ? (
-                <p className="text-[#333] text-[12px] mb-4">Nenhum comentário ainda.</p>
+                <p className="text-rise-fg-4 text-[12px] mb-4">Nenhum comentário ainda.</p>
               ) : (
                 <div className="space-y-3 mb-4 max-h-[220px] overflow-y-auto pr-1">
                   {comentarios.map((c: CRMComentario) => (
@@ -1108,12 +1108,12 @@ export default function DepartamentoComercial() {
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-2 mb-0.5">
-                          <span className="text-[#eee] text-[12px] font-semibold">{c.usuario?.nome ?? "Usuário"}</span>
-                          <span className="text-[#333] text-[10px]">
+                          <span className="text-rise-fg text-[12px] font-semibold">{c.usuario?.nome ?? "Usuário"}</span>
+                          <span className="text-rise-fg-4 text-[10px]">
                             {new Date(c.criado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                           </span>
                         </div>
-                        <p className="text-[#bdbdbd] text-[13px] leading-relaxed break-words">{c.conteudo}</p>
+                        <p className="text-rise-fg-2 text-[13px] leading-relaxed break-words">{c.conteudo}</p>
                       </div>
                     </div>
                   ))}
@@ -1127,7 +1127,7 @@ export default function DepartamentoComercial() {
                   onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleEnviarComentario(); }}
                   placeholder="Adicionar comentário... (Ctrl+Enter para enviar)"
                   rows={2}
-                  className="flex-1 bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl px-4 py-2.5 text-[#eee] text-[13px] resize-none focus:border-[#6B8AFF] focus:outline-none placeholder-[#333]"
+                  className="flex-1 bg-rise-surface border border-rise-line-2 rounded-xl px-4 py-2.5 text-rise-fg text-[13px] resize-none focus:border-[#6B8AFF] focus:outline-none placeholder-[#333]"
                 />
                 <button
                   onClick={handleEnviarComentario}
@@ -1145,13 +1145,13 @@ export default function DepartamentoComercial() {
       {/* ══ Modal: Detalhe Cliente ══ */}
       {detalheCliente && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-[480px]">
+          <div className="bg-rise-surface border border-rise-line rounded-2xl p-6 w-full max-w-[480px]">
             <div className="flex items-start justify-between mb-5">
               <div>
-                <h2 className="text-[#eee] text-[18px] font-semibold">{detalheCliente.nome}</h2>
-                {detalheCliente.empresa && <p className="text-[#555] text-[13px] mt-0.5">{detalheCliente.empresa}</p>}
+                <h2 className="text-rise-fg text-[18px] font-semibold">{detalheCliente.nome}</h2>
+                {detalheCliente.empresa && <p className="text-rise-fg-4 text-[13px] mt-0.5">{detalheCliente.empresa}</p>}
               </div>
-              <button onClick={() => setDetalheCliente(null)} className="text-[#555] hover:text-[#eee]"><X size={20} /></button>
+              <button onClick={() => setDetalheCliente(null)} className="text-rise-fg-4 hover:text-rise-fg"><X size={20} /></button>
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-5">
@@ -1161,17 +1161,17 @@ export default function DepartamentoComercial() {
                 { label: "Responsável",  value: detalheCliente.responsavel?.nome ?? "—",      color: "#eee" },
                 { label: "Originador",   value: detalheCliente.originador?.nome ?? "—",       color: "#bdbdbd" },
               ].map((row) => (
-                <div key={row.label} className="bg-[#0f0f0f] rounded-xl p-3">
-                  <p className="text-[#555] text-[11px] mb-1">{row.label}</p>
+                <div key={row.label} className="bg-rise-surface rounded-xl p-3">
+                  <p className="text-rise-fg-4 text-[11px] mb-1">{row.label}</p>
                   <p className="font-semibold text-[13px]" style={{ color: row.color }}>{row.value}</p>
                 </div>
               ))}
             </div>
 
             {detalheCliente.notas && (
-              <div className="bg-[#0f0f0f] rounded-xl p-4 mb-4">
-                <p className="text-[#555] text-[11px] mb-1">Notas</p>
-                <p className="text-[#bdbdbd] text-[13px] leading-relaxed">{detalheCliente.notas}</p>
+              <div className="bg-rise-surface rounded-xl p-4 mb-4">
+                <p className="text-rise-fg-4 text-[11px] mb-1">Notas</p>
+                <p className="text-rise-fg-2 text-[13px] leading-relaxed">{detalheCliente.notas}</p>
               </div>
             )}
 
@@ -1188,21 +1188,21 @@ export default function DepartamentoComercial() {
               const opsCliente = operacoes.filter((o: CRMOperacao) => o.cliente_id === detalheCliente.id);
               if (opsCliente.length === 0) return null;
               return (
-                <div className="border-t border-[#1e1e1e] pt-5">
+                <div className="border-t border-rise-line-2 pt-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <TrendingUp size={14} className="text-[#555]" />
-                    <span className="text-[#bdbdbd] text-[13px] font-semibold">Operações vinculadas</span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#1a1a1a] text-[#555]">{opsCliente.length}</span>
+                    <TrendingUp size={14} className="text-rise-fg-4" />
+                    <span className="text-rise-fg-2 text-[13px] font-semibold">Operações vinculadas</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rise-raised text-rise-fg-4">{opsCliente.length}</span>
                   </div>
                   <div className="space-y-2">
                     {opsCliente.map((op: CRMOperacao) => {
                       const stCfg = OP_STATUS_CONFIG[op.status] ?? { color: "#555", label: op.status };
                       return (
                         <button key={op.id} onClick={() => { setDetalheCliente(null); setDetalheOp(op); }}
-                          className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl px-4 py-3 flex items-center justify-between hover:border-[#444] transition-all text-left">
+                          className="w-full bg-rise-surface border border-rise-line-2 rounded-xl px-4 py-3 flex items-center justify-between hover:border-rise-line-3 transition-all text-left">
                           <div className="flex items-center gap-2 min-w-0">
                             <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: stCfg.color }} />
-                            <span className="text-[#eee] text-[13px] font-medium truncate">{op.titulo}</span>
+                            <span className="text-rise-fg text-[13px] font-medium truncate">{op.titulo}</span>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                             {opVE(op) > 0 && (

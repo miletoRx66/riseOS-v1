@@ -1,5 +1,35 @@
 @custom-variant dark (&:is(.dark *));
 
+/* ── Rise OS brand tokens (light) ─────────────────────── */
+:root {
+  --rise-bg:       #f0f2f5;
+  --rise-surface:  #ffffff;
+  --rise-raised:   #f8f9fa;
+  --rise-subtle:   #eef0f3;
+  --rise-fg:       #111827;
+  --rise-fg-2:     #374151;
+  --rise-fg-3:     #6b7280;
+  --rise-fg-4:     #9ca3af;
+  --rise-line:     #e5e7eb;
+  --rise-line-2:   #f3f4f6;
+  --rise-line-3:   #d1d5db;
+}
+
+/* ── Rise OS brand tokens (dark) ──────────────────────── */
+.dark {
+  --rise-bg:       #0a0a0a;
+  --rise-surface:  #0f0f0f;
+  --rise-raised:   #1a1a1a;
+  --rise-subtle:   #222222;
+  --rise-fg:       #eeeeee;
+  --rise-fg-2:     #bdbdbd;
+  --rise-fg-3:     #777777;
+  --rise-fg-4:     #555555;
+  --rise-line:     #333333;
+  --rise-line-2:   #222222;
+  --rise-line-3:   #444444;
+}
+
 :root {
   --font-size: 16px;
   --background: #ffffff;
@@ -79,6 +109,19 @@
 }
 
 @theme inline {
+  /* Rise OS tokens */
+  --color-rise-bg:      var(--rise-bg);
+  --color-rise-surface: var(--rise-surface);
+  --color-rise-raised:  var(--rise-raised);
+  --color-rise-subtle:  var(--rise-subtle);
+  --color-rise-fg:      var(--rise-fg);
+  --color-rise-fg-2:    var(--rise-fg-2);
+  --color-rise-fg-3:    var(--rise-fg-3);
+  --color-rise-fg-4:    var(--rise-fg-4);
+  --color-rise-line:    var(--rise-line);
+  --color-rise-line-2:  var(--rise-line-2);
+  --color-rise-line-3:  var(--rise-line-3);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

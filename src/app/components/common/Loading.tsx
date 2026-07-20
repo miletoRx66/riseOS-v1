@@ -13,10 +13,10 @@ export function Loading({ size = "md", text }: LoadingProps) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 p-8">
       <div
-        className={`${sizeClasses[size]} border-[#333] border-t-[#14E9BC] rounded-full animate-spin`}
+        className={`${sizeClasses[size]} border-rise-line border-t-[#14E9BC] rounded-full animate-spin`}
       />
       {text && (
-        <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px]">
+        <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px]">
           {text}
         </p>
       )}

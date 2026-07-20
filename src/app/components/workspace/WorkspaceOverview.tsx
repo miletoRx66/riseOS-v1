@@ -80,10 +80,10 @@ export function WorkspaceOverview({ departamento, temPermissao }: WorkspaceOverv
     <div className="space-y-8">
       {/* Welcome Section */}
       <div className="bg-gradient-to-br from-[#14E9BC]/10 to-transparent border border-[#14E9BC]/20 rounded-lg p-6">
-        <h2 className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px] mb-2">
+        <h2 className="font-['Inter:Bold',sans-serif] text-rise-fg text-[24px] mb-2">
           Bem-vindo ao Workspace {departamento.nome}!
         </h2>
-        <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[15px] leading-relaxed">
+        <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[15px] leading-relaxed">
           {temPermissao
             ? "Você tem permissão total para criar e gerenciar formulários, documentos, automações e objetivos deste departamento."
             : "Você pode visualizar todas as informações, mas apenas executivos do departamento podem editar e criar novos itens."}
@@ -92,7 +92,7 @@ export function WorkspaceOverview({ departamento, temPermissao }: WorkspaceOverv
 
       {/* Stats Grid */}
       <div>
-        <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[20px] mb-4">
+        <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[20px] mb-4">
           Estatísticas do Workspace
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -101,7 +101,7 @@ export function WorkspaceOverview({ departamento, temPermissao }: WorkspaceOverv
             return (
               <div
                 key={stat.label}
-                className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6 hover:border-[#555] transition-all"
+                className="bg-rise-surface border border-rise-line rounded-lg p-6 hover:border-rise-fg-4 transition-all"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div
@@ -111,13 +111,13 @@ export function WorkspaceOverview({ departamento, temPermissao }: WorkspaceOverv
                     <Icon size={24} style={{ color: stat.cor }} />
                   </div>
                 </div>
-                <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px] mb-2">
+                <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px] mb-2">
                   {stat.label}
                 </p>
-                <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[32px] mb-1">
+                <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[32px] mb-1">
                   {stat.valor}
                 </p>
-                <p className="font-['Inter:Regular',sans-serif] text-[#666] text-[13px]">
+                <p className="font-['Inter:Regular',sans-serif] text-rise-fg-3 text-[13px]">
                   {stat.descricao}
                 </p>
               </div>
@@ -128,57 +128,57 @@ export function WorkspaceOverview({ departamento, temPermissao }: WorkspaceOverv
 
       {/* Funcionalidades Disponíveis */}
       <div>
-        <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[20px] mb-4">
+        <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[20px] mb-4">
           Funcionalidades do Workspace
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
             <div className="flex items-center gap-3 mb-3">
               <FileText size={24} className="text-[#14E9BC]" />
-              <h4 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px]">
+              <h4 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[16px]">
                 Formulários Personalizados
               </h4>
             </div>
-            <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] leading-relaxed">
+            <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] leading-relaxed">
               Crie formulários customizados para coleta de dados, pesquisas internas e processos do
               departamento.
             </p>
           </div>
 
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
             <div className="flex items-center gap-3 mb-3">
               <FileText size={24} className="text-[#28d939]" />
-              <h4 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px]">
+              <h4 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[16px]">
                 Gestão de Documentos
               </h4>
             </div>
-            <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] leading-relaxed">
+            <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] leading-relaxed">
               Importe, exporte e edite documentos. Organize arquivos por categorias e mantenha tudo
               centralizado.
             </p>
           </div>
 
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
             <div className="flex items-center gap-3 mb-3">
               <Zap size={24} className="text-[#f59e0b]" />
-              <h4 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px]">
+              <h4 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[16px]">
                 Automações Inteligentes
               </h4>
             </div>
-            <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] leading-relaxed">
+            <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] leading-relaxed">
               Configure triggers e ações automáticas baseadas em eventos. Economize tempo em tarefas
               repetitivas.
             </p>
           </div>
 
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
             <div className="flex items-center gap-3 mb-3">
               <Target size={24} className="text-[#6B8AFF]" />
-              <h4 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px]">
+              <h4 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[16px]">
                 Objetivos e Metas
               </h4>
             </div>
-            <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] leading-relaxed">
+            <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] leading-relaxed">
               Defina objetivos semanais, mensais e anuais. Acompanhe o progresso e mantenha o time
               alinhado.
             </p>
@@ -188,8 +188,8 @@ export function WorkspaceOverview({ departamento, temPermissao }: WorkspaceOverv
 
       {/* Quick Actions */}
       {temPermissao && (
-        <div className="bg-[#0f0f0f] border border-[#14E9BC]/40 rounded-lg p-6">
-          <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[18px] mb-4">
+        <div className="bg-rise-surface border border-[#14E9BC]/40 rounded-lg p-6">
+          <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[18px] mb-4">
             Ações Rápidas
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">

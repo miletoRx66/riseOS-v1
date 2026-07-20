@@ -57,7 +57,7 @@ export function Tooltip({ content, children, position = "top" }: TooltipProps) {
       {isVisible && (
         <div
           ref={tooltipRef}
-          className="fixed z-[1070] px-3 py-2 bg-[#1a1a1a] border border-[#333] rounded text-[#eee] font-['Inter:Regular',sans-serif] text-[12px] whitespace-nowrap pointer-events-none"
+          className="fixed z-[1070] px-3 py-2 bg-rise-raised border border-rise-line rounded text-rise-fg font-['Inter:Regular',sans-serif] text-[12px] whitespace-nowrap pointer-events-none"
           style={{
             top: `${coords.top}px`,
             left: `${coords.left}px`,

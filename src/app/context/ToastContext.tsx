@@ -60,10 +60,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               style={{ backgroundColor: c.bg, borderColor: c.border }}
             >
               <Icon size={18} style={{ color: c.icon }} className="flex-shrink-0 mt-0.5" />
-              <p className="text-[#eee] text-[13px] font-['Inter:Regular',sans-serif] flex-1 leading-relaxed">
+              <p className="text-rise-fg text-[13px] font-['Inter:Regular',sans-serif] flex-1 leading-relaxed">
                 {t.message}
               </p>
-              <button onClick={() => dismiss(t.id)} className="text-[#555] hover:text-[#eee] transition-colors flex-shrink-0">
+              <button onClick={() => dismiss(t.id)} className="text-rise-fg-4 hover:text-rise-fg transition-colors flex-shrink-0">
                 <X size={14} />
               </button>
             </div>

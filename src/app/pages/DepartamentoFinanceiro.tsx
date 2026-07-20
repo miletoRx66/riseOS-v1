@@ -97,26 +97,26 @@ function ModalAUM({ produtos, competencia, userId, onSalvo, onFechar }: ModalAUM
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[#0f0f0f] border border-[#333] rounded-xl w-full max-w-[560px]">
-        <div className="flex items-center justify-between p-6 border-b border-[#333]">
+      <div className="bg-rise-surface border border-rise-line rounded-xl w-full max-w-[560px]">
+        <div className="flex items-center justify-between p-6 border-b border-rise-line">
           <div className="flex items-center gap-3">
-            <h2 className="text-[#eee] text-[20px] font-bold">Lançar AUM</h2>
+            <h2 className="text-rise-fg text-[20px] font-bold">Lançar AUM</h2>
             {isEdicao && !carregandoSnap && (
               <span className="bg-[#f59e0b]/15 text-[#f59e0b] text-[11px] font-semibold px-2 py-0.5 rounded-full border border-[#f59e0b]/30">
                 Editando existente
               </span>
             )}
           </div>
-          <button onClick={onFechar} className="text-[#555] hover:text-[#eee] transition-colors"><X size={20} /></button>
+          <button onClick={onFechar} className="text-rise-fg-4 hover:text-rise-fg transition-colors"><X size={20} /></button>
         </div>
 
         <div className="p-6 space-y-4">
 
           {/* Produto */}
           <div>
-            <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Produto</label>
+            <label className="block text-rise-fg-2 text-[12px] font-semibold mb-1.5">Produto</label>
             <select value={produtoId} onChange={e => setProdutoId(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none">
+              className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[14px] focus:border-[#f59e0b] focus:outline-none">
               {produtos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
             </select>
           </div>
@@ -124,12 +124,12 @@ function ModalAUM({ produtos, competencia, userId, onSalvo, onFechar }: ModalAUM
           {/* Frequência + Competência */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[#bdbdbd] text-[12px] font-semibold">Competência</label>
-              <div className="flex items-center gap-1 bg-[#111] border border-[#2a2a2a] rounded-lg p-0.5">
+              <label className="text-rise-fg-2 text-[12px] font-semibold">Competência</label>
+              <div className="flex items-center gap-1 bg-rise-surface border border-rise-line-2 rounded-lg p-0.5">
                 {(["mensal", "semanal"] as const).map(f => (
                   <button key={f} onClick={() => { setFrequencia(f); setComp(f === "mensal" ? competencia : ""); }}
                     className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${
-                      frequencia === f ? "bg-[#f59e0b] text-[#000]" : "text-[#555] hover:text-[#bdbdbd]"
+                      frequencia === f ? "bg-[#f59e0b] text-[#000]" : "text-rise-fg-4 hover:text-rise-fg-2"
                     }`}>
                     {f === "mensal" ? "Mensal" : "Semanal"}
                   </button>
@@ -139,16 +139,16 @@ function ModalAUM({ produtos, competencia, userId, onSalvo, onFechar }: ModalAUM
             <input
               type={frequencia === "mensal" ? "month" : "week"}
               value={comp} onChange={e => setComp(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none"
+              className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[14px] focus:border-[#f59e0b] focus:outline-none"
             />
             {frequencia === "semanal" && comp && (
-              <p className="text-[#555] text-[11px] mt-1">Competência semanal: {comp}</p>
+              <p className="text-rise-fg-4 text-[11px] mt-1">Competência semanal: {comp}</p>
             )}
           </div>
 
           {/* Inputs AUM */}
           {carregandoSnap ? (
-            <div className="flex items-center justify-center py-6 text-[#555] text-[13px] gap-2">
+            <div className="flex items-center justify-center py-6 text-rise-fg-4 text-[13px] gap-2">
               <div className="w-4 h-4 border-2 border-[#f59e0b] border-t-transparent rounded-full animate-spin" />
               Verificando lançamento anterior...
             </div>
@@ -162,7 +162,7 @@ function ModalAUM({ produtos, competencia, userId, onSalvo, onFechar }: ModalAUM
                 <div key={label}>
                   <label className="block text-[12px] font-semibold mb-1.5" style={{ color: cor }}>{label}</label>
                   <input value={val} onChange={e => set(e.target.value)} placeholder="0.00" type="number" step="0.01"
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:outline-none transition-colors"
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[14px] focus:outline-none transition-colors"
                     style={{ borderColor: val ? cor : undefined }} />
                 </div>
               ))}
@@ -170,7 +170,7 @@ function ModalAUM({ produtos, competencia, userId, onSalvo, onFechar }: ModalAUM
           )}
 
           {/* Computed preview */}
-          <div className="bg-[#1a1a1a] border border-[#222] rounded-lg p-4 grid grid-cols-3 gap-3">
+          <div className="bg-rise-raised border border-rise-line-2 rounded-lg p-4 grid grid-cols-3 gap-3">
             {[
               { label: "Total Investido",     val: m.total_investido,      cor: "#6B8AFF" },
               { label: "Fees Gerados",        val: m.fees_gerados,         cor: "#f59e0b" },
@@ -178,22 +178,22 @@ function ModalAUM({ produtos, competencia, userId, onSalvo, onFechar }: ModalAUM
             ].map(({ label, val, cor }) => (
               <div key={label} className="text-center">
                 <p className="text-[11px] mb-1" style={{ color: cor }}>{label}</p>
-                <p className="text-[#eee] text-[13px] font-bold">{fmt(val)}</p>
+                <p className="text-rise-fg text-[13px] font-bold">{fmt(val)}</p>
               </div>
             ))}
           </div>
 
           <div>
-            <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Notas (opcional)</label>
+            <label className="block text-rise-fg-2 text-[12px] font-semibold mb-1.5">Notas (opcional)</label>
             <textarea value={notas} onChange={e => setNotas(e.target.value)} rows={2}
-              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none resize-none" />
+              className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[14px] focus:border-[#f59e0b] focus:outline-none resize-none" />
           </div>
 
           {erro && <p className="text-[#ec5d5e] text-[13px]">{erro}</p>}
         </div>
 
         <div className="flex justify-end gap-3 px-6 pb-6">
-          <button onClick={onFechar} className="px-4 py-2.5 rounded-lg bg-[#1a1a1a] text-[#bdbdbd] text-[14px] hover:bg-[#252525]">Cancelar</button>
+          <button onClick={onFechar} className="px-4 py-2.5 rounded-lg bg-rise-raised text-rise-fg-2 text-[14px] hover:bg-rise-raised">Cancelar</button>
           <button onClick={handleSalvar} disabled={salvando}
             className="px-5 py-2.5 rounded-lg bg-[#f59e0b] text-[#000] font-semibold text-[14px] hover:bg-[#d97706] disabled:opacity-50">
             {salvando ? "Salvando..." : "Salvar"}
@@ -246,10 +246,10 @@ function ModalTransacao({ userId, onSalvo, onFechar }: ModalTransacaoProps) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[#0f0f0f] border border-[#333] rounded-xl w-full max-w-[480px]">
-        <div className="flex items-center justify-between p-6 border-b border-[#333]">
-          <h2 className="text-[#eee] text-[20px] font-bold">Nova Transação</h2>
-          <button onClick={onFechar} className="text-[#555] hover:text-[#eee]"><X size={20} /></button>
+      <div className="bg-rise-surface border border-rise-line rounded-xl w-full max-w-[480px]">
+        <div className="flex items-center justify-between p-6 border-b border-rise-line">
+          <h2 className="text-rise-fg text-[20px] font-bold">Nova Transação</h2>
+          <button onClick={onFechar} className="text-rise-fg-4 hover:text-rise-fg"><X size={20} /></button>
         </div>
         <div className="p-6 space-y-4">
           <div className="flex gap-2">
@@ -258,34 +258,34 @@ function ModalTransacao({ userId, onSalvo, onFechar }: ModalTransacaoProps) {
                 className={`flex-1 py-2 rounded-lg text-[14px] font-semibold transition-colors ${
                   tipo === t
                     ? t === "receita" ? "bg-[#28d939]/20 text-[#28d939] border border-[#28d939]/40" : "bg-[#ec5d5e]/20 text-[#ec5d5e] border border-[#ec5d5e]/40"
-                    : "bg-[#1a1a1a] text-[#555] border border-transparent"
+                    : "bg-rise-raised text-rise-fg-4 border border-transparent"
                 }`}>
                 {t === "receita" ? "Receita" : "Despesa"}
               </button>
             ))}
           </div>
           <div>
-            <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Categoria</label>
+            <label className="block text-rise-fg-2 text-[12px] font-semibold mb-1.5">Categoria</label>
             <select value={categoria} onChange={e => setCategoria(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none">
+              className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[14px] focus:border-[#f59e0b] focus:outline-none">
               {categorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Descrição</label>
+            <label className="block text-rise-fg-2 text-[12px] font-semibold mb-1.5">Descrição</label>
             <input value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Descrição da transação"
-              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none" />
+              className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[14px] focus:border-[#f59e0b] focus:outline-none" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Valor (R$)</label>
+              <label className="block text-rise-fg-2 text-[12px] font-semibold mb-1.5">Valor (R$)</label>
               <input type="number" step="0.01" value={valor} onChange={e => setValor(e.target.value)} placeholder="0.00"
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none" />
+                className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[14px] focus:border-[#f59e0b] focus:outline-none" />
             </div>
             <div>
-              <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Status</label>
+              <label className="block text-rise-fg-2 text-[12px] font-semibold mb-1.5">Status</label>
               <select value={status} onChange={e => setStatus(e.target.value as any)}
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none">
+                className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[14px] focus:border-[#f59e0b] focus:outline-none">
                 <option value="pendente">Pendente</option>
                 <option value="confirmado">Confirmado</option>
                 <option value="pago">Pago</option>
@@ -294,20 +294,20 @@ function ModalTransacao({ userId, onSalvo, onFechar }: ModalTransacaoProps) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Data</label>
+              <label className="block text-rise-fg-2 text-[12px] font-semibold mb-1.5">Data</label>
               <input type="date" value={data} onChange={e => setData(e.target.value)}
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none" />
+                className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[14px] focus:border-[#f59e0b] focus:outline-none" />
             </div>
             <div>
-              <label className="block text-[#bdbdbd] text-[12px] font-semibold mb-1.5">Competência</label>
+              <label className="block text-rise-fg-2 text-[12px] font-semibold mb-1.5">Competência</label>
               <input type="month" value={competencia} onChange={e => setComp(e.target.value)}
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none" />
+                className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[14px] focus:border-[#f59e0b] focus:outline-none" />
             </div>
           </div>
           {erro && <p className="text-[#ec5d5e] text-[13px]">{erro}</p>}
         </div>
         <div className="flex justify-end gap-3 px-6 pb-6">
-          <button onClick={onFechar} className="px-4 py-2.5 rounded-lg bg-[#1a1a1a] text-[#bdbdbd] text-[14px] hover:bg-[#252525]">Cancelar</button>
+          <button onClick={onFechar} className="px-4 py-2.5 rounded-lg bg-rise-raised text-rise-fg-2 text-[14px] hover:bg-rise-raised">Cancelar</button>
           <button onClick={handleSalvar} disabled={salvando}
             className="px-5 py-2.5 rounded-lg bg-[#f59e0b] text-[#000] font-semibold text-[14px] hover:bg-[#d97706] disabled:opacity-50">
             {salvando ? "Salvando..." : "Salvar"}
@@ -404,7 +404,9 @@ export default function DepartamentoFinanceiro() {
     const shortNome = (nome: string) => {
       if (nome.includes("Rise Fixed Yield") && nome.includes("Sênior")) return "RFY Sênior";
       if (nome.includes("Rise Fixed Yield") && nome.includes("Sub"))    return "RFY Sub";
-      if (nome.includes("RFY18"))                                         return "RFY18";
+      if (nome.includes("RFY18") && nome.includes("Sub"))                 return "RFY18 Sub";
+      if (nome.includes("RFY18") && nome.includes("Sênior"))              return "RFY18 Sênior";
+      if (nome.includes("RFY18"))                                          return "RFY18";
       if (nome.includes("Rise Liquidity Yield 3"))                        return "RLY 3";
       if (nome.includes("Rise Liquidity Yield"))                          return "RLY";
       if (nome.includes("Capex Senior"))                                  return "Capex Sr";
@@ -611,28 +613,28 @@ export default function DepartamentoFinanceiro() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-[1400px] mx-auto">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
-            <h1 className="font-bold text-[#eee] text-[32px] mb-1">Financeiro</h1>
-            <p className="text-[#bdbdbd] text-[15px]">
+            <h1 className="font-bold text-rise-fg text-[32px] mb-1">Financeiro</h1>
+            <p className="text-rise-fg-2 text-[15px]">
               {formatarCompetencia(competencia)} · {vista === "operacional" ? "Vista Operacional" : "Vista Executiva"}
             </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {/* Competência */}
             <input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)}
-              className="bg-[#0f0f0f] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[14px] focus:border-[#f59e0b] focus:outline-none" />
+              className="bg-rise-surface border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] focus:border-[#f59e0b] focus:outline-none" />
 
             {/* Vista toggle */}
-            <div className="flex items-center gap-1 bg-[#0f0f0f] border border-[#333] rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-rise-surface border border-rise-line rounded-lg p-1">
               {(["operacional", "executiva"] as const).map(v => (
                 <button key={v} onClick={() => setVista(v)}
                   className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
-                    vista === v ? "bg-[#f59e0b] text-[#000]" : "text-[#bdbdbd] hover:text-[#eee]"
+                    vista === v ? "bg-[#f59e0b] text-[#000]" : "text-rise-fg-2 hover:text-rise-fg"
                   }`}>
                   {v === "operacional" ? "Operacional" : "Executiva"}
                 </button>
@@ -647,16 +649,16 @@ export default function DepartamentoFinanceiro() {
                 </button>
                 {snapshots.length > 0 && (
                   <button onClick={exportarAUM}
-                    className="bg-[#1a1a1a] border border-[#333] text-[#eee] px-4 py-2 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:border-[#f59e0b]">
+                    className="bg-rise-raised border border-rise-line text-rise-fg px-4 py-2 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:border-[#f59e0b]">
                     <Download size={16} /> Exportar AUM
                   </button>
                 )}
                 <button onClick={() => setModalTrans(true)}
-                  className="bg-[#1a1a1a] border border-[#333] text-[#eee] px-4 py-2 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:border-[#f59e0b]">
+                  className="bg-rise-raised border border-rise-line text-rise-fg px-4 py-2 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:border-[#f59e0b]">
                   <Plus size={16} /> Transação
                 </button>
                 <button onClick={() => setIsImportModalOpen(true)}
-                  className="bg-[#1a1a1a] border border-[#333] text-[#eee] px-4 py-2 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:border-[#f59e0b]">
+                  className="bg-rise-raised border border-rise-line text-rise-fg px-4 py-2 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:border-[#f59e0b]">
                   <Upload size={16} /> Importar CSV
                 </button>
               </>
@@ -676,8 +678,8 @@ export default function DepartamentoFinanceiro() {
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
                 <Layers size={18} className="text-[#f59e0b]" />
-                <h2 className="text-[#eee] text-[18px] font-bold">Assets Under Management</h2>
-                <span className="text-[#555] text-[13px]">· {formatarCompetencia(competencia)}</span>
+                <h2 className="text-rise-fg text-[18px] font-bold">Assets Under Management</h2>
+                <span className="text-rise-fg-4 text-[13px]">· {formatarCompetencia(competencia)}</span>
               </div>
 
               {/* KPIs AUM */}
@@ -688,25 +690,25 @@ export default function DepartamentoFinanceiro() {
                   { label: "Fees Gerados", val: fees_gerados, cor: "#f59e0b", icon: TrendingUp, desc: "AUM − Total Investido" },
                   { label: "Volume Transacionado", val: volume_transacionado, cor: "#bdbdbd", icon: LayoutGrid, desc: "Aportes + Resgates" },
                 ].map(({ label, val, cor, icon: Icon, desc }) => (
-                  <div key={label} className="bg-[#0f0f0f] border border-[#333] rounded-xl p-5 hover:border-[#444] transition-colors">
+                  <div key={label} className="bg-rise-surface border border-rise-line rounded-xl p-5 hover:border-rise-line-3 transition-colors">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-[#bdbdbd] text-[13px]">{label}</p>
+                      <p className="text-rise-fg-2 text-[13px]">{label}</p>
                       <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${cor}20` }}>
                         <Icon size={17} style={{ color: cor }} />
                       </div>
                     </div>
-                    <p className="text-[#eee] text-[22px] font-bold mb-1">{fmt(val)}</p>
-                    <p className="text-[#555] text-[11px]">{desc}</p>
+                    <p className="text-rise-fg text-[22px] font-bold mb-1">{fmt(val)}</p>
+                    <p className="text-rise-fg-4 text-[11px]">{desc}</p>
                   </div>
                 ))}
               </div>
 
               {/* Breakdown por produto */}
               {snapshots.length === 0 ? (
-                <div className="bg-[#0f0f0f] border border-[#222] border-dashed rounded-xl p-10 text-center">
-                  <Layers size={32} className="text-[#333] mx-auto mb-3" />
-                  <p className="text-[#555] text-[14px]">Nenhum snapshot para {formatarCompetencia(competencia)}.</p>
-                  {podeEditar && <p className="text-[#333] text-[13px] mt-1">Clique em "Lançar AUM" para adicionar.</p>}
+                <div className="bg-rise-surface border border-rise-line-2 border-dashed rounded-xl p-10 text-center">
+                  <Layers size={32} className="text-rise-fg-4 mx-auto mb-3" />
+                  <p className="text-rise-fg-4 text-[14px]">Nenhum snapshot para {formatarCompetencia(competencia)}.</p>
+                  {podeEditar && <p className="text-rise-fg-4 text-[13px] mt-1">Clique em "Lançar AUM" para adicionar.</p>}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -714,14 +716,14 @@ export default function DepartamentoFinanceiro() {
                     const produto = produtos.find(p => p.id === snap.produto_id);
                     const m = computarMetricas(snap);
                     return (
-                      <div key={snap.id} className="bg-[#0f0f0f] border border-[#333] rounded-xl p-5 hover:border-[#444] transition-colors">
+                      <div key={snap.id} className="bg-rise-surface border border-rise-line rounded-xl p-5 hover:border-rise-line-3 transition-colors">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${produto?.cor ?? "#f59e0b"}20` }}>
                             <Package size={18} style={{ color: produto?.cor ?? "#f59e0b" }} />
                           </div>
                           <div>
-                            <p className="text-[#eee] text-[15px] font-bold">{produto?.nome ?? snap.produto_id}</p>
-                            <p className="text-[#555] text-[12px]">{snap.classe} · {formatarCompetencia(snap.competencia)}</p>
+                            <p className="text-rise-fg text-[15px] font-bold">{produto?.nome ?? snap.produto_id}</p>
+                            <p className="text-rise-fg-4 text-[12px]">{snap.classe} · {formatarCompetencia(snap.competencia)}</p>
                           </div>
                           <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#f59e0b]/10 text-[#f59e0b]">AUM</span>
                         </div>
@@ -735,7 +737,7 @@ export default function DepartamentoFinanceiro() {
                             { label: "Vol. Transacionado", val: m.volume_transacionado, cor: "#bdbdbd" },
                           ].map(({ label, val, cor }) => (
                             <div key={label} className="flex items-center justify-between">
-                              <span className="text-[#666] text-[12px]">{label}</span>
+                              <span className="text-rise-fg-3 text-[12px]">{label}</span>
                               <span className="text-[13px] font-semibold" style={{ color: cor }}>{fmt(Number(val))}</span>
                             </div>
                           ))}
@@ -754,35 +756,35 @@ export default function DepartamentoFinanceiro() {
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-5">
                   <TrendingUp size={18} className="text-[#f59e0b]" />
-                  <h2 className="text-[#eee] text-[18px] font-bold">Insights-Chave</h2>
-                  <span className="text-[#555] text-[13px]">· {formatarCompetencia(competencia)}</span>
+                  <h2 className="text-rise-fg text-[18px] font-bold">Insights-Chave</h2>
+                  <span className="text-rise-fg-4 text-[13px]">· {formatarCompetencia(competencia)}</span>
                 </div>
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-[#0f0f0f] border border-[#14E9BC]/30 rounded-xl p-5">
-                    <p className="text-[#555] text-[11px] uppercase tracking-wider mb-2">Maior AUM</p>
-                    <p className="text-[#bdbdbd] text-[13px] font-semibold truncate mb-1">{insightsAUM.maiorAUM.shortNome}</p>
+                  <div className="bg-rise-surface border border-[#14E9BC]/30 rounded-xl p-5">
+                    <p className="text-rise-fg-4 text-[11px] uppercase tracking-wider mb-2">Maior AUM</p>
+                    <p className="text-rise-fg-2 text-[13px] font-semibold truncate mb-1">{insightsAUM.maiorAUM.shortNome}</p>
                     <p className="text-[#14E9BC] text-[20px] font-bold leading-tight">{fmt(insightsAUM.maiorAUM.aum_total)}</p>
-                    <p className="text-[#555] text-[11px] mt-1">{insightsAUM.maiorAUM.concentracaoPct.toFixed(1)}% do AUM total</p>
+                    <p className="text-rise-fg-4 text-[11px] mt-1">{insightsAUM.maiorAUM.concentracaoPct.toFixed(1)}% do AUM total</p>
                   </div>
-                  <div className="bg-[#0f0f0f] border border-[#f59e0b]/30 rounded-xl p-5">
-                    <p className="text-[#555] text-[11px] uppercase tracking-wider mb-2">Maior Rendimento</p>
-                    <p className="text-[#bdbdbd] text-[13px] font-semibold truncate mb-1">{insightsAUM.maiorFeeRatio.shortNome}</p>
+                  <div className="bg-rise-surface border border-[#f59e0b]/30 rounded-xl p-5">
+                    <p className="text-rise-fg-4 text-[11px] uppercase tracking-wider mb-2">Maior Rendimento</p>
+                    <p className="text-rise-fg-2 text-[13px] font-semibold truncate mb-1">{insightsAUM.maiorFeeRatio.shortNome}</p>
                     <p className="text-[#f59e0b] text-[20px] font-bold leading-tight">{insightsAUM.maiorFeeRatio.feeRatioPct.toFixed(2)}%</p>
-                    <p className="text-[#555] text-[11px] mt-1">fees / AUM · {fmt(insightsAUM.maiorFeeRatio.fees_gerados)}</p>
+                    <p className="text-rise-fg-4 text-[11px] mt-1">fees / AUM · {fmt(insightsAUM.maiorFeeRatio.fees_gerados)}</p>
                   </div>
-                  <div className="bg-[#0f0f0f] border border-[#6B8AFF]/30 rounded-xl p-5">
-                    <p className="text-[#555] text-[11px] uppercase tracking-wider mb-2">Maior Atividade</p>
-                    <p className="text-[#bdbdbd] text-[13px] font-semibold truncate mb-1">{insightsAUM.maiorVolume.shortNome}</p>
+                  <div className="bg-rise-surface border border-[#6B8AFF]/30 rounded-xl p-5">
+                    <p className="text-rise-fg-4 text-[11px] uppercase tracking-wider mb-2">Maior Atividade</p>
+                    <p className="text-rise-fg-2 text-[13px] font-semibold truncate mb-1">{insightsAUM.maiorVolume.shortNome}</p>
                     <p className="text-[#6B8AFF] text-[20px] font-bold leading-tight">{fmt(insightsAUM.maiorVolume.volume_transacionado)}</p>
-                    <p className="text-[#555] text-[11px] mt-1">volume transacionado</p>
+                    <p className="text-rise-fg-4 text-[11px] mt-1">volume transacionado</p>
                   </div>
-                  <div className="bg-[#0f0f0f] border border-[#28d939]/30 rounded-xl p-5">
-                    <p className="text-[#555] text-[11px] uppercase tracking-wider mb-2">Fee Ratio Consolidado</p>
-                    <p className="text-[#bdbdbd] text-[13px] font-semibold mb-1">{snapshots.length} produto{snapshots.length !== 1 ? "s" : ""}</p>
+                  <div className="bg-rise-surface border border-[#28d939]/30 rounded-xl p-5">
+                    <p className="text-rise-fg-4 text-[11px] uppercase tracking-wider mb-2">Fee Ratio Consolidado</p>
+                    <p className="text-rise-fg-2 text-[13px] font-semibold mb-1">{snapshots.length} produto{snapshots.length !== 1 ? "s" : ""}</p>
                     <p className="text-[#28d939] text-[20px] font-bold leading-tight">{insightsAUM.feeRatioTotal.toFixed(2)}%</p>
-                    <p className="text-[#555] text-[11px] mt-1">fees / AUM total · {fmt(fees_gerados)}</p>
+                    <p className="text-rise-fg-4 text-[11px] mt-1">fees / AUM total · {fmt(fees_gerados)}</p>
                   </div>
                 </div>
 
@@ -790,8 +792,8 @@ export default function DepartamentoFinanceiro() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
 
                   {/* AUM por Produto — barras horizontais */}
-                  <div className="bg-[#0f0f0f] border border-[#333] rounded-xl p-5">
-                    <p className="text-[#eee] text-[14px] font-semibold mb-4">AUM por Produto</p>
+                  <div className="bg-rise-surface border border-rise-line rounded-xl p-5">
+                    <p className="text-rise-fg text-[14px] font-semibold mb-4">AUM por Produto</p>
                     <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={insightsAUM.aumChartData} layout="vertical"
                         margin={{ top: 0, right: 60, left: 0, bottom: 0 }}>
@@ -800,7 +802,7 @@ export default function DepartamentoFinanceiro() {
                         <YAxis type="category" dataKey="name" width={72}
                           tick={{ fill: "#bdbdbd", fontSize: 11 }} axisLine={false} tickLine={false} />
                         <Tooltip
-                          contentStyle={{ backgroundColor: "#1a1a1a", border: "1px solid #333", borderRadius: 8, fontSize: 12 }}
+                          contentStyle={{ backgroundColor: "var(--rise-raised)", border: "1px solid var(--rise-line)", borderRadius: 8, fontSize: 12 }}
                           formatter={(v: number, _: string, p: any) => [fmt(v), p.payload.fullName]}
                           cursor={{ fill: "#ffffff08" }}
                         />
@@ -817,8 +819,8 @@ export default function DepartamentoFinanceiro() {
                   </div>
 
                   {/* Aportes vs Resgates — barras agrupadas */}
-                  <div className="bg-[#0f0f0f] border border-[#333] rounded-xl p-5">
-                    <p className="text-[#eee] text-[14px] font-semibold mb-4">Aportes vs Resgates</p>
+                  <div className="bg-rise-surface border border-rise-line rounded-xl p-5">
+                    <p className="text-rise-fg text-[14px] font-semibold mb-4">Aportes vs Resgates</p>
                     <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={insightsAUM.movChartData}
                         margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
@@ -827,7 +829,7 @@ export default function DepartamentoFinanceiro() {
                           axisLine={false} tickLine={false} />
                         <YAxis hide />
                         <Tooltip
-                          contentStyle={{ backgroundColor: "#1a1a1a", border: "1px solid #333", borderRadius: 8, fontSize: 12 }}
+                          contentStyle={{ backgroundColor: "var(--rise-raised)", border: "1px solid var(--rise-line)", borderRadius: 8, fontSize: 12 }}
                           formatter={(v: number) => fmt(v)}
                           cursor={{ fill: "#ffffff08" }}
                         />
@@ -840,16 +842,16 @@ export default function DepartamentoFinanceiro() {
                 </div>
 
                 {/* Tabela de análise cruzada */}
-                <div className="bg-[#0f0f0f] border border-[#333] rounded-xl overflow-hidden mb-4">
-                  <div className="px-5 py-3.5 border-b border-[#222]">
-                    <p className="text-[#eee] text-[14px] font-semibold">Análise Cruzada por Produto</p>
+                <div className="bg-rise-surface border border-rise-line rounded-xl overflow-hidden mb-4">
+                  <div className="px-5 py-3.5 border-b border-rise-line-2">
+                    <p className="text-rise-fg text-[14px] font-semibold">Análise Cruzada por Produto</p>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-[#1a1a1a]">
+                        <tr className="border-b border-rise-raised">
                           {["Produto", "AUM", "Conc.", "Aportes", "Resgates", "Investido", "Fees", "Fee %"].map(h => (
-                            <th key={h} className="px-4 py-2.5 text-left text-[11px] font-semibold text-[#555] uppercase tracking-wider">{h}</th>
+                            <th key={h} className="px-4 py-2.5 text-left text-[11px] font-semibold text-rise-fg-4 uppercase tracking-wider">{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -857,20 +859,20 @@ export default function DepartamentoFinanceiro() {
                         {insightsAUM.sorted.map((s, i) => {
                           const feeOk = s.fees_gerados >= 0;
                           return (
-                            <tr key={s.produto_id} className={`border-b border-[#111] hover:bg-[#111] transition-colors ${i === 0 ? "bg-[#f59e0b]/4" : ""}`}>
+                            <tr key={s.produto_id} className={`border-b border-[#111] hover:bg-rise-surface transition-colors ${i === 0 ? "bg-[#f59e0b]/4" : ""}`}>
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-2">
                                   <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.cor }} />
-                                  <span className="text-[#eee] text-[13px] font-medium">{s.shortNome}</span>
+                                  <span className="text-rise-fg text-[13px] font-medium">{s.shortNome}</span>
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-[#14E9BC] text-[13px] font-semibold">{fmt(s.aum_total)}</td>
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-16 bg-[#1a1a1a] rounded-full h-1.5">
+                                  <div className="w-16 bg-rise-raised rounded-full h-1.5">
                                     <div className="h-1.5 rounded-full" style={{ width: `${s.concentracaoPct}%`, backgroundColor: s.cor }} />
                                   </div>
-                                  <span className="text-[#555] text-[11px]">{s.concentracaoPct.toFixed(0)}%</span>
+                                  <span className="text-rise-fg-4 text-[11px]">{s.concentracaoPct.toFixed(0)}%</span>
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-[#28d939] text-[13px]">{fmt(s.total_aportes)}</td>
@@ -919,8 +921,8 @@ export default function DepartamentoFinanceiro() {
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
                 <DollarSign size={18} className="text-[#28d939]" />
-                <h2 className="text-[#eee] text-[18px] font-bold">Financeiro Operacional</h2>
-                <span className="text-[#555] text-[13px]">· {formatarCompetencia(competencia)}</span>
+                <h2 className="text-rise-fg text-[18px] font-bold">Financeiro Operacional</h2>
+                <span className="text-rise-fg-4 text-[13px]">· {formatarCompetencia(competencia)}</span>
               </div>
 
               {/* KPIs operacionais */}
@@ -931,14 +933,14 @@ export default function DepartamentoFinanceiro() {
                   { label: "Lucro Líquido", val: lucroLiquido, cor: "#14E9BC", arrow: lucroLiquido >= 0 ? "up" : "down", diff: null },
                   { label: "Margem", val: null, pctVal: margem, cor: "#f59e0b", arrow: "up", diff: null },
                 ].map(({ label, val, pctVal, cor, arrow }) => (
-                  <div key={label} className="bg-[#0f0f0f] border border-[#333] rounded-xl p-5">
+                  <div key={label} className="bg-rise-surface border border-rise-line rounded-xl p-5">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-[#bdbdbd] text-[13px]">{label}</p>
+                      <p className="text-rise-fg-2 text-[13px]">{label}</p>
                       <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${cor}20` }}>
                         {arrow === "up" ? <TrendingUp size={17} style={{ color: cor }} /> : <TrendingDown size={17} style={{ color: cor }} />}
                       </div>
                     </div>
-                    <p className="text-[#eee] text-[22px] font-bold">
+                    <p className="text-rise-fg text-[22px] font-bold">
                       {pctVal !== undefined ? `${pctVal.toFixed(1)}%` : fmt(val ?? 0)}
                     </p>
                   </div>
@@ -947,10 +949,10 @@ export default function DepartamentoFinanceiro() {
             </div>
 
             {/* Gráfico fluxo de caixa — visível nas duas vistas */}
-            <div className="bg-[#0f0f0f] border border-[#333] rounded-xl p-6 mb-6">
-              <h2 className="text-[#eee] text-[18px] font-bold mb-6">Fluxo de Caixa — Últimos 6 meses</h2>
+            <div className="bg-rise-surface border border-rise-line rounded-xl p-6 mb-6">
+              <h2 className="text-rise-fg text-[18px] font-bold mb-6">Fluxo de Caixa — Últimos 6 meses</h2>
               {fluxo.every(f => f.receitas === 0 && f.despesas === 0) ? (
-                <div className="flex items-center justify-center h-[200px] text-[#555] text-[14px]">
+                <div className="flex items-center justify-center h-[200px] text-rise-fg-4 text-[14px]">
                   Sem transações no período. Lance os dados para ver o gráfico.
                 </div>
               ) : (
@@ -959,7 +961,7 @@ export default function DepartamentoFinanceiro() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#222" />
                     <XAxis dataKey="mesNome" stroke="#555" style={{ fontSize: 12 }} />
                     <YAxis stroke="#555" style={{ fontSize: 12 }} tickFormatter={v => `R$${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip contentStyle={{ backgroundColor: "#1a1a1a", border: "1px solid #333", borderRadius: 8 }}
+                    <Tooltip contentStyle={{ backgroundColor: "var(--rise-raised)", border: "1px solid var(--rise-line)", borderRadius: 8 }}
                       formatter={(v: any) => fmt(v)} />
                     <Legend wrapperStyle={{ fontSize: 13 }} />
                     <Line type="monotone" dataKey="receitas" name="Receitas" stroke="#28d939" strokeWidth={2} dot={{ r: 4, fill: "#28d939" }} />
@@ -980,16 +982,16 @@ export default function DepartamentoFinanceiro() {
                   ].map(({ titulo, cats }) => {
                     const max = Math.max(...cats.map(c => c.total), 1);
                     return (
-                      <div key={titulo} className="bg-[#0f0f0f] border border-[#333] rounded-xl p-6">
-                        <h3 className="text-[#eee] text-[16px] font-bold mb-4">{titulo}</h3>
+                      <div key={titulo} className="bg-rise-surface border border-rise-line rounded-xl p-6">
+                        <h3 className="text-rise-fg text-[16px] font-bold mb-4">{titulo}</h3>
                         <div className="space-y-3">
                           {cats.map(cat => (
                             <div key={cat.id}>
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-[#eee] text-[13px]">{cat.nome}</span>
-                                <span className="text-[#eee] text-[13px] font-semibold">{fmt(cat.total)}</span>
+                                <span className="text-rise-fg text-[13px]">{cat.nome}</span>
+                                <span className="text-rise-fg text-[13px] font-semibold">{fmt(cat.total)}</span>
                               </div>
-                              <div className="w-full bg-[#1a1a1a] rounded-full h-1.5">
+                              <div className="w-full bg-rise-raised rounded-full h-1.5">
                                 <div className="h-1.5 rounded-full transition-all" style={{ width: `${(cat.total / max) * 100}%`, backgroundColor: cat.cor }} />
                               </div>
                             </div>
@@ -1001,11 +1003,11 @@ export default function DepartamentoFinanceiro() {
                 </div>
 
                 {/* Tabela de transações */}
-                <div className="bg-[#0f0f0f] border border-[#333] rounded-xl p-6">
+                <div className="bg-rise-surface border border-rise-line rounded-xl p-6">
                   <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-                    <h2 className="text-[#eee] text-[18px] font-bold">Transações</h2>
+                    <h2 className="text-rise-fg text-[18px] font-bold">Transações</h2>
                     <select value={filtroTipo} onChange={e => { setFiltroTipo(e.target.value as any); }}
-                      className="bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2 text-[#eee] text-[13px] focus:border-[#f59e0b] focus:outline-none">
+                      className="bg-rise-raised border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[13px] focus:border-[#f59e0b] focus:outline-none">
                       <option value="todos">Todos os Tipos</option>
                       <option value="receita">Receitas</option>
                       <option value="despesa">Despesas</option>
@@ -1014,16 +1016,16 @@ export default function DepartamentoFinanceiro() {
 
                   {transacoes.length === 0 ? (
                     <div className="text-center py-10">
-                      <p className="text-[#555] text-[14px]">Nenhuma transação em {formatarCompetencia(competencia)}.</p>
-                      {podeEditar && <p className="text-[#333] text-[13px] mt-1">Use "+ Transação" ou "Importar CSV" para adicionar.</p>}
+                      <p className="text-rise-fg-4 text-[14px]">Nenhuma transação em {formatarCompetencia(competencia)}.</p>
+                      {podeEditar && <p className="text-rise-fg-4 text-[13px] mt-1">Use "+ Transação" ou "Importar CSV" para adicionar.</p>}
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
-                          <tr className="border-b border-[#222]">
+                          <tr className="border-b border-rise-line-2">
                             {["Data", "Tipo", "Descrição", "Categoria", "Status", "Valor"].map(h => (
-                              <th key={h} className={`px-4 py-3 text-[13px] font-semibold text-[#eee] ${h === "Valor" ? "text-right" : "text-left"}`}>{h}</th>
+                              <th key={h} className={`px-4 py-3 text-[13px] font-semibold text-rise-fg ${h === "Valor" ? "text-right" : "text-left"}`}>{h}</th>
                             ))}
                           </tr>
                         </thead>
@@ -1032,14 +1034,14 @@ export default function DepartamentoFinanceiro() {
                             const cats = t.tipo === "receita" ? CATEGORIAS_RECEITA : CATEGORIAS_DESPESA;
                             const cat = cats.find(c => c.id === t.categoria);
                             return (
-                              <tr key={t.id} className="border-b border-[#1a1a1a] hover:bg-[#111] transition-colors">
-                                <td className="px-4 py-3 text-[#bdbdbd] text-[13px]">{new Date(t.data).toLocaleDateString("pt-BR")}</td>
+                              <tr key={t.id} className="border-b border-rise-raised hover:bg-rise-surface transition-colors">
+                                <td className="px-4 py-3 text-rise-fg-2 text-[13px]">{new Date(t.data).toLocaleDateString("pt-BR")}</td>
                                 <td className="px-4 py-3">
                                   <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${t.tipo === "receita" ? "bg-[#28d939]/20 text-[#28d939]" : "bg-[#ec5d5e]/20 text-[#ec5d5e]"}`}>
                                     {t.tipo === "receita" ? "RECEITA" : "DESPESA"}
                                   </span>
                                 </td>
-                                <td className="px-4 py-3 text-[#eee] text-[13px]">{t.descricao}</td>
+                                <td className="px-4 py-3 text-rise-fg text-[13px]">{t.descricao}</td>
                                 <td className="px-4 py-3">
                                   <span className="px-2 py-0.5 rounded text-[11px]" style={{ backgroundColor: `${cat?.cor}20`, color: cat?.cor }}>{cat?.nome ?? t.categoria}</span>
                                 </td>
@@ -1072,29 +1074,29 @@ export default function DepartamentoFinanceiro() {
       {/* Modal CSV */}
       {isImportModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-xl max-w-[800px] w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-[#333]">
-              <h2 className="text-[#eee] text-[22px] font-bold">Importar Transações CSV</h2>
+          <div className="bg-rise-surface border border-rise-line rounded-xl max-w-[800px] w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-rise-line">
+              <h2 className="text-rise-fg text-[22px] font-bold">Importar Transações CSV</h2>
               <button onClick={() => { setIsImportModalOpen(false); setImportStep("upload"); setCsvFile(null); setParsedData([]); setImportErrors([]); }}
-                className="text-[#555] hover:text-[#eee]"><X size={20} /></button>
+                className="text-rise-fg-4 hover:text-rise-fg"><X size={20} /></button>
             </div>
 
             {importStep === "upload" && (
               <div className="p-6">
-                <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 mb-5 text-[13px] text-[#bdbdbd] space-y-1">
-                  <p><strong className="text-[#eee]">Colunas obrigatórias:</strong> tipo, categoria, descricao, valor, data (AAAA-MM-DD), competencia (AAAA-MM)</p>
-                  <p><strong className="text-[#eee]">Tipo:</strong> receita | despesa</p>
+                <div className="bg-rise-raised border border-rise-line rounded-lg p-4 mb-5 text-[13px] text-rise-fg-2 space-y-1">
+                  <p><strong className="text-rise-fg">Colunas obrigatórias:</strong> tipo, categoria, descricao, valor, data (AAAA-MM-DD), competencia (AAAA-MM)</p>
+                  <p><strong className="text-rise-fg">Tipo:</strong> receita | despesa</p>
                   <button onClick={downloadExemploCSV} className="mt-2 text-[#f59e0b] hover:underline flex items-center gap-2 text-[12px]">
                     <FileSpreadsheet size={14} /> Baixar CSV de exemplo
                   </button>
                 </div>
                 <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
-                  className={`border-2 border-dashed rounded-xl p-10 text-center transition-all ${isDragging ? "border-[#f59e0b] bg-[#f59e0b]/5" : "border-[#333] hover:border-[#555]"}`}>
+                  className={`border-2 border-dashed rounded-xl p-10 text-center transition-all ${isDragging ? "border-[#f59e0b] bg-[#f59e0b]/5" : "border-rise-line hover:border-rise-fg-4"}`}>
                   <input type="file" accept=".csv" onChange={handleFileSelect} className="hidden" id="fin-csv" />
                   <label htmlFor="fin-csv" className="cursor-pointer">
                     <FileSpreadsheet size={40} className="text-[#f59e0b] mx-auto mb-3" />
-                    {csvFile ? <p className="text-[#eee] text-[15px]">{csvFile.name}</p> : (
-                      <><p className="text-[#eee] text-[16px] mb-1">Arraste ou clique para selecionar</p><p className="text-[#555] text-[13px]">Apenas .csv</p></>
+                    {csvFile ? <p className="text-rise-fg text-[15px]">{csvFile.name}</p> : (
+                      <><p className="text-rise-fg text-[16px] mb-1">Arraste ou clique para selecionar</p><p className="text-rise-fg-4 text-[13px]">Apenas .csv</p></>
                     )}
                   </label>
                 </div>
@@ -1108,21 +1110,21 @@ export default function DepartamentoFinanceiro() {
 
             {importStep === "preview" && (
               <div className="p-6">
-                <p className="text-[#bdbdbd] text-[14px] mb-4">{parsedData.length} transações prontas para importar.</p>
-                <div className="overflow-x-auto border border-[#333] rounded-lg mb-4 max-h-[300px] overflow-y-auto">
+                <p className="text-rise-fg-2 text-[14px] mb-4">{parsedData.length} transações prontas para importar.</p>
+                <div className="overflow-x-auto border border-rise-line rounded-lg mb-4 max-h-[300px] overflow-y-auto">
                   <table className="w-full">
-                    <thead className="bg-[#111] sticky top-0">
-                      <tr>{["Tipo","Categoria","Descrição","Valor","Data","Comp."].map(h => <th key={h} className="px-3 py-2 text-left text-[12px] text-[#bdbdbd] border-b border-[#333]">{h}</th>)}</tr>
+                    <thead className="bg-rise-surface sticky top-0">
+                      <tr>{["Tipo","Categoria","Descrição","Valor","Data","Comp."].map(h => <th key={h} className="px-3 py-2 text-left text-[12px] text-rise-fg-2 border-b border-rise-line">{h}</th>)}</tr>
                     </thead>
                     <tbody>
                       {parsedData.map((t, i) => (
-                        <tr key={i} className="border-b border-[#1a1a1a]">
+                        <tr key={i} className="border-b border-rise-raised">
                           <td className="px-3 py-2 text-[12px]"><span className={t.tipo === "receita" ? "text-[#28d939]" : "text-[#ec5d5e]"}>{t.tipo}</span></td>
-                          <td className="px-3 py-2 text-[#bdbdbd] text-[12px]">{t.categoria}</td>
-                          <td className="px-3 py-2 text-[#eee] text-[12px]">{t.descricao}</td>
-                          <td className="px-3 py-2 text-[#eee] text-[12px]">{fmt(t.valor)}</td>
-                          <td className="px-3 py-2 text-[#bdbdbd] text-[12px]">{t.data}</td>
-                          <td className="px-3 py-2 text-[#bdbdbd] text-[12px]">{t.competencia}</td>
+                          <td className="px-3 py-2 text-rise-fg-2 text-[12px]">{t.categoria}</td>
+                          <td className="px-3 py-2 text-rise-fg text-[12px]">{t.descricao}</td>
+                          <td className="px-3 py-2 text-rise-fg text-[12px]">{fmt(t.valor)}</td>
+                          <td className="px-3 py-2 text-rise-fg-2 text-[12px]">{t.data}</td>
+                          <td className="px-3 py-2 text-rise-fg-2 text-[12px]">{t.competencia}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1134,14 +1136,14 @@ export default function DepartamentoFinanceiro() {
             {importStep === "success" && (
               <div className="p-10 text-center">
                 <CheckCircle size={48} className="text-[#28d939] mx-auto mb-4" />
-                <p className="text-[#eee] text-[20px] font-bold">{parsedData.length} transações importadas!</p>
+                <p className="text-rise-fg text-[20px] font-bold">{parsedData.length} transações importadas!</p>
               </div>
             )}
 
             {importStep !== "success" && (
-              <div className="flex justify-end gap-3 p-6 border-t border-[#333]">
+              <div className="flex justify-end gap-3 p-6 border-t border-rise-line">
                 <button onClick={() => { setIsImportModalOpen(false); setImportStep("upload"); setCsvFile(null); setParsedData([]); setImportErrors([]); }}
-                  className="px-4 py-2.5 rounded-lg bg-[#1a1a1a] text-[#bdbdbd] text-[14px] hover:bg-[#252525]">Cancelar</button>
+                  className="px-4 py-2.5 rounded-lg bg-rise-raised text-rise-fg-2 text-[14px] hover:bg-rise-raised">Cancelar</button>
                 {importStep === "preview" && (
                   <button onClick={handleConfirmImport} disabled={importando}
                     className="px-5 py-2.5 rounded-lg bg-[#f59e0b] text-[#000] font-semibold text-[14px] hover:bg-[#d97706] disabled:opacity-50">

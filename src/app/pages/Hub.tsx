@@ -88,7 +88,7 @@ export default function Hub() {
   const emBreve = LINKS_CORPORATIVOS.filter((l) => !l.url);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-[1200px] mx-auto">
 
         {/* Header */}
@@ -98,11 +98,11 @@ export default function Hub() {
               <Globe size={22} className="text-[#000]" />
             </div>
             <div>
-              <h1 className="font-bold text-[#eee] text-[32px] leading-tight">Hub de Links</h1>
-              <p className="text-[#555] text-[14px]">O escritório central da Rise Finance</p>
+              <h1 className="font-bold text-rise-fg text-[32px] leading-tight">Hub de Links</h1>
+              <p className="text-rise-fg-4 text-[14px]">O escritório central da Rise Finance</p>
             </div>
           </div>
-          <p className="text-[#bdbdbd] text-[16px] max-w-[600px]">
+          <p className="text-rise-fg-2 text-[16px] max-w-[600px]">
             Todos os sistemas, plataformas e ferramentas da Rise em um único lugar.
             Acesse rapidamente o que precisa sem sair do Rise OS.
           </p>
@@ -110,14 +110,14 @@ export default function Hub() {
 
         {/* Search — preparado para expansão futura */}
         <div className="relative mb-10 max-w-[480px]">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555]" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-rise-fg-4" />
           <input
             type="text"
             placeholder="Buscar links..."
             readOnly
-            className="w-full bg-[#0f0f0f] border border-[#333] rounded-xl pl-11 pr-4 py-3 text-[#555] text-[14px] cursor-not-allowed focus:outline-none"
+            className="w-full bg-rise-surface border border-rise-line rounded-xl pl-11 pr-4 py-3 text-rise-fg-4 text-[14px] cursor-not-allowed focus:outline-none"
           />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#333] text-[11px] font-medium">
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-rise-fg-4 text-[11px] font-medium">
             Em breve
           </span>
         </div>
@@ -125,7 +125,7 @@ export default function Hub() {
         {/* Links ativos */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-5">
-            <h2 className="text-[#eee] text-[18px] font-semibold">Links Corporativos</h2>
+            <h2 className="text-rise-fg text-[18px] font-semibold">Links Corporativos</h2>
             <span className="bg-[#14E9BC]/10 text-[#14E9BC] text-[11px] font-semibold px-2 py-0.5 rounded-full">
               {ativos.length} ativos
             </span>
@@ -141,7 +141,7 @@ export default function Hub() {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group bg-[#0f0f0f] border border-[#333] rounded-xl p-6 flex flex-col gap-4 hover:border-[#444] hover:bg-[#111] transition-all duration-200 cursor-pointer"
+                  className="group bg-rise-surface border border-rise-line rounded-xl p-6 flex flex-col gap-4 hover:border-rise-line-3 hover:bg-rise-surface transition-all duration-200 cursor-pointer"
                 >
                   <div className="flex items-start justify-between">
                     <div
@@ -152,13 +152,13 @@ export default function Hub() {
                     </div>
                     <ExternalLink
                       size={16}
-                      className="text-[#333] group-hover:text-[#555] transition-colors mt-0.5"
+                      className="text-rise-fg-4 group-hover:text-rise-fg-4 transition-colors mt-0.5"
                     />
                   </div>
 
                   <div className="flex-1">
-                    <p className="text-[#eee] text-[16px] font-semibold mb-1">{link.nome}</p>
-                    <p className="text-[#777] text-[13px] leading-relaxed">{link.descricao}</p>
+                    <p className="text-rise-fg text-[16px] font-semibold mb-1">{link.nome}</p>
+                    <p className="text-rise-fg-3 text-[13px] leading-relaxed">{link.descricao}</p>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -168,7 +168,7 @@ export default function Hub() {
                     >
                       {link.tag}
                     </span>
-                    <span className="text-[#333] text-[11px] truncate max-w-[160px] group-hover:text-[#555] transition-colors">
+                    <span className="text-rise-fg-4 text-[11px] truncate max-w-[160px] group-hover:text-rise-fg-4 transition-colors">
                       {link.url?.replace(/^https?:\/\//, "").split("?")[0]}
                     </span>
                   </div>
@@ -181,8 +181,8 @@ export default function Hub() {
         {/* Em breve */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-5">
-            <h2 className="text-[#555] text-[18px] font-semibold">Em Breve</h2>
-            <span className="bg-[#333] text-[#555] text-[11px] font-semibold px-2 py-0.5 rounded-full">
+            <h2 className="text-rise-fg-4 text-[18px] font-semibold">Em Breve</h2>
+            <span className="bg-rise-line text-rise-fg-4 text-[11px] font-semibold px-2 py-0.5 rounded-full">
               {emBreve.length}
             </span>
           </div>
@@ -193,7 +193,7 @@ export default function Hub() {
               return (
                 <div
                   key={link.id}
-                  className="bg-[#0f0f0f] border border-[#222] rounded-xl p-6 flex flex-col gap-4 opacity-60 cursor-not-allowed"
+                  className="bg-rise-surface border border-rise-line-2 rounded-xl p-6 flex flex-col gap-4 opacity-60 cursor-not-allowed"
                 >
                   <div className="flex items-start justify-between">
                     <div
@@ -202,15 +202,15 @@ export default function Hub() {
                     >
                       <Icon size={22} />
                     </div>
-                    <div className="flex items-center gap-1.5 bg-[#1a1a1a] border border-[#2a2a2a] rounded-full px-2.5 py-1">
-                      <Clock size={10} className="text-[#555]" />
-                      <span className="text-[#555] text-[10px] font-semibold">Em breve</span>
+                    <div className="flex items-center gap-1.5 bg-rise-raised border border-rise-line-2 rounded-full px-2.5 py-1">
+                      <Clock size={10} className="text-rise-fg-4" />
+                      <span className="text-rise-fg-4 text-[10px] font-semibold">Em breve</span>
                     </div>
                   </div>
 
                   <div className="flex-1">
-                    <p className="text-[#555] text-[16px] font-semibold mb-1">{link.nome}</p>
-                    <p className="text-[#3a3a3a] text-[13px] leading-relaxed">{link.descricao}</p>
+                    <p className="text-rise-fg-4 text-[16px] font-semibold mb-1">{link.nome}</p>
+                    <p className="text-rise-fg-4 text-[13px] leading-relaxed">{link.descricao}</p>
                   </div>
 
                   <div>
@@ -229,17 +229,17 @@ export default function Hub() {
 
         {/* Banner: Atalhos por departamento */}
         <section>
-          <div className="bg-[#0f0f0f] border border-[#222] border-dashed rounded-xl p-8 flex flex-col items-center text-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-[#1a1a1a] flex items-center justify-center">
-              <Globe size={22} className="text-[#333]" />
+          <div className="bg-rise-surface border border-rise-line-2 border-dashed rounded-xl p-8 flex flex-col items-center text-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-rise-raised flex items-center justify-center">
+              <Globe size={22} className="text-rise-fg-4" />
             </div>
             <div>
-              <p className="text-[#555] text-[15px] font-semibold mb-1">Atalhos por Departamento</p>
-              <p className="text-[#3a3a3a] text-[13px]">
+              <p className="text-rise-fg-4 text-[15px] font-semibold mb-1">Atalhos por Departamento</p>
+              <p className="text-rise-fg-4 text-[13px]">
                 Cada departamento poderá manter seus próprios links e ferramentas específicas aqui.
               </p>
             </div>
-            <span className="bg-[#1a1a1a] border border-[#2a2a2a] text-[#555] text-[11px] font-semibold px-3 py-1 rounded-full">
+            <span className="bg-rise-raised border border-rise-line-2 text-rise-fg-4 text-[11px] font-semibold px-3 py-1 rounded-full">
               Roadmap
             </span>
           </div>

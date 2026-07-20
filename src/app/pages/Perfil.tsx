@@ -61,47 +61,47 @@ export default function Perfil() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-[640px] mx-auto">
-        <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[32px] mb-8">
+        <h1 className="font-['Inter:Bold',sans-serif] font-bold text-rise-fg text-[32px] mb-8">
           Meu Perfil
         </h1>
 
         {/* Avatar + Info */}
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-xl p-6 mb-6 flex items-center gap-5">
+        <div className="bg-rise-surface border border-rise-line rounded-xl p-6 mb-6 flex items-center gap-5">
           <div className="w-20 h-20 rounded-full bg-[#14E9BC]/20 flex items-center justify-center text-[28px] font-bold text-[#14E9BC] flex-shrink-0">
             {usuario?.nome ? getIniciais(usuario.nome) : "?"}
           </div>
           <div>
-            <h2 className="text-[#eee] text-[20px] font-['Inter:Semi_Bold',sans-serif]">{usuario?.nome}</h2>
-            <p className="text-[#bdbdbd] text-[14px] mt-0.5">{usuario?.cargo || "Sem cargo"}</p>
-            <p className="text-[#555] text-[13px] mt-0.5">{usuario?.email}</p>
+            <h2 className="text-rise-fg text-[20px] font-['Inter:Semi_Bold',sans-serif]">{usuario?.nome}</h2>
+            <p className="text-rise-fg-2 text-[14px] mt-0.5">{usuario?.cargo || "Sem cargo"}</p>
+            <p className="text-rise-fg-4 text-[13px] mt-0.5">{usuario?.email}</p>
           </div>
         </div>
 
         {/* Editar perfil */}
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-xl p-6 mb-6">
+        <div className="bg-rise-surface border border-rise-line rounded-xl p-6 mb-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-8 h-8 bg-[#14E9BC]/15 rounded-lg flex items-center justify-center">
               <User size={16} className="text-[#14E9BC]" />
             </div>
-            <h3 className="text-[#eee] text-[16px] font-['Inter:Semi_Bold',sans-serif]">Informações Pessoais</h3>
+            <h3 className="text-rise-fg text-[16px] font-['Inter:Semi_Bold',sans-serif]">Informações Pessoais</h3>
           </div>
 
           <form onSubmit={handleSalvarPerfil} className="space-y-4">
             <div>
-              <label className="block text-[#bdbdbd] text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">
+              <label className="block text-rise-fg-2 text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">
                 Nome completo *
               </label>
               <input
                 type="text"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-[#bdbdbd] text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">
+              <label className="block text-rise-fg-2 text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">
                 Cargo
               </label>
               <input
@@ -109,20 +109,20 @@ export default function Perfil() {
                 value={cargo}
                 onChange={(e) => setCargo(e.target.value)}
                 placeholder="Ex: Gerente de Projetos"
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-[#bdbdbd] text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">
+              <label className="block text-rise-fg-2 text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">
                 E-mail
               </label>
               <input
                 type="email"
                 value={usuario?.email ?? ""}
                 disabled
-                className="w-full bg-[#111] border border-[#222] rounded-lg px-4 py-2.5 text-[#555] text-[14px] cursor-not-allowed"
+                className="w-full bg-rise-surface border border-rise-line-2 rounded-lg px-4 py-2.5 text-rise-fg-4 text-[14px] cursor-not-allowed"
               />
-              <p className="text-[#555] text-[11px] mt-1">O e-mail não pode ser alterado aqui</p>
+              <p className="text-rise-fg-4 text-[11px] mt-1">O e-mail não pode ser alterado aqui</p>
             </div>
             <div className="flex justify-end pt-1">
               <button
@@ -138,17 +138,17 @@ export default function Perfil() {
         </div>
 
         {/* Alterar senha */}
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-xl p-6">
+        <div className="bg-rise-surface border border-rise-line rounded-xl p-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-8 h-8 bg-[#f59e0b]/15 rounded-lg flex items-center justify-center">
               <Lock size={16} className="text-[#f59e0b]" />
             </div>
-            <h3 className="text-[#eee] text-[16px] font-['Inter:Semi_Bold',sans-serif]">Alterar Senha</h3>
+            <h3 className="text-rise-fg text-[16px] font-['Inter:Semi_Bold',sans-serif]">Alterar Senha</h3>
           </div>
 
           <form onSubmit={handleAlterarSenha} className="space-y-4">
             <div>
-              <label className="block text-[#bdbdbd] text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">
+              <label className="block text-rise-fg-2 text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">
                 Nova senha *
               </label>
               <div className="relative">
@@ -157,12 +157,12 @@ export default function Perfil() {
                   value={novaSenha}
                   onChange={(e) => setNovaSenha(e.target.value)}
                   placeholder="Mínimo 6 caracteres"
-                  className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none pr-10"
+                  className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setMostrarSenhas(!mostrarSenhas)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555] hover:text-[#bdbdbd] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-rise-fg-4 hover:text-rise-fg-2 transition-colors"
                 >
                   {mostrarSenhas ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -172,7 +172,7 @@ export default function Perfil() {
               )}
             </div>
             <div>
-              <label className="block text-[#bdbdbd] text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">
+              <label className="block text-rise-fg-2 text-[13px] mb-1.5 font-['Inter:Medium',sans-serif]">
                 Confirmar nova senha *
               </label>
               <input
@@ -180,7 +180,7 @@ export default function Perfil() {
                 value={confirmarSenha}
                 onChange={(e) => setConfirmarSenha(e.target.value)}
                 placeholder="Repita a nova senha"
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none"
               />
               {confirmarSenha.length > 0 && novaSenha !== confirmarSenha && (
                 <p className="text-[#ec5d5e] text-[11px] mt-1">As senhas não coincidem</p>

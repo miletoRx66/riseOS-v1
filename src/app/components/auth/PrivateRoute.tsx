@@ -30,10 +30,10 @@ export function PrivateRoute({ children }: PrivateRouteProps) {
 
   if (isLoading || (!usuario && !graceExpired)) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-rise-bg flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#14E9BC] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[16px]">
+          <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[16px]">
             Carregando...
           </p>
         </div>

@@ -41,17 +41,17 @@ export default function RelatorioDepartamento() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] p-8 flex items-center justify-center">
-        <p className="text-[#bdbdbd] text-[16px]">Carregando...</p>
+      <div className="min-h-screen bg-rise-bg p-8 flex items-center justify-center">
+        <p className="text-rise-fg-2 text-[16px]">Carregando...</p>
       </div>
     );
   }
 
   if (!dept) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] p-8 flex items-center justify-center">
+      <div className="min-h-screen bg-rise-bg p-8 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px] mb-4">
+          <h1 className="font-['Inter:Bold',sans-serif] text-rise-fg text-[24px] mb-4">
             Departamento não encontrado
           </h1>
           <Link
@@ -84,13 +84,13 @@ export default function RelatorioDepartamento() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="mb-8">
           <Link
             to="/relatorios"
-            className="inline-flex items-center gap-2 text-[#bdbdbd] hover:text-[#14E9BC] font-['Inter:Medium',sans-serif] text-[14px] mb-4 transition-colors"
+            className="inline-flex items-center gap-2 text-rise-fg-2 hover:text-[#14E9BC] font-['Inter:Medium',sans-serif] text-[14px] mb-4 transition-colors"
           >
             <ArrowLeft size={16} />
             Voltar para Relatórios
@@ -106,20 +106,20 @@ export default function RelatorioDepartamento() {
                 </span>
               </div>
               <div>
-                <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[32px]">
+                <h1 className="font-['Inter:Bold',sans-serif] font-bold text-rise-fg text-[32px]">
                   Relatório - {dept.nome}
                 </h1>
-                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[16px]">
+                <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[16px]">
                   Análise detalhada de performance e métricas
                 </p>
               </div>
             </div>
             <div className="flex flex-col items-end gap-3">
               <div className="text-right">
-                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px] mb-1">
+                <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[12px] mb-1">
                   Período de análise
                 </p>
-                <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px]">
+                <p className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[16px]">
                   Último mês
                 </p>
               </div>
@@ -137,7 +137,7 @@ export default function RelatorioDepartamento() {
 
         {/* Métricas Principais */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
             <div className="flex items-center gap-3 mb-3">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -145,16 +145,16 @@ export default function RelatorioDepartamento() {
               >
                 <Users size={20} style={{ color: dept.cor }} />
               </div>
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Membros
               </p>
             </div>
-            <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+            <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
               {dept.membros}
             </p>
           </div>
 
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
             <div className="flex items-center gap-3 mb-3">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -162,11 +162,11 @@ export default function RelatorioDepartamento() {
               >
                 <CheckCircle2 size={20} style={{ color: dept.cor }} />
               </div>
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Taxa de Conclusão
               </p>
             </div>
-            <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px] mb-1">
+            <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px] mb-1">
               {completionRate}%
             </p>
             <div className="flex items-center gap-1 text-[#28d939]">
@@ -177,7 +177,7 @@ export default function RelatorioDepartamento() {
             </div>
           </div>
 
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
             <div className="flex items-center gap-3 mb-3">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -185,16 +185,16 @@ export default function RelatorioDepartamento() {
               >
                 <Clock size={20} style={{ color: dept.cor }} />
               </div>
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Tarefas Ativas
               </p>
             </div>
-            <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+            <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
               {tarefas.length - completedTasks}
             </p>
           </div>
 
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
             <div className="flex items-center gap-3 mb-3">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -202,11 +202,11 @@ export default function RelatorioDepartamento() {
               >
                 <FileText size={20} style={{ color: dept.cor }} />
               </div>
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Documentos
               </p>
             </div>
-            <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+            <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
               {dept.documentos}
             </p>
           </div>
@@ -215,22 +215,22 @@ export default function RelatorioDepartamento() {
         {/* OKR Principal e Status */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* OKR Principal */}
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
-            <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[18px] mb-6 flex items-center gap-2">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
+            <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-rise-fg text-[18px] mb-6 flex items-center gap-2">
               <Target size={20} style={{ color: dept.cor }} />
               OKR Principal
             </h2>
             {principalOkr ? (
               <>
                 <div className="mb-6">
-                  <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] mb-2">
+                  <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] mb-2">
                     Objetivo
                   </p>
-                  <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[20px] mb-4">
+                  <p className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[20px] mb-4">
                     {principalOkr.titulo}
                   </p>
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 bg-[#1a1a1a] rounded-full h-3">
+                    <div className="flex-1 bg-rise-raised rounded-full h-3">
                       <div
                         className="h-3 rounded-full transition-all"
                         style={{
@@ -239,30 +239,30 @@ export default function RelatorioDepartamento() {
                         }}
                       />
                     </div>
-                    <span className="font-['Inter:Bold',sans-serif] text-[#eee] text-[18px]">
+                    <span className="font-['Inter:Bold',sans-serif] text-rise-fg text-[18px]">
                       {principalOkr.progresso}%
                     </span>
                   </div>
                 </div>
                 {principalOkr.key_results && principalOkr.key_results.length > 0 && (
                   <div className="space-y-4">
-                    <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[12px] uppercase tracking-wider">
+                    <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[12px] uppercase tracking-wider">
                       Key Results
                     </p>
                     {principalOkr.key_results.map((kr) => (
                       <div key={kr.id} className="border-l-2 pl-4" style={{ borderColor: dept.cor }}>
-                        <p className="font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                        <p className="font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                           {kr.descricao}
                         </p>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px]">
+                          <span className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[12px]">
                             {kr.valor_atual} / {kr.valor_meta} {kr.unidade}
                           </span>
-                          <span className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[12px]">
+                          <span className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[12px]">
                             {kr.progresso}%
                           </span>
                         </div>
-                        <div className="w-full bg-[#1a1a1a] rounded-full h-1.5">
+                        <div className="w-full bg-rise-raised rounded-full h-1.5">
                           <div
                             className="h-1.5 rounded-full"
                             style={{
@@ -277,15 +277,15 @@ export default function RelatorioDepartamento() {
                 )}
               </>
             ) : (
-              <p className="text-[#666] font-['Inter:Regular',sans-serif] text-[14px]">
+              <p className="text-rise-fg-3 font-['Inter:Regular',sans-serif] text-[14px]">
                 Nenhum OKR cadastrado para este departamento.
               </p>
             )}
           </div>
 
           {/* Distribuição de Status */}
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
-            <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[18px] mb-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
+            <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-rise-fg text-[18px] mb-6">
               Status das Tarefas
             </h2>
             <div className="space-y-6">
@@ -293,15 +293,15 @@ export default function RelatorioDepartamento() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-[#6B8AFF]" />
-                    <span className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px]">
+                    <span className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px]">
                       Planejamento
                     </span>
                   </div>
-                  <span className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px]">
+                  <span className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[14px]">
                     {plannedTasks} tarefas
                   </span>
                 </div>
-                <div className="w-full bg-[#1a1a1a] rounded-full h-2">
+                <div className="w-full bg-rise-raised rounded-full h-2">
                   <div
                     className="bg-[#6B8AFF] h-2 rounded-full"
                     style={{ width: tarefas.length > 0 ? `${(plannedTasks / tarefas.length) * 100}%` : "0%" }}
@@ -313,15 +313,15 @@ export default function RelatorioDepartamento() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-[#28d939]" />
-                    <span className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px]">
+                    <span className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px]">
                       Em Andamento
                     </span>
                   </div>
-                  <span className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px]">
+                  <span className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[14px]">
                     {inProgressTasks} tarefas
                   </span>
                 </div>
-                <div className="w-full bg-[#1a1a1a] rounded-full h-2">
+                <div className="w-full bg-rise-raised rounded-full h-2">
                   <div
                     className="bg-[#28d939] h-2 rounded-full"
                     style={{ width: tarefas.length > 0 ? `${(inProgressTasks / tarefas.length) * 100}%` : "0%" }}
@@ -333,15 +333,15 @@ export default function RelatorioDepartamento() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-[#bdbdbd]" />
-                    <span className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px]">
+                    <span className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px]">
                       Concluído
                     </span>
                   </div>
-                  <span className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px]">
+                  <span className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[14px]">
                     {completedTasks} tarefas
                   </span>
                 </div>
-                <div className="w-full bg-[#1a1a1a] rounded-full h-2">
+                <div className="w-full bg-rise-raised rounded-full h-2">
                   <div
                     className="bg-[#bdbdbd] h-2 rounded-full"
                     style={{ width: tarefas.length > 0 ? `${(completedTasks / tarefas.length) * 100}%` : "0%" }}
@@ -353,8 +353,8 @@ export default function RelatorioDepartamento() {
         </div>
 
         {/* Tendência Mensal */}
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6 mb-8">
-          <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[18px] mb-6">
+        <div className="bg-rise-surface border border-rise-line rounded-lg p-6 mb-8">
+          <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-rise-fg text-[18px] mb-6">
             Tendência de Conclusão (6 meses)
           </h2>
           <div className="flex items-end gap-4 h-[200px]">
@@ -369,10 +369,10 @@ export default function RelatorioDepartamento() {
                     }}
                   />
                 </div>
-                <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[12px] mt-2">
+                <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[12px] mt-2">
                   {item.mes}
                 </p>
-                <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[11px]">
+                <p className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[11px]">
                   {item.valor}%
                 </p>
               </div>
@@ -381,8 +381,8 @@ export default function RelatorioDepartamento() {
         </div>
 
         {/* Tarefas Recentes */}
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
-          <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[18px] mb-6">
+        <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
+          <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-rise-fg text-[18px] mb-6">
             Tarefas Recentes
           </h2>
           {tarefas.length > 0 ? (
@@ -391,7 +391,7 @@ export default function RelatorioDepartamento() {
                 <Link
                   key={tarefa.id}
                   to={`/tarefas/${tarefa.id}`}
-                  className="flex items-center justify-between p-4 border border-[#333] rounded-lg hover:border-[#555] hover:bg-[#1a1a1a] transition-all group"
+                  className="flex items-center justify-between p-4 border border-rise-line rounded-lg hover:border-rise-fg-4 hover:bg-rise-raised transition-all group"
                 >
                   <div className="flex items-center gap-4 flex-1">
                     <div
@@ -406,10 +406,10 @@ export default function RelatorioDepartamento() {
                       }}
                     />
                     <div className="flex-1">
-                      <h3 className="font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] group-hover:text-[#14E9BC] transition-colors">
+                      <h3 className="font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] group-hover:text-[#14E9BC] transition-colors">
                         {tarefa.titulo}
                       </h3>
-                      <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px] mt-1">
+                      <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[12px] mt-1">
                         {tarefa.responsavel?.nome ?? "—"} • Prazo:{" "}
                         {tarefa.prazo ? new Date(tarefa.prazo).toLocaleDateString("pt-BR") : "—"}
                       </p>
@@ -429,11 +429,11 @@ export default function RelatorioDepartamento() {
                     </span>
                     <div className="w-16">
                       <div className="flex items-center justify-end gap-1 mb-1">
-                        <span className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[12px]">
+                        <span className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[12px]">
                           {tarefa.progresso ?? 0}%
                         </span>
                       </div>
-                      <div className="w-full bg-[#1a1a1a] rounded-full h-1">
+                      <div className="w-full bg-rise-raised rounded-full h-1">
                         <div
                           className="h-1 rounded-full"
                           style={{ width: `${tarefa.progresso ?? 0}%`, backgroundColor: dept.cor }}
@@ -445,7 +445,7 @@ export default function RelatorioDepartamento() {
               ))}
             </div>
           ) : (
-            <p className="text-[#666] font-['Inter:Regular',sans-serif] text-[14px]">
+            <p className="text-rise-fg-3 font-['Inter:Regular',sans-serif] text-[14px]">
               Nenhuma tarefa encontrada.
             </p>
           )}

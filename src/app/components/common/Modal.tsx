@@ -38,17 +38,17 @@ export function Modal({ isOpen, onClose, title, children, footer }: ModalProps) 
 
       {/* Modal */}
       <div
-        className="relative bg-[#0f0f0f] border border-[#333] rounded-lg shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col"
+        className="relative bg-rise-surface border border-rise-line rounded-lg shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#333]">
-          <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[20px]">
+        <div className="flex items-center justify-between p-6 border-b border-rise-line">
+          <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-rise-fg text-[20px]">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="text-[#bdbdbd] hover:text-[#eee] transition-colors"
+            className="text-rise-fg-2 hover:text-rise-fg transition-colors"
           >
             <X size={24} />
           </button>
@@ -61,7 +61,7 @@ export function Modal({ isOpen, onClose, title, children, footer }: ModalProps) 
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-[#333]">
+          <div className="flex items-center justify-end gap-3 p-6 border-t border-rise-line">
             {footer}
           </div>
         )}

@@ -5,7 +5,7 @@ interface BadgeProps {
 }
 
 const variantStyles = {
-  default: "bg-[#1a1a1a] text-[#bdbdbd]",
+  default: "bg-rise-raised text-rise-fg-2",
   success: "bg-[#28d939]/20 text-[#28d939]",
   warning: "bg-[#f59e0b]/20 text-[#f59e0b]",
   error: "bg-[#ec5d5e]/20 text-[#ec5d5e]",

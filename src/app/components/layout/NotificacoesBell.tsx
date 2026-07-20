@@ -100,8 +100,8 @@ export function NotificacoesBell({ userId }: Props) {
         onClick={() => setOpen((v) => !v)}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
           open
-            ? "bg-[#1a1a1a] text-[#14E9BC] border border-[#14E9BC]/30"
-            : "text-[#bdbdbd] hover:bg-[#1a1a1a] hover:text-[#eee]"
+            ? "bg-rise-raised text-[#14E9BC] border border-[#14E9BC]/30"
+            : "text-rise-fg-2 hover:bg-rise-raised hover:text-rise-fg"
         }`}
       >
         <div className="relative">
@@ -117,11 +117,11 @@ export function NotificacoesBell({ userId }: Props) {
 
       {/* Painel */}
       {open && (
-        <div className="absolute left-full bottom-0 ml-2 w-[360px] bg-[#111] border border-[#333] rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div className="absolute left-full bottom-0 ml-2 w-[360px] bg-rise-surface border border-rise-line rounded-xl shadow-2xl z-50 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#333]">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-rise-line">
             <div className="flex items-center gap-2">
-              <span className="text-[#eee] text-[15px] font-['Inter:Semi_Bold',sans-serif]">
+              <span className="text-rise-fg text-[15px] font-['Inter:Semi_Bold',sans-serif]">
                 Notificações
               </span>
               {unreadCount > 0 && (
@@ -140,7 +140,7 @@ export function NotificacoesBell({ userId }: Props) {
                   Marcar todas como lidas
                 </button>
               )}
-              <button onClick={() => setOpen(false)} className="text-[#555] hover:text-[#eee] transition-colors">
+              <button onClick={() => setOpen(false)} className="text-rise-fg-4 hover:text-rise-fg transition-colors">
                 <X size={15} />
               </button>
             </div>
@@ -149,11 +149,11 @@ export function NotificacoesBell({ userId }: Props) {
           {/* Lista */}
           <div className="max-h-[440px] overflow-y-auto">
             {carregando ? (
-              <div className="p-6 text-center text-[#555] text-[13px]">Carregando...</div>
+              <div className="p-6 text-center text-rise-fg-4 text-[13px]">Carregando...</div>
             ) : notifs.length === 0 ? (
               <div className="p-10 text-center">
-                <Bell size={32} className="text-[#333] mx-auto mb-3" />
-                <p className="text-[#555] text-[13px]">Nenhuma notificação ainda</p>
+                <Bell size={32} className="text-rise-fg-4 mx-auto mb-3" />
+                <p className="text-rise-fg-4 text-[13px]">Nenhuma notificação ainda</p>
               </div>
             ) : (
               notifs.map((notif) => {
@@ -163,8 +163,8 @@ export function NotificacoesBell({ userId }: Props) {
                   <button
                     key={notif.id}
                     onClick={() => handleClickNotif(notif)}
-                    className={`w-full flex items-start gap-3 px-4 py-3 text-left border-b border-[#1a1a1a] hover:bg-[#1a1a1a] transition-colors ${
-                      !notif.lida ? "bg-[#0d0d0d]" : ""
+                    className={`w-full flex items-start gap-3 px-4 py-3 text-left border-b border-rise-raised hover:bg-rise-raised transition-colors ${
+                      !notif.lida ? "bg-rise-bg" : ""
                     }`}
                   >
                     {/* Indicador de não lida */}
@@ -186,16 +186,16 @@ export function NotificacoesBell({ userId }: Props) {
                     {/* Conteúdo */}
                     <div className="flex-1 min-w-0">
                       <p className={`text-[13px] truncate leading-snug ${
-                        !notif.lida ? "text-[#eee] font-semibold" : "text-[#bdbdbd]"
+                        !notif.lida ? "text-rise-fg font-semibold" : "text-rise-fg-2"
                       }`}>
                         {notif.titulo}
                       </p>
                       {notif.corpo && (
-                        <p className="text-[#555] text-[12px] truncate mt-0.5">
+                        <p className="text-rise-fg-4 text-[12px] truncate mt-0.5">
                           {notif.corpo}
                         </p>
                       )}
-                      <p className="text-[#444] text-[11px] mt-1">
+                      <p className="text-rise-fg-4 text-[11px] mt-1">
                         {tempoRelativo(notif.criada_em)}
                       </p>
                     </div>

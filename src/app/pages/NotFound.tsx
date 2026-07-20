@@ -3,12 +3,12 @@ import { Home } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-8">
+    <div className="min-h-screen bg-rise-bg flex items-center justify-center p-8">
       <div className="text-center">
-        <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[72px] mb-4">
+        <h1 className="font-['Inter:Bold',sans-serif] font-bold text-rise-fg text-[72px] mb-4">
           404
         </h1>
-        <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[20px] mb-8">
+        <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[20px] mb-8">
           Página não encontrada
         </p>
         <Link

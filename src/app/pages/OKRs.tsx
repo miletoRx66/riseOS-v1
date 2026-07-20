@@ -186,16 +186,16 @@ export default function OKRs() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[32px] mb-2">
+              <h1 className="font-['Inter:Bold',sans-serif] font-bold text-rise-fg text-[32px] mb-2">
                 Gestão de OKRs
               </h1>
-              <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[16px]">
+              <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[16px]">
                 Orquestre objetivos e resultados-chave por departamento
               </p>
             </div>
@@ -211,15 +211,15 @@ export default function OKRs() {
           {/* Filtros */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Filter size={18} className="text-[#bdbdbd]" />
-              <span className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <Filter size={18} className="text-rise-fg-2" />
+              <span className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Filtros:
               </span>
             </div>
             <select
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+              className="bg-rise-raised border border-rise-line rounded-lg px-4 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
             >
               <option value="todos">Todos os Departamentos</option>
               {departamentos.map((dept) => (
@@ -231,7 +231,7 @@ export default function OKRs() {
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+              className="bg-rise-raised border border-rise-line rounded-lg px-4 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
             >
               <option value="todos">Todos os Períodos</option>
               <option value="Q1 2026">Q1 2026</option>
@@ -241,16 +241,16 @@ export default function OKRs() {
             </select>
 
             {/* Divisor */}
-            <div className="h-6 w-px bg-[#333]"></div>
+            <div className="h-6 w-px bg-rise-line"></div>
 
             {/* Modo de Visualização */}
-            <div className="flex items-center gap-2 bg-[#1a1a1a] border border-[#333] rounded-lg p-1">
+            <div className="flex items-center gap-2 bg-rise-raised border border-rise-line rounded-lg p-1">
               <button
                 onClick={() => setViewMode("lista")}
                 className={`px-3 py-1.5 rounded-md flex items-center gap-2 font-['Inter:Medium',sans-serif] text-[13px] transition-all ${
                   viewMode === "lista"
                     ? "bg-[#14E9BC] text-[#000]"
-                    : "text-[#bdbdbd] hover:text-[#eee]"
+                    : "text-rise-fg-2 hover:text-rise-fg"
                 }`}
               >
                 <LayoutList size={16} />
@@ -261,7 +261,7 @@ export default function OKRs() {
                 className={`px-3 py-1.5 rounded-md flex items-center gap-2 font-['Inter:Medium',sans-serif] text-[13px] transition-all ${
                   viewMode === "calendario"
                     ? "bg-[#14E9BC] text-[#000]"
-                    : "text-[#bdbdbd] hover:text-[#eee]"
+                    : "text-rise-fg-2 hover:text-rise-fg"
                 }`}
               >
                 <CalendarDays size={16} />
@@ -272,7 +272,7 @@ export default function OKRs() {
                 className={`px-3 py-1.5 rounded-md flex items-center gap-2 font-['Inter:Medium',sans-serif] text-[13px] transition-all ${
                   viewMode === "kanban"
                     ? "bg-[#14E9BC] text-[#000]"
-                    : "text-[#bdbdbd] hover:text-[#eee]"
+                    : "text-rise-fg-2 hover:text-rise-fg"
                 }`}
               >
                 <LayoutGrid size={16} />
@@ -284,58 +284,58 @@ export default function OKRs() {
 
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-[#14E9BC]/15 flex items-center justify-center">
                 <Target size={20} className="text-[#14E9BC]" />
               </div>
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Total de OKRs
               </p>
             </div>
-            <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+            <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
               {okrs.length}
             </p>
           </div>
 
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-[#28d939]/15 flex items-center justify-center">
                 <TrendingUp size={20} className="text-[#28d939]" />
               </div>
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 No Caminho
               </p>
             </div>
-            <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+            <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
               {okrs.filter((o) => o.progresso >= 80).length}
             </p>
           </div>
 
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-[#f59e0b]/15 flex items-center justify-center">
                 <Target size={20} className="text-[#f59e0b]" />
               </div>
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Atenção
               </p>
             </div>
-            <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+            <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
               {okrs.filter((o) => o.progresso >= 50 && o.progresso < 80).length}
             </p>
           </div>
 
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-[#ec5d5e]/15 flex items-center justify-center">
                 <Target size={20} className="text-[#ec5d5e]" />
               </div>
-              <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+              <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                 Em Risco
               </p>
             </div>
-            <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[28px]">
+            <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[28px]">
               {okrs.filter((o) => o.progresso < 50).length}
             </p>
           </div>
@@ -352,7 +352,7 @@ export default function OKRs() {
             return (
               <div
                 key={okr.id}
-                className="bg-[#0f0f0f] border border-[#333] rounded-lg hover:border-[#555] transition-all overflow-hidden"
+                className="bg-rise-surface border border-rise-line rounded-lg hover:border-rise-fg-4 transition-all overflow-hidden"
               >
                 {/* Header do OKR - Clicável */}
                 <div
@@ -371,7 +371,7 @@ export default function OKRs() {
                         <Link
                           to={`/okrs/${okr.id}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[20px] hover:text-[#14E9BC] transition-colors"
+                          className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[20px] hover:text-[#14E9BC] transition-colors"
                         >
                           {okr.titulo}
                         </Link>
@@ -385,7 +385,7 @@ export default function OKRs() {
                           {getStatusLabel(okr.progresso)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 text-[#bdbdbd] text-[14px] flex-wrap">
+                      <div className="flex items-center gap-4 text-rise-fg-2 text-[14px] flex-wrap">
                         <div className="flex items-center gap-2">
                           <div
                             className="w-2 h-2 rounded-full"
@@ -408,16 +408,16 @@ export default function OKRs() {
                   </div>
                   <div className="flex items-center gap-4 flex-shrink-0">
                     <div className="text-right">
-                      <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px] mb-1">
+                      <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[12px] mb-1">
                         Progresso Geral
                       </p>
-                      <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[32px]">
+                      <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[32px]">
                         {okr.progresso}%
                       </p>
                     </div>
                     <button
                       onClick={(e) => handleExcluirOkr(e, okr.id)}
-                      className="text-[#bdbdbd] hover:text-[#ec5d5e] transition-colors p-1"
+                      className="text-rise-fg-2 hover:text-[#ec5d5e] transition-colors p-1"
                       title="Excluir OKR"
                     >
                       <Trash2 size={18} />
@@ -427,7 +427,7 @@ export default function OKRs() {
                         e.stopPropagation();
                         toggleOKR(okr.id);
                       }}
-                      className="text-[#bdbdbd] hover:text-[#14E9BC] transition-colors"
+                      className="text-rise-fg-2 hover:text-[#14E9BC] transition-colors"
                     >
                       {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
                     </button>
@@ -436,7 +436,7 @@ export default function OKRs() {
 
                 {/* Barra de Progresso Geral - Sempre visível */}
                 <div className="px-6 pb-6">
-                  <div className="w-full bg-[#1a1a1a] rounded-full h-3">
+                  <div className="w-full bg-rise-raised rounded-full h-3">
                     <div
                       className="h-3 rounded-full transition-all"
                       style={{
@@ -449,10 +449,10 @@ export default function OKRs() {
 
                 {/* Conteúdo Expansível - Key Results e Tarefas */}
                 {isExpanded && (
-                  <div className="px-6 pb-6 space-y-6 border-t border-[#333] pt-6">
+                  <div className="px-6 pb-6 space-y-6 border-t border-rise-line pt-6">
                     {/* Key Results */}
                     <div>
-                      <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px] mb-4 uppercase tracking-wider">
+                      <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[14px] mb-4 uppercase tracking-wider">
                         Key Results
                       </h3>
                       <div className="space-y-4">
@@ -465,17 +465,17 @@ export default function OKRs() {
                               style={{ borderColor: dept.cor }}
                             >
                               <div className="flex items-start justify-between mb-2">
-                                <p className="font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] flex-1">
+                                <p className="font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] flex-1">
                                   {kr.descricao}
                                 </p>
                                 <div className="text-right ml-4">
-                                  <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px]">
+                                  <p className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[16px]">
                                     {kr.progresso}%
                                   </p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3 mb-2">
-                                <div className="flex-1 bg-[#1a1a1a] rounded-full h-2">
+                                <div className="flex-1 bg-rise-raised rounded-full h-2">
                                   <div
                                     className="h-2 rounded-full transition-all"
                                     style={{ width: `${kr.progresso}%`, backgroundColor: dept.cor }}
@@ -483,11 +483,11 @@ export default function OKRs() {
                                 </div>
                               </div>
                               <div className="flex items-center justify-between">
-                                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px]">
+                                <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[12px]">
                                   {kr.valor_atual.toLocaleString()} / {kr.valor_meta.toLocaleString()}{" "}
                                   {kr.unidade}
                                 </p>
-                                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[12px]">
+                                <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[12px]">
                                   {kr.metrica}
                                 </p>
                               </div>
@@ -500,9 +500,9 @@ export default function OKRs() {
                                     max={kr.valor_meta}
                                     value={editingKr.valor}
                                     onChange={(e) => setEditingKr({ ...editingKr, valor: parseFloat(e.target.value) || 0 })}
-                                    className="w-28 bg-[#1a1a1a] border border-[#333] rounded px-3 py-1.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                                    className="w-28 bg-rise-raised border border-rise-line rounded px-3 py-1.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none"
                                   />
-                                  <span className="text-[#bdbdbd] text-[12px]">/ {kr.valor_meta} {kr.unidade}</span>
+                                  <span className="text-rise-fg-2 text-[12px]">/ {kr.valor_meta} {kr.unidade}</span>
                                   <button
                                     onClick={() => handleSalvarProgresso(okr.id, kr.id, kr.valor_meta)}
                                     disabled={salvandoKr}
@@ -512,7 +512,7 @@ export default function OKRs() {
                                   </button>
                                   <button
                                     onClick={() => setEditingKr(null)}
-                                    className="text-[#bdbdbd] hover:text-[#eee] px-2 py-1.5 text-[12px] transition-colors"
+                                    className="text-rise-fg-2 hover:text-rise-fg px-2 py-1.5 text-[12px] transition-colors"
                                   >
                                     Cancelar
                                   </button>
@@ -540,12 +540,12 @@ export default function OKRs() {
 
         {/* Empty State */}
         {filteredOKRs.length === 0 && (
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-12 text-center">
-            <Target size={48} className="text-[#555] mx-auto mb-4" />
-            <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[18px] mb-2">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-12 text-center">
+            <Target size={48} className="text-rise-fg-4 mx-auto mb-4" />
+            <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[18px] mb-2">
               Nenhum OKR encontrado
             </h3>
-            <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] mb-6">
+            <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] mb-6">
               Tente ajustar os filtros ou crie um novo OKR
             </p>
             <button 
@@ -562,20 +562,20 @@ export default function OKRs() {
       {/* Modal - Novo OKR */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-[#000]/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg max-w-[900px] w-full my-8">
+          <div className="bg-rise-surface border border-rise-line rounded-lg max-w-[900px] w-full my-8">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-[#333]">
+            <div className="flex items-center justify-between p-6 border-b border-rise-line">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-[#14E9BC]/20 flex items-center justify-center">
                   <Target size={20} className="text-[#14E9BC]" />
                 </div>
-                <h2 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[24px]">
+                <h2 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[24px]">
                   Novo OKR
                 </h2>
               </div>
               <button
                 onClick={handleCloseModal}
-                className="text-[#bdbdbd] hover:text-[#eee] transition-colors"
+                className="text-rise-fg-2 hover:text-rise-fg transition-colors"
               >
                 <X size={24} />
               </button>
@@ -588,7 +588,7 @@ export default function OKRs() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Título do Objetivo */}
                   <div className="lg:col-span-2">
-                    <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                    <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                       Título do Objetivo *
                     </label>
                     <input
@@ -597,20 +597,20 @@ export default function OKRs() {
                       value={formData.titulo}
                       onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
                       placeholder="Ex: Aumentar Brand Awareness no mercado B2B"
-                      className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                      className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                     />
                   </div>
 
                   {/* Departamento */}
                   <div>
-                    <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                    <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                       Departamento *
                     </label>
                     <select
                       required
                       value={formData.departamento}
                       onChange={(e) => setFormData({ ...formData, departamento: e.target.value })}
-                      className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                      className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                     >
                       <option value="">Selecione um departamento</option>
                       {departamentos.map((dept) => (
@@ -623,14 +623,14 @@ export default function OKRs() {
 
                   {/* Período */}
                   <div>
-                    <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                    <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                       Período *
                     </label>
                     <select
                       required
                       value={formData.periodo}
                       onChange={(e) => setFormData({ ...formData, periodo: e.target.value })}
-                      className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                      className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                     >
                       <option value="Q1 2026">Q1 2026</option>
                       <option value="Q2 2026">Q2 2026</option>
@@ -642,14 +642,14 @@ export default function OKRs() {
 
                   {/* Responsável */}
                   <div>
-                    <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                    <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                       Responsável *
                     </label>
                     <select
                       required
                       value={formData.responsavel_id}
                       onChange={(e) => setFormData({ ...formData, responsavel_id: e.target.value })}
-                      className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                      className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                     >
                       <option value="">Selecione o responsável</option>
                       {usuarios.map((u) => (
@@ -660,7 +660,7 @@ export default function OKRs() {
 
                   {/* Data de Início */}
                   <div>
-                    <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                    <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                       Data de Início *
                     </label>
                     <input
@@ -668,13 +668,13 @@ export default function OKRs() {
                       required
                       value={formData.dataInicio}
                       onChange={(e) => setFormData({ ...formData, dataInicio: e.target.value })}
-                      className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                      className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                     />
                   </div>
 
                   {/* Data de Fim */}
                   <div>
-                    <label className="block font-['Inter:Medium',sans-serif] text-[#eee] text-[14px] mb-2">
+                    <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
                       Data de Fim *
                     </label>
                     <input
@@ -682,26 +682,26 @@ export default function OKRs() {
                       required
                       value={formData.dataFim}
                       onChange={(e) => setFormData({ ...formData, dataFim: e.target.value })}
-                      className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[#eee] font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                      className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-3 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
                     />
                   </div>
                 </div>
 
                 {/* Key Results */}
-                <div className="border-t border-[#333] pt-6">
+                <div className="border-t border-rise-line pt-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[16px] mb-1">
+                      <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[16px] mb-1">
                         Key Results (Resultados-Chave)
                       </h3>
-                      <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[13px]">
+                      <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[13px]">
                         Defina de 3 a 5 resultados mensuráveis que indicam o sucesso do objetivo
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={handleAddKeyResult}
-                      className="bg-[#1a1a1a] border border-[#333] text-[#14E9BC] px-4 py-2 rounded-lg font-['Inter:Semi_Bold',sans-serif] text-[13px] flex items-center gap-2 hover:bg-[#222] transition-colors"
+                      className="bg-rise-raised border border-rise-line text-[#14E9BC] px-4 py-2 rounded-lg font-['Inter:Semi_Bold',sans-serif] text-[13px] flex items-center gap-2 hover:bg-rise-subtle transition-colors"
                     >
                       <Plus size={16} />
                       Adicionar KR
@@ -710,7 +710,7 @@ export default function OKRs() {
 
                   <div className="space-y-4">
                     {keyResults.map((kr, index) => (
-                      <div key={kr.id} className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4">
+                      <div key={kr.id} className="bg-rise-raised border border-rise-line rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <span className="font-['Inter:Semi_Bold',sans-serif] text-[#14E9BC] text-[13px]">
                             Key Result #{index + 1}
@@ -729,7 +729,7 @@ export default function OKRs() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {/* Descrição */}
                           <div className="md:col-span-2">
-                            <label className="block font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[12px] mb-2">
+                            <label className="block font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[12px] mb-2">
                               Descrição do Resultado *
                             </label>
                             <input
@@ -738,13 +738,13 @@ export default function OKRs() {
                               value={kr.descricao}
                               onChange={(e) => handleKeyResultChange(kr.id, "descricao", e.target.value)}
                               placeholder="Ex: Alcançar 100k seguidores nas redes sociais"
-                              className="w-full bg-[#0f0f0f] border border-[#333] rounded-lg px-3 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                              className="w-full bg-rise-surface border border-rise-line rounded-lg px-3 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[13px] focus:border-[#14E9BC] focus:outline-none"
                             />
                           </div>
 
                           {/* Métrica */}
                           <div>
-                            <label className="block font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[12px] mb-2">
+                            <label className="block font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[12px] mb-2">
                               Métrica *
                             </label>
                             <input
@@ -753,13 +753,13 @@ export default function OKRs() {
                               value={kr.metrica}
                               onChange={(e) => handleKeyResultChange(kr.id, "metrica", e.target.value)}
                               placeholder="Ex: Seguidores"
-                              className="w-full bg-[#0f0f0f] border border-[#333] rounded-lg px-3 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                              className="w-full bg-rise-surface border border-rise-line rounded-lg px-3 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[13px] focus:border-[#14E9BC] focus:outline-none"
                             />
                           </div>
 
                           {/* Unidade */}
                           <div>
-                            <label className="block font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[12px] mb-2">
+                            <label className="block font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[12px] mb-2">
                               Unidade *
                             </label>
                             <input
@@ -768,13 +768,13 @@ export default function OKRs() {
                               value={kr.unidade}
                               onChange={(e) => handleKeyResultChange(kr.id, "unidade", e.target.value)}
                               placeholder="Ex: seguidores, %, R$, leads"
-                              className="w-full bg-[#0f0f0f] border border-[#333] rounded-lg px-3 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                              className="w-full bg-rise-surface border border-rise-line rounded-lg px-3 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[13px] focus:border-[#14E9BC] focus:outline-none"
                             />
                           </div>
 
                           {/* Valor Inicial */}
                           <div>
-                            <label className="block font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[12px] mb-2">
+                            <label className="block font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[12px] mb-2">
                               Valor Inicial *
                             </label>
                             <input
@@ -783,13 +783,13 @@ export default function OKRs() {
                               value={kr.valorInicial}
                               onChange={(e) => handleKeyResultChange(kr.id, "valorInicial", parseFloat(e.target.value) || 0)}
                               placeholder="0"
-                              className="w-full bg-[#0f0f0f] border border-[#333] rounded-lg px-3 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                              className="w-full bg-rise-surface border border-rise-line rounded-lg px-3 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[13px] focus:border-[#14E9BC] focus:outline-none"
                             />
                           </div>
 
                           {/* Valor Meta */}
                           <div>
-                            <label className="block font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[12px] mb-2">
+                            <label className="block font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[12px] mb-2">
                               Valor Meta *
                             </label>
                             <input
@@ -798,7 +798,7 @@ export default function OKRs() {
                               value={kr.valorMeta}
                               onChange={(e) => handleKeyResultChange(kr.id, "valorMeta", parseFloat(e.target.value) || 0)}
                               placeholder="100000"
-                              className="w-full bg-[#0f0f0f] border border-[#333] rounded-lg px-3 py-2 text-[#eee] font-['Inter:Regular',sans-serif] text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                              className="w-full bg-rise-surface border border-rise-line rounded-lg px-3 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[13px] focus:border-[#14E9BC] focus:outline-none"
                             />
                           </div>
                         </div>
@@ -809,11 +809,11 @@ export default function OKRs() {
               </div>
 
               {/* Modal Footer */}
-              <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-[#333]">
+              <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-rise-line">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-6 py-3 rounded-lg font-['Inter:Semi_Bold',sans-serif] text-[14px] text-[#bdbdbd] hover:text-[#eee] hover:bg-[#1a1a1a] transition-colors"
+                  className="px-6 py-3 rounded-lg font-['Inter:Semi_Bold',sans-serif] text-[14px] text-rise-fg-2 hover:text-rise-fg hover:bg-rise-raised transition-colors"
                 >
                   Cancelar
                 </button>

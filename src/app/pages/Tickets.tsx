@@ -131,7 +131,7 @@ export default function Tickets() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-[1400px] mx-auto">
 
         {/* Header */}
@@ -141,9 +141,9 @@ export default function Tickets() {
               <div className="w-10 h-10 rounded-xl bg-[#ec5d5e]/15 flex items-center justify-center">
                 <Ticket size={20} className="text-[#ec5d5e]" />
               </div>
-              <h1 className="font-bold text-[#eee] text-[32px]">Tickets</h1>
+              <h1 className="font-bold text-rise-fg text-[32px]">Tickets</h1>
             </div>
-            <p className="text-[#bdbdbd] text-[15px] ml-[52px]">
+            <p className="text-rise-fg-2 text-[15px] ml-[52px]">
               Acompanhamento de incidentes, bugs e solicitações
             </p>
           </div>
@@ -163,16 +163,16 @@ export default function Tickets() {
             { label: "Críticos",  value: counts.criticos,  color: "#ff0040" },
             { label: "Resolvidos",value: counts.resolvidos, color: "#28d939" },
           ].map((k) => (
-            <div key={k.label} className="bg-[#0f0f0f] border border-[#222] rounded-xl p-5">
-              <p className="text-[#555] text-[12px] mb-1">{k.label}</p>
+            <div key={k.label} className="bg-rise-surface border border-rise-line-2 rounded-xl p-5">
+              <p className="text-rise-fg-4 text-[12px] mb-1">{k.label}</p>
               <p className="text-[28px] font-bold" style={{ color: k.color }}>{k.value}</p>
             </div>
           ))}
         </div>
 
         {/* Filtros */}
-        <div className="bg-[#0f0f0f] border border-[#333] rounded-lg px-5 py-3 mb-6 flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2 text-[#bdbdbd]">
+        <div className="bg-rise-surface border border-rise-line rounded-lg px-5 py-3 mb-6 flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2 text-rise-fg-2">
             <Filter size={15} />
             <span className="text-[13px]">Filtros:</span>
           </div>
@@ -180,24 +180,24 @@ export default function Tickets() {
             {["todos", ...Object.keys(STATUS_CONFIG)].map((s) => (
               <button key={s} onClick={() => setFiltroStatus(s)}
                 className={`px-3 py-1 rounded-lg text-[12px] font-medium transition-colors ${
-                  filtroStatus === s ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]" : "text-[#666] hover:text-[#bdbdbd]"
+                  filtroStatus === s ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]" : "text-rise-fg-3 hover:text-rise-fg-2"
                 }`}>
                 {s === "todos" ? "Todos" : STATUS_CONFIG[s as keyof typeof STATUS_CONFIG]?.label}
               </button>
             ))}
           </div>
-          <div className="w-px h-4 bg-[#333]" />
+          <div className="w-px h-4 bg-rise-line" />
           <div className="flex gap-2">
             {["todos", ...Object.keys(TIPO_CONFIG)].map((t) => (
               <button key={t} onClick={() => setFiltroTipo(t)}
                 className={`px-3 py-1 rounded-lg text-[12px] font-medium transition-colors ${
-                  filtroTipo === t ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]" : "text-[#666] hover:text-[#bdbdbd]"
+                  filtroTipo === t ? "bg-[#14E9BC]/15 border border-[#14E9BC]/40 text-[#14E9BC]" : "text-rise-fg-3 hover:text-rise-fg-2"
                 }`}>
                 {t === "todos" ? "Todos tipos" : TIPO_CONFIG[t as keyof typeof TIPO_CONFIG]?.label}
               </button>
             ))}
           </div>
-          <span className="ml-auto text-[#555] text-[12px]">{filtrados.length} ticket{filtrados.length !== 1 ? "s" : ""}</span>
+          <span className="ml-auto text-rise-fg-4 text-[12px]">{filtrados.length} ticket{filtrados.length !== 1 ? "s" : ""}</span>
         </div>
 
         {/* Board por status */}
@@ -223,8 +223,8 @@ export default function Tickets() {
 
                 <div className="space-y-2.5">
                   {col.items.length === 0 ? (
-                    <div className="border border-dashed border-[#222] rounded-xl p-6 text-center">
-                      <p className="text-[#444] text-[12px]">Sem tickets</p>
+                    <div className="border border-dashed border-rise-line-2 rounded-xl p-6 text-center">
+                      <p className="text-rise-fg-4 text-[12px]">Sem tickets</p>
                     </div>
                   ) : col.items.map((ticket) => {
                     const TipoIcon = TIPO_CONFIG[ticket.tipo]?.icon ?? AlertTriangle;
@@ -234,7 +234,7 @@ export default function Tickets() {
                       <div
                         key={ticket.id}
                         onClick={() => setDetalhe(ticket)}
-                        className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-4 hover:border-[#444] transition-all cursor-pointer"
+                        className="bg-rise-surface border border-rise-line-2 rounded-xl p-4 hover:border-rise-line-3 transition-all cursor-pointer"
                       >
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-1.5">
@@ -248,15 +248,15 @@ export default function Tickets() {
                           </span>
                         </div>
 
-                        <h4 className="text-[#eee] text-[13px] font-semibold leading-snug mb-2 line-clamp-2">
+                        <h4 className="text-rise-fg text-[13px] font-semibold leading-snug mb-2 line-clamp-2">
                           {ticket.titulo}
                         </h4>
 
-                        <div className="flex items-center justify-between pt-2 border-t border-[#1a1a1a]">
-                          <span className="text-[#555] text-[10px]">
+                        <div className="flex items-center justify-between pt-2 border-t border-rise-raised">
+                          <span className="text-rise-fg-4 text-[10px]">
                             {ticket.responsavel?.nome?.split(" ")[0] ?? "Sem responsável"}
                           </span>
-                          <span className="text-[#555] text-[10px]">{fmtData(ticket.criado_em)}</span>
+                          <span className="text-rise-fg-4 text-[10px]">{fmtData(ticket.criado_em)}</span>
                         </div>
                       </div>
                     );
@@ -271,37 +271,37 @@ export default function Tickets() {
       {/* Modal: Novo Ticket */}
       {modalAberto && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-[520px]">
+          <div className="bg-rise-surface border border-rise-line rounded-2xl p-6 w-full max-w-[520px]">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-[#eee] text-[18px] font-semibold">Novo Ticket</h2>
-              <button onClick={() => setModalAberto(false)} className="text-[#555] hover:text-[#eee] transition-colors">
+              <h2 className="text-rise-fg text-[18px] font-semibold">Novo Ticket</h2>
+              <button onClick={() => setModalAberto(false)} className="text-rise-fg-4 hover:text-rise-fg transition-colors">
                 <X size={20} />
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Título *</label>
+                <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Título *</label>
                 <input
                   value={form.titulo}
                   onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
                   placeholder="Descreva o problema ou solicitação"
-                  className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                  className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[14px] focus:border-[#14E9BC] focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Tipo</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Tipo</label>
                   <select value={form.tipo} onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value as TicketDB["tipo"] }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none">
                     {Object.entries(TIPO_CONFIG).map(([v, c]) => <option key={v} value={v}>{c.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Prioridade</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Prioridade</label>
                   <select value={form.prioridade} onChange={(e) => setForm((f) => ({ ...f, prioridade: e.target.value as TicketDB["prioridade"] }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none">
                     {Object.entries(PRIORIDADE_CONFIG).map(([v, c]) => <option key={v} value={v}>{c.label}</option>)}
                   </select>
                 </div>
@@ -309,17 +309,17 @@ export default function Tickets() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Departamento</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Departamento</label>
                   <select value={form.departamento_id} onChange={(e) => setForm((f) => ({ ...f, departamento_id: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none">
                     <option value="">Nenhum</option>
                     {departamentos.map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Responsável</label>
+                  <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Responsável</label>
                   <select value={form.responsavel_id} onChange={(e) => setForm((f) => ({ ...f, responsavel_id: e.target.value }))}
-                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none">
+                    className="w-full bg-rise-raised border border-rise-line rounded-lg px-3 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none">
                     <option value="">Nenhum</option>
                     {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
                   </select>
@@ -327,26 +327,26 @@ export default function Tickets() {
               </div>
 
               <div>
-                <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Prazo</label>
+                <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Prazo</label>
                 <input type="date" value={form.prazo} onChange={(e) => setForm((f) => ({ ...f, prazo: e.target.value }))}
-                  className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] focus:border-[#14E9BC] focus:outline-none" />
+                  className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none" />
               </div>
 
               <div>
-                <label className="text-[#bdbdbd] text-[12px] mb-1.5 block">Descrição</label>
+                <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Descrição</label>
                 <textarea
                   value={form.descricao}
                   onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))}
                   rows={3}
                   placeholder="Contexto adicional..."
-                  className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-[#eee] text-[13px] resize-none focus:border-[#14E9BC] focus:outline-none"
+                  className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[13px] resize-none focus:border-[#14E9BC] focus:outline-none"
                 />
               </div>
             </div>
 
             <div className="flex gap-3 mt-6">
               <button onClick={() => setModalAberto(false)}
-                className="flex-1 bg-[#1a1a1a] border border-[#333] text-[#bdbdbd] py-2.5 rounded-lg text-[14px] hover:text-[#eee] transition-colors">
+                className="flex-1 bg-rise-raised border border-rise-line text-rise-fg-2 py-2.5 rounded-lg text-[14px] hover:text-rise-fg transition-colors">
                 Cancelar
               </button>
               <button onClick={handleCriar} disabled={!form.titulo.trim() || salvando}
@@ -362,7 +362,7 @@ export default function Tickets() {
       {/* Modal: Detalhe do Ticket */}
       {detalhe && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-[560px]">
+          <div className="bg-rise-surface border border-rise-line rounded-2xl p-6 w-full max-w-[560px]">
             <div className="flex items-start justify-between mb-5">
               <div className="flex items-center gap-2">
                 {(() => { const TipoIcon = TIPO_CONFIG[detalhe.tipo]?.icon ?? AlertTriangle; return <TipoIcon size={16} style={{ color: TIPO_CONFIG[detalhe.tipo]?.color }} />; })()}
@@ -370,15 +370,15 @@ export default function Tickets() {
                   {TIPO_CONFIG[detalhe.tipo]?.label}
                 </span>
               </div>
-              <button onClick={() => setDetalhe(null)} className="text-[#555] hover:text-[#eee] transition-colors">
+              <button onClick={() => setDetalhe(null)} className="text-rise-fg-4 hover:text-rise-fg transition-colors">
                 <X size={20} />
               </button>
             </div>
 
-            <h2 className="text-[#eee] text-[18px] font-semibold mb-4">{detalhe.titulo}</h2>
+            <h2 className="text-rise-fg text-[18px] font-semibold mb-4">{detalhe.titulo}</h2>
 
             {detalhe.descricao && (
-              <p className="text-[#bdbdbd] text-[14px] leading-relaxed mb-5 bg-[#0f0f0f] rounded-xl p-4">
+              <p className="text-rise-fg-2 text-[14px] leading-relaxed mb-5 bg-rise-surface rounded-xl p-4">
                 {detalhe.descricao}
               </p>
             )}
@@ -390,8 +390,8 @@ export default function Tickets() {
                 { label: "Responsável", value: detalhe.responsavel?.nome ?? "—",              color: "#eee" },
                 { label: "Aberto em",   value: fmtData(detalhe.criado_em),                   color: "#bdbdbd" },
               ].map((row) => (
-                <div key={row.label} className="bg-[#0f0f0f] rounded-xl p-3">
-                  <p className="text-[#555] text-[11px] mb-1">{row.label}</p>
+                <div key={row.label} className="bg-rise-surface rounded-xl p-3">
+                  <p className="text-rise-fg-4 text-[11px] mb-1">{row.label}</p>
                   <p className="font-semibold" style={{ color: row.color }}>{row.value}</p>
                 </div>
               ))}
@@ -406,10 +406,10 @@ export default function Tickets() {
                   <div key={s} className="flex items-center gap-1">
                     <div className={`w-2 h-2 rounded-full ${done ? "" : "opacity-30"}`}
                       style={{ backgroundColor: STATUS_CONFIG[s].color }} />
-                    <span className={`text-[10px] whitespace-nowrap ${done ? "text-[#bdbdbd]" : "text-[#444]"}`}>
+                    <span className={`text-[10px] whitespace-nowrap ${done ? "text-rise-fg-2" : "text-rise-fg-4"}`}>
                       {STATUS_CONFIG[s].label}
                     </span>
-                    {i < STATUS_FLOW.length - 1 && <ChevronRight size={10} className="text-[#333]" />}
+                    {i < STATUS_FLOW.length - 1 && <ChevronRight size={10} className="text-rise-fg-4" />}
                   </div>
                 );
               })}

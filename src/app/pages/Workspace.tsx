@@ -45,18 +45,18 @@ export default function Workspace() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] p-8 flex items-center justify-center">
-        <p className="text-[#bdbdbd] text-[16px]">Carregando...</p>
+      <div className="min-h-screen bg-rise-bg p-8 flex items-center justify-center">
+        <p className="text-rise-fg-2 text-[16px]">Carregando...</p>
       </div>
     );
   }
 
   if (!departamento) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] p-8 flex items-center justify-center">
+      <div className="min-h-screen bg-rise-bg p-8 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle size={48} className="text-[#ec5d5e] mx-auto mb-4" />
-          <p className="text-[#bdbdbd] text-[18px]">Departamento não encontrado</p>
+          <p className="text-rise-fg-2 text-[18px]">Departamento não encontrado</p>
         </div>
       </div>
     );
@@ -71,7 +71,7 @@ export default function Workspace() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] p-8">
+    <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -92,10 +92,10 @@ export default function Workspace() {
                 {departamento.nome[0]}
               </div>
               <div>
-                <h1 className="font-['Inter:Bold',sans-serif] text-[#eee] text-[32px] mb-1">
+                <h1 className="font-['Inter:Bold',sans-serif] text-rise-fg text-[32px] mb-1">
                   Workspace {departamento.nome}
                 </h1>
-                <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[16px]">
+                <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[16px]">
                   Gerencie formulários, documentos, automações e objetivos
                 </p>
               </div>
@@ -130,17 +130,17 @@ export default function Workspace() {
 
         {/* Informações do Usuário Logado */}
         {usuario && (
-          <div className="mb-6 bg-[#0f0f0f] border border-[#333] rounded-lg p-4 flex items-center gap-4">
+          <div className="mb-6 bg-rise-surface border border-rise-line rounded-lg p-4 flex items-center gap-4">
             <img
               src={usuario.avatar}
               alt={usuario.nome}
-              className="w-12 h-12 rounded-full bg-[#1a1a1a]"
+              className="w-12 h-12 rounded-full bg-rise-raised"
             />
             <div className="flex-1">
-              <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[15px]">
+              <p className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[15px]">
                 {usuario.nome}
               </p>
-              <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[13px]">
+              <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[13px]">
                 {usuario.cargo} • {usuario.email}
               </p>
             </div>
@@ -162,7 +162,7 @@ export default function Workspace() {
         )}
 
         {/* Tabs Navigation */}
-        <div className="mb-8 border-b border-[#333]">
+        <div className="mb-8 border-b border-rise-line">
           <div className="flex gap-6">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -174,7 +174,7 @@ export default function Workspace() {
                   className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-all ${
                     isActive
                       ? "border-[#14E9BC] text-[#14E9BC]"
-                      : "border-transparent text-[#bdbdbd] hover:text-[#eee]"
+                      : "border-transparent text-rise-fg-2 hover:text-rise-fg"
                   }`}
                 >
                   <Icon size={18} />

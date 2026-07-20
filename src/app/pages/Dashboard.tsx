@@ -38,14 +38,14 @@ export default function Dashboard() {
   const recentTasks = tarefas.filter((t) => t.status === "em-andamento").slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] px-4 py-6 sm:px-6 sm:py-8 lg:p-8">
+    <div className="min-h-screen bg-rise-bg px-4 py-6 sm:px-6 sm:py-8 lg:p-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="font-['Inter:Bold',sans-serif] font-bold text-[#eee] text-[24px] sm:text-[32px] mb-1 sm:mb-2">
+          <h1 className="font-['Inter:Bold',sans-serif] font-bold text-rise-fg text-[24px] sm:text-[32px] mb-1 sm:mb-2">
             Dashboard
           </h1>
-          <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] sm:text-[16px]">
+          <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] sm:text-[16px]">
             Visão geral do sistema administrativo Rise
           </p>
         </div>
@@ -83,17 +83,17 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Link
             to="/tarefas"
-            className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6 hover:border-[#555] transition-all"
+            className="bg-rise-surface border border-rise-line rounded-lg p-6 hover:border-rise-fg-4 transition-all"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-[#28d939]/20 rounded-lg flex items-center justify-center">
                 <TrendingUp size={24} className="text-[#28d939]" />
               </div>
               <div>
-                <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+                <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                   Tarefas Ativas
                 </p>
-                <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px]">
+                <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[24px]">
                   {loading ? "—" : tarefas.filter((t) => t.status !== "concluido").length}
                 </p>
               </div>
@@ -102,17 +102,17 @@ export default function Dashboard() {
 
           <Link
             to="/tarefas"
-            className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6 hover:border-[#555] transition-all"
+            className="bg-rise-surface border border-rise-line rounded-lg p-6 hover:border-rise-fg-4 transition-all"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-[#14E9BC]/20 rounded-lg flex items-center justify-center">
                 <CheckCircle size={24} className="text-[#14E9BC]" />
               </div>
               <div>
-                <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+                <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                   Concluídas
                 </p>
-                <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px]">
+                <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[24px]">
                   {loading ? "—" : concluidas}
                 </p>
               </div>
@@ -121,17 +121,17 @@ export default function Dashboard() {
 
           <Link
             to="/departamentos"
-            className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6 hover:border-[#555] transition-all"
+            className="bg-rise-surface border border-rise-line rounded-lg p-6 hover:border-rise-fg-4 transition-all"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-[#6B8AFF]/20 rounded-lg flex items-center justify-center">
                 <Building2 size={24} className="text-[#6B8AFF]" />
               </div>
               <div>
-                <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[14px]">
+                <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[14px]">
                   Departamentos
                 </p>
-                <p className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px]">
+                <p className="font-['Inter:Bold',sans-serif] text-rise-fg text-[24px]">
                   {loading ? "—" : departamentos.length}
                 </p>
               </div>
@@ -141,8 +141,8 @@ export default function Dashboard() {
 
         {/* Distribuição por Status */}
         {!loading && total > 0 && (
-          <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6 mb-8">
-            <h2 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[18px] mb-4">
+          <div className="bg-rise-surface border border-rise-line rounded-lg p-6 mb-8">
+            <h2 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[18px] mb-4">
               Distribuição por Status
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -157,21 +157,21 @@ export default function Dashboard() {
                   : tarefas.filter((t) => t.status === status).length;
                 const pct = total > 0 ? Math.round((count / total) * 100) : 0;
                 return (
-                  <div key={status} className="bg-[#1a1a1a] rounded-lg p-4">
+                  <div key={status} className="bg-rise-raised rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Icon size={16} style={{ color }} />
-                      <span className="text-[#bdbdbd] text-[13px] font-['Inter:Medium',sans-serif]">
+                      <span className="text-rise-fg-2 text-[13px] font-['Inter:Medium',sans-serif]">
                         {label}
                       </span>
                     </div>
-                    <p className="text-[#eee] text-[24px] font-['Inter:Bold',sans-serif]">{count}</p>
-                    <div className="mt-2 w-full bg-[#333] rounded-full h-1.5">
+                    <p className="text-rise-fg text-[24px] font-['Inter:Bold',sans-serif]">{count}</p>
+                    <div className="mt-2 w-full bg-rise-line rounded-full h-1.5">
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{ width: `${pct}%`, backgroundColor: color }}
                       />
                     </div>
-                    <p className="text-[#555] text-[11px] mt-1 font-['Inter:Regular',sans-serif]">
+                    <p className="text-rise-fg-4 text-[11px] mt-1 font-['Inter:Regular',sans-serif]">
                       {pct}% do total
                     </p>
                   </div>
@@ -186,7 +186,7 @@ export default function Dashboard() {
           {/* Tarefas em andamento */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[20px]">
+              <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-rise-fg text-[20px]">
                 Tarefas em Andamento
               </h2>
               <Link to="/tarefas" className="font-['Inter:Medium',sans-serif] text-[#14E9BC] text-[14px] hover:underline">
@@ -194,8 +194,8 @@ export default function Dashboard() {
               </Link>
             </div>
             {loading ? (
-              <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-8 text-center">
-                <p className="text-[#555] text-[14px]">Carregando...</p>
+              <div className="bg-rise-surface border border-rise-line rounded-lg p-8 text-center">
+                <p className="text-rise-fg-4 text-[14px]">Carregando...</p>
               </div>
             ) : recentTasks.length > 0 ? (
               <div className="space-y-3">
@@ -217,8 +217,8 @@ export default function Dashboard() {
                 })}
               </div>
             ) : (
-              <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-8 text-center">
-                <p className="text-[#555] text-[14px] font-['Inter:Regular',sans-serif]">
+              <div className="bg-rise-surface border border-rise-line rounded-lg p-8 text-center">
+                <p className="text-rise-fg-4 text-[14px] font-['Inter:Regular',sans-serif]">
                   Nenhuma tarefa em andamento
                 </p>
               </div>
@@ -228,7 +228,7 @@ export default function Dashboard() {
           {/* Links rápidos / Conteúdos */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[20px]">
+              <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-rise-fg text-[20px]">
                 Conteúdos em Destaque
               </h2>
             </div>
@@ -242,7 +242,7 @@ export default function Dashboard() {
                 <Link
                   key={label}
                   to={to}
-                  className="bg-[#0f0f0f] border border-[#333] rounded-lg p-4 hover:border-[#555] transition-all group"
+                  className="bg-rise-surface border border-rise-line rounded-lg p-4 hover:border-rise-fg-4 transition-all group"
                 >
                   <div
                     className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
@@ -250,10 +250,10 @@ export default function Dashboard() {
                   >
                     <Icon size={20} style={{ color }} />
                   </div>
-                  <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px] group-hover:text-[#14E9BC] transition-colors">
+                  <p className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[14px] group-hover:text-[#14E9BC] transition-colors">
                     {label}
                   </p>
-                  <p className="text-[#555] text-[12px] font-['Inter:Regular',sans-serif] mt-1">
+                  <p className="text-rise-fg-4 text-[12px] font-['Inter:Regular',sans-serif] mt-1">
                     {desc}
                   </p>
                 </Link>
@@ -265,16 +265,16 @@ export default function Dashboard() {
               href="https://rise-finance-2.gitbook.io/rise-l-internal/93hIPck7wPVGbXmFrkis"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 flex items-center gap-3 bg-[#0f0f0f] border border-[#333] rounded-lg p-4 hover:border-[#14E9BC] transition-all group"
+              className="mt-3 flex items-center gap-3 bg-rise-surface border border-rise-line rounded-lg p-4 hover:border-[#14E9BC] transition-all group"
             >
               <div className="w-10 h-10 rounded-lg bg-[#14E9BC]/10 flex items-center justify-center text-[20px]">
                 📋
               </div>
               <div>
-                <p className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px] group-hover:text-[#14E9BC] transition-colors">
+                <p className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[14px] group-hover:text-[#14E9BC] transition-colors">
                   Governança
                 </p>
-                <p className="text-[#555] text-[12px] font-['Inter:Regular',sans-serif]">
+                <p className="text-rise-fg-4 text-[12px] font-['Inter:Regular',sans-serif]">
                   Documentação interna · GitBook
                 </p>
               </div>

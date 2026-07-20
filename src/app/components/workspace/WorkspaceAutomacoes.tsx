@@ -46,10 +46,10 @@ export function WorkspaceAutomacoes({ departamento, temPermissao }: WorkspaceAut
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-['Inter:Bold',sans-serif] text-[#eee] text-[24px] mb-2">
+          <h2 className="font-['Inter:Bold',sans-serif] text-rise-fg text-[24px] mb-2">
             Automações
           </h2>
-          <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[15px]">
+          <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[15px]">
             Configure triggers e ações automáticas baseadas em eventos
           </p>
         </div>
@@ -66,7 +66,7 @@ export function WorkspaceAutomacoes({ departamento, temPermissao }: WorkspaceAut
         {automacoes.map((auto) => (
           <div
             key={auto.id}
-            className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6 hover:border-[#555] transition-all"
+            className="bg-rise-surface border border-rise-line rounded-lg p-6 hover:border-rise-fg-4 transition-all"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-start gap-4 flex-1">
@@ -75,11 +75,11 @@ export function WorkspaceAutomacoes({ departamento, temPermissao }: WorkspaceAut
                     auto.status === "ativa" ? "bg-[#28d939]/20" : "bg-[#666]/20"
                   }`}
                 >
-                  <Zap size={24} className={auto.status === "ativa" ? "text-[#28d939]" : "text-[#666]"} />
+                  <Zap size={24} className={auto.status === "ativa" ? "text-[#28d939]" : "text-rise-fg-3"} />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[18px]">
+                    <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[18px]">
                       {auto.nome}
                     </h3>
                     <span
@@ -94,23 +94,23 @@ export function WorkspaceAutomacoes({ departamento, temPermissao }: WorkspaceAut
                   </div>
                   <div className="grid grid-cols-2 gap-4 mb-3">
                     <div>
-                      <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[12px] mb-1">
+                      <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[12px] mb-1">
                         TRIGGER
                       </p>
-                      <p className="font-['Inter:Regular',sans-serif] text-[#eee] text-[14px]">
+                      <p className="font-['Inter:Regular',sans-serif] text-rise-fg text-[14px]">
                         {auto.trigger}
                       </p>
                     </div>
                     <div>
-                      <p className="font-['Inter:Medium',sans-serif] text-[#bdbdbd] text-[12px] mb-1">
+                      <p className="font-['Inter:Medium',sans-serif] text-rise-fg-2 text-[12px] mb-1">
                         AÇÃO
                       </p>
-                      <p className="font-['Inter:Regular',sans-serif] text-[#eee] text-[14px]">
+                      <p className="font-['Inter:Regular',sans-serif] text-rise-fg text-[14px]">
                         {auto.acao}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 text-[#666] text-[13px]">
+                  <div className="flex items-center gap-4 text-rise-fg-3 text-[13px]">
                     <div className="flex items-center gap-2">
                       <Play size={14} />
                       <span>{auto.execucoes} execuções</span>
@@ -132,7 +132,7 @@ export function WorkspaceAutomacoes({ departamento, temPermissao }: WorkspaceAut
               {temPermissao && (
                 <div className="flex items-center gap-2">
                   <button
-                    className="p-2 rounded-lg bg-[#1a1a1a] hover:bg-[#252525] transition-colors"
+                    className="p-2 rounded-lg bg-rise-raised hover:bg-rise-raised transition-colors"
                     title={auto.status === "ativa" ? "Pausar" : "Ativar"}
                   >
                     {auto.status === "ativa" ? (
@@ -142,13 +142,13 @@ export function WorkspaceAutomacoes({ departamento, temPermissao }: WorkspaceAut
                     )}
                   </button>
                   <button
-                    className="p-2 rounded-lg bg-[#1a1a1a] hover:bg-[#252525] transition-colors"
+                    className="p-2 rounded-lg bg-rise-raised hover:bg-rise-raised transition-colors"
                     title="Editar"
                   >
-                    <Edit2 size={18} className="text-[#bdbdbd]" />
+                    <Edit2 size={18} className="text-rise-fg-2" />
                   </button>
                   <button
-                    className="p-2 rounded-lg bg-[#1a1a1a] hover:bg-[#252525] transition-colors"
+                    className="p-2 rounded-lg bg-rise-raised hover:bg-rise-raised transition-colors"
                     title="Excluir"
                   >
                     <Trash2 size={18} className="text-[#ec5d5e]" />
@@ -161,8 +161,8 @@ export function WorkspaceAutomacoes({ departamento, temPermissao }: WorkspaceAut
       </div>
 
       {/* Triggers Disponíveis */}
-      <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-6">
-        <h3 className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[18px] mb-4">
+      <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
+        <h3 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[18px] mb-4">
           Triggers Disponíveis
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -176,7 +176,7 @@ export function WorkspaceAutomacoes({ departamento, temPermissao }: WorkspaceAut
           ].map((trigger) => (
             <div
               key={trigger}
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2 font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[13px]"
+              className="bg-rise-raised border border-rise-line rounded-lg px-4 py-2 font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[13px]"
             >
               {trigger}
             </div>

@@ -8,9 +8,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles = {
   primary: "bg-[#14E9BC] text-[#000] hover:bg-[#12d4a8]",
-  secondary: "bg-[#292929] text-[#eee] hover:bg-[#333] border border-[#595959]",
-  outline: "bg-transparent text-[#eee] border border-[#333] hover:bg-[#1a1a1a]",
-  ghost: "bg-transparent text-[#bdbdbd] hover:bg-[#1a1a1a] hover:text-[#eee]",
+  secondary: "bg-rise-raised text-rise-fg hover:bg-rise-line border border-rise-line-3",
+  outline: "bg-transparent text-rise-fg border border-rise-line hover:bg-rise-raised",
+  ghost: "bg-transparent text-rise-fg-2 hover:bg-rise-raised hover:text-rise-fg",
 };
 
 const sizeStyles = {

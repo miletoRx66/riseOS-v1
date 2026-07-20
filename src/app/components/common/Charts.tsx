@@ -14,14 +14,14 @@ export function SimpleBarChart({ data, height = 200 }: SimpleChartProps) {
         return (
           <div key={index}>
             <div className="flex items-center justify-between mb-2">
-              <span className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px]">
+              <span className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px]">
                 {item.label}
               </span>
-              <span className="font-['Inter:Semi_Bold',sans-serif] text-[#eee] text-[14px]">
+              <span className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[14px]">
                 {item.value}
               </span>
             </div>
-            <div className="w-full bg-[#1a1a1a] rounded-full h-2">
+            <div className="w-full bg-rise-raised rounded-full h-2">
               <div
                 className="h-2 rounded-full transition-all duration-500"
                 style={{
@@ -103,7 +103,7 @@ export function SimpleLineChart({ data, color = "#14E9BC", height = 200 }: Simpl
       </svg>
 
       {/* Labels */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-between px-2 text-[10px] text-[#bdbdbd] font-['Inter:Regular',sans-serif]">
+      <div className="absolute bottom-0 left-0 right-0 flex justify-between px-2 text-[10px] text-rise-fg-2 font-['Inter:Regular',sans-serif]">
         {data.map((item, index) => (
           <span key={index}>{item.label}</span>
         ))}

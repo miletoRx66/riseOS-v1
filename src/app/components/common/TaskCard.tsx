@@ -45,10 +45,10 @@ export function TaskCard({ id, titulo, departamento, status, prioridade, respons
 
   return (
     <Link to={`/tarefas/${id}`}>
-      <div className="bg-[#0f0f0f] border border-[#333] rounded-lg p-4 hover:border-[#14E9BC] transition-all cursor-pointer">
+      <div className="bg-rise-surface border border-rise-line rounded-lg p-4 hover:border-[#14E9BC] transition-all cursor-pointer">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h4 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#eee] text-[16px] mb-2">
+            <h4 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-rise-fg text-[16px] mb-2">
               {titulo}
             </h4>
             <div className="flex items-center gap-2">
@@ -58,7 +58,7 @@ export function TaskCard({ id, titulo, departamento, status, prioridade, respons
               >
                 {statusLabel}
               </span>
-              <span className="px-2 py-1 rounded bg-[#1a1a1a] text-[#bdbdbd] text-[12px] font-['Inter:Regular',sans-serif]">
+              <span className="px-2 py-1 rounded bg-rise-raised text-rise-fg-2 text-[12px] font-['Inter:Regular',sans-serif]">
                 {departamentoLabel}
               </span>
             </div>
@@ -69,12 +69,12 @@ export function TaskCard({ id, titulo, departamento, status, prioridade, respons
         </div>
 
         {descricao && (
-          <p className="font-['Inter:Regular',sans-serif] text-[#bdbdbd] text-[14px] mb-3 line-clamp-2">
+          <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] mb-3 line-clamp-2">
             {descricao}
           </p>
         )}
 
-        <div className="flex items-center justify-between text-[#bdbdbd] text-[13px]">
+        <div className="flex items-center justify-between text-rise-fg-2 text-[13px]">
           <div className="flex items-center gap-2">
             <User size={14} />
             <span className="font-['Inter:Regular',sans-serif]">{responsavel}</span>
