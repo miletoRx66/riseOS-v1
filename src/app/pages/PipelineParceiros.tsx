@@ -653,8 +653,9 @@ export default function PipelineParceiros() {
   const totalParceiros   = parceiros.length;
   const aumPotencialTotal = parceiros.reduce((s, p) => s + (p.aum || 0), 0);
 
-  const dealsLancados    = parceiros.filter((p) => p.status === "lancado" || p.status === "distribuicao_consolidada");
-  const aumEfetLancado   = dealsLancados.reduce((s, p) => s + (p.aum || 0), 0);
+  const aumEfetLancado =
+    parceiros.filter((p) => p.status === "lancado").reduce((s, p) => s + (p.aum || 0), 0) +
+    parceiros.filter((p) => p.status === "distribuicao_consolidada").reduce((s, p) => s + (p.valor_distribuido || 0), 0);
 
   const dealsDist        = parceiros.filter((p) => p.status === "distribuicao_consolidada");
   const aumDistribuido   = dealsDist.reduce((s, p) => s + (p.valor_distribuido || 0), 0);
