@@ -14,12 +14,14 @@ export function MetricCard({ title, value, variation, isPositive = true, gradien
     : "bg-rise-surface h-[125px] relative rounded-[8px] shrink-0";
 
   const gradientStyle = gradient
-    ? { backgroundImage: "linear-gradient(133.683deg, rgb(9, 44, 43) 0%, rgb(15, 27, 27) 60%, rgb(14, 21, 21) 100%)" }
+    ? { backgroundImage: "var(--rise-gradient-card)" }
     : {};
 
   const borderClass = gradient
-    ? "absolute border-[#1e685f] border-[1.5px] border-solid inset-0 pointer-events-none rounded-[8px]"
+    ? "absolute border-[1.5px] border-solid inset-0 pointer-events-none rounded-[8px]"
     : "absolute border-rise-line border-[1.5px] border-solid inset-0 pointer-events-none rounded-[8px]";
+
+  const borderStyle = gradient ? { borderColor: "var(--rise-gradient-card-border)" } : {};
 
   return (
     <div className={bgClass} style={gradientStyle}>
@@ -51,7 +53,7 @@ export function MetricCard({ title, value, variation, isPositive = true, gradien
           </div>
         </div>
       </div>
-      <div aria-hidden="true" className={borderClass} />
+      <div aria-hidden="true" className={borderClass} style={borderStyle} />
     </div>
   );
 }

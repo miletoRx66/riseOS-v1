@@ -13,6 +13,8 @@
   --rise-line:     #e5e7eb;
   --rise-line-2:   #f3f4f6;
   --rise-line-3:   #d1d5db;
+  --rise-gradient-card: linear-gradient(133.683deg, #d1faf4 0%, #e6faf5 60%, #f0fdf9 100%);
+  --rise-gradient-card-border: #14E9BC60;
 }
 
 /* ── Rise OS brand tokens (dark) ──────────────────────── */
@@ -28,6 +30,8 @@
   --rise-line:     #333333;
   --rise-line-2:   #222222;
   --rise-line-3:   #444444;
+  --rise-gradient-card: linear-gradient(133.683deg, rgb(9, 44, 43) 0%, rgb(15, 27, 27) 60%, rgb(14, 21, 21) 100%);
+  --rise-gradient-card-border: #1e685f;
 }
 
 :root {
