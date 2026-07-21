@@ -7,6 +7,7 @@ import {
 } from "../../lib/services/pipeline";
 import { formatBRLCompact } from "../../lib/format";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import {
   Plus, X, Filter, Loader2, Send, ChevronRight, Edit2, Trash2,
   TrendingUp, DollarSign, Target, Users, Calendar, CheckCircle,
@@ -620,6 +621,7 @@ function Row({ label, value, valueColor }: { label: string; value: string | null
 
 export default function PipelineParceiros() {
   const { usuario } = useAuth();
+  const { toast } = useToast();
   const [parceiros, setParceiros] = useState<PipelineParceiro[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -736,6 +738,7 @@ export default function PipelineParceiros() {
     } catch (err) {
       console.error("Erro ao mover parceiro:", err);
       setParceiros((prev) => prev.map((x) => x.id === id ? { ...x, status: p.status } : x));
+      toast("Não foi possível mover o parceiro. Verifique as permissões ou contate o suporte.", "error");
     }
   }
 
