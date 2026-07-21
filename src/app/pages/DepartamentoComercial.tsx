@@ -94,7 +94,7 @@ function DistributionProgress({
 
 export default function DepartamentoComercial() {
   const { usuario } = useAuth();
-  const [tab, setTab] = useState<"clientes" | "operacoes" | "pipeline">("clientes");
+  const [tab, setTab] = useState<"clientes" | "pipeline">("clientes");
 
   const [clientes, setClientes]     = useState<CRMCliente[]>([]);
   const [operacoes, setOperacoes]   = useState<CRMOperacao[]>([]);
@@ -114,6 +114,11 @@ export default function DepartamentoComercial() {
   const draggingOpRef                   = useRef<string | null>(null);
   const [draggingOpId, setDraggingOpId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
+
+  // drag-and-drop clientes (kanban)
+  const draggingClienteRef                         = useRef<string | null>(null);
+  const [draggingClienteId, setDraggingClienteId] = useState<string | null>(null);
+  const [dragOverClienteStatus, setDragOverClienteStatus] = useState<string | null>(null);
 
   // comentários
   const [comentarios, setComentarios]           = useState<CRMComentario[]>([]);
@@ -326,6 +331,43 @@ export default function DepartamentoComercial() {
     if (detalheCliente?.id === cliente.id) setDetalheCliente((d) => d ? { ...d, status: flow[idx + 1] } : d);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handleClienteDragStart(e: any, id: string) {
+    draggingClienteRef.current = id;
+    setDraggingClienteId(id);
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+  }
+
+  function handleClienteDragEnd() {
+    setDraggingClienteId(null);
+    setDragOverClienteStatus(null);
+    draggingClienteRef.current = null;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handleClienteDragOver(e: any, status: string) {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    setDragOverClienteStatus(status);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function handleClienteDrop(e: any, novoStatus: CRMCliente["status"]) {
+    e.preventDefault();
+    const id = draggingClienteRef.current;
+    if (!id) return;
+    const cliente = clientes.find((c) => c.id === id);
+    if (!cliente || cliente.status === novoStatus) { handleClienteDragEnd(); return; }
+    setClientes((prev) => prev.map((c) => c.id === id ? { ...c, status: novoStatus } : c));
+    handleClienteDragEnd();
+    try {
+      await atualizarCliente(id, { status: novoStatus });
+      if (detalheCliente?.id === id) setDetalheCliente((d) => d ? { ...d, status: novoStatus } : d);
+    } catch {
+      setClientes((prev) => prev.map((c) => c.id === id ? { ...c, status: cliente.status } : c));
+    }
+  }
+
   // ── Render ───────────────────────────────────────────────────────
 
   const formOpInvalid = !formOp.titulo.trim() || !formOp.data_inicio || !formOp.proximo_followup;
@@ -347,38 +389,22 @@ export default function DepartamentoComercial() {
               </div>
             </div>
           </div>
-          {tab !== "pipeline" && (
+          {tab === "clientes" && (
             <button
-              onClick={() => tab === "clientes" ? setModalCliente(true) : setModalOp(true)}
+              onClick={() => setModalCliente(true)}
               className="bg-[#14E9BC] text-[#000] px-5 py-2.5 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:bg-[#12d4a8] transition-colors mt-1"
             >
               <Plus size={18} />
-              {tab === "clientes" ? "Novo Investidor" : "Nova Operação"}
+              Novo Investidor
             </button>
           )}
-        </div>
-
-        {/* KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {[
-            { label: "Investidores",    value: clientes.length,    color: "#6B8AFF",  suffix: "" },
-            { label: "Pipeline",        value: fmtValor(pipeline), color: "#f59e0b",  suffix: "" },
-            { label: "Meta Atingida",   value: fmtValor(receita),  color: "#28d939",  suffix: "" },
-            { label: "Taxa Conversão",  value: `${taxaConversao}%`, color: "#14E9BC", suffix: "" },
-          ].map((k) => (
-            <div key={k.label} className="bg-rise-surface border border-rise-line-2 rounded-xl p-5">
-              <p className="text-rise-fg-4 text-[12px] mb-1">{k.label}</p>
-              <p className="text-[22px] font-bold" style={{ color: k.color }}>{k.value}</p>
-            </div>
-          ))}
         </div>
 
         {/* Tabs principais */}
         <div className="flex gap-0 mb-5 border-b border-rise-line-2">
           {([
-            ["clientes",  "Investidores",      <Users size={14} />,      clientes.length],
-            ["operacoes", "Operações",          <TrendingUp size={14} />, operacoes.length],
-            ["pipeline",  "Pipeline Parceiros", <Network size={14} />,    null],
+            ["clientes",  "Investidores",      <Users size={14} />,   clientes.length],
+            ["pipeline",  "Pipeline Parceiros", <Network size={14} />, null],
           ] as const).map(([t, label, icon, count]) => (
             <button key={t} onClick={() => { setTab(t as typeof tab); setFiltroStatus("todos"); setSegmentoAtivo("todos"); }}
               className={`flex items-center gap-1.5 px-5 py-2.5 text-[13px] font-semibold transition-all border-b-2 -mb-px ${
@@ -431,24 +457,6 @@ export default function DepartamentoComercial() {
           </div>
         )}
 
-        {/* Filtro inline */}
-        {tab !== "pipeline" && (
-          <div className="flex items-center gap-1.5 mb-5 flex-wrap">
-            <Filter size={12} className="text-rise-fg-4 mr-1" />
-            {(tab === "clientes"
-              ? [{ v: "todos", l: "Todos" }, ...Object.entries(CLIENTE_STATUS).map(([v, c]) => ({ v, l: c.label }))]
-              : [{ v: "todos", l: "Todos" }, ...Object.entries(OP_STATUS_CONFIG).map(([v, c]) => ({ v, l: c.label }))]
-            ).map(({ v, l }) => (
-              <button key={v} onClick={() => setFiltroStatus(v)}
-                className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors ${
-                  filtroStatus === v ? "bg-[#14E9BC]/15 text-[#14E9BC]" : "text-rise-fg-4 hover:text-rise-fg-2"
-                }`}>
-                {l}
-              </button>
-            ))}
-          </div>
-        )}
-
         {/* Content */}
         {tab === "pipeline" ? (
           <PipelineParceiros />
@@ -458,76 +466,112 @@ export default function DepartamentoComercial() {
           </div>
         ) : tab === "clientes" ? (
 
-          /* ── Investidores ── */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {clientesVisiveis.length === 0 ? (
-              <div className="col-span-3 text-center py-16 text-rise-fg-4">Nenhum investidor encontrado</div>
-            ) : clientesVisiveis.map((cliente: CRMCliente) => {
-              const st = CLIENTE_STATUS[cliente.status];
-              const pr = PRIORIDADE_COLOR[cliente.prioridade as keyof typeof PRIORIDADE_COLOR] ?? "#555";
-              const seg = cliente.segmento ?? "b2b_ofertas";
-              const segCfg = SEGMENTO_CONFIG[seg];
+          /* ── Investidores Kanban ── */
+          <div className="flex gap-4 overflow-x-auto pb-4 select-none">
+            {Object.entries(CLIENTE_STATUS).map(([statusKey, stCfg]) => {
+              const colClientes = clientesVisiveis.filter((c) => c.status === statusKey);
+              const isOver = dragOverClienteStatus === statusKey;
               return (
-                <div key={cliente.id} onClick={() => setDetalheCliente(cliente)}
-                  className="bg-rise-surface border border-rise-line-2 rounded-xl p-5 hover:border-rise-line-3 transition-all cursor-pointer">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0 pr-2">
-                      <h3 className="text-rise-fg font-semibold text-[15px] truncate">{cliente.nome}</h3>
-                      {cliente.empresa && <p className="text-rise-fg-4 text-[12px] mt-0.5 truncate">{cliente.empresa}</p>}
-                    </div>
-                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                <div
+                  key={statusKey}
+                  className="flex-shrink-0 transition-all"
+                  style={{ width: "260px" }}
+                  onDragOver={(e) => handleClienteDragOver(e, statusKey)}
+                  onDragLeave={() => setDragOverClienteStatus(null)}
+                  onDrop={(e) => handleClienteDrop(e, statusKey as CRMCliente["status"])}
+                >
+                  {/* Column header */}
+                  <div
+                    className="rounded-xl p-3 mb-3 border transition-all"
+                    style={{
+                      borderColor: isOver ? stCfg.color : `${stCfg.color}30`,
+                      backgroundColor: isOver ? `${stCfg.color}18` : `${stCfg.color}08`,
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-[13px]" style={{ color: stCfg.color }}>{stCfg.label}</span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: `${st.color}18`, color: st.color }}>
-                        {st.label}
-                      </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
-                        style={{ backgroundColor: `${segCfg.color}18`, color: segCfg.color }}>
-                        {segCfg.label}
+                        style={{ backgroundColor: `${stCfg.color}20`, color: stCfg.color }}>
+                        {colClientes.length}
                       </span>
                     </div>
                   </div>
 
-                  <div className="space-y-1.5 mb-3">
-                    {cliente.email && (
-                      <div className="flex items-center gap-2 text-rise-fg-3 text-[12px]">
-                        <Mail size={12} />{cliente.email}
+                  {/* Cards */}
+                  <div className="space-y-2.5 min-h-[60px]">
+                    {colClientes.length === 0 ? (
+                      <div
+                        className="border border-dashed rounded-xl p-5 text-center transition-all"
+                        style={{ borderColor: isOver ? stCfg.color : "var(--rise-line-2)", backgroundColor: isOver ? `${stCfg.color}08` : "transparent" }}
+                      >
+                        <p className="text-rise-fg-4 text-[12px]">{isOver ? "Soltar aqui" : "Sem investidores"}</p>
                       </div>
-                    )}
-                    {cliente.telefone && (
-                      <div className="flex items-center gap-2 text-rise-fg-3 text-[12px]">
-                        <Phone size={12} />{cliente.telefone}
-                      </div>
-                    )}
-                  </div>
+                    ) : colClientes.map((cliente: CRMCliente) => {
+                      const isDragging = draggingClienteId === cliente.id;
+                      const pr = PRIORIDADE_COLOR[cliente.prioridade as keyof typeof PRIORIDADE_COLOR] ?? "#555";
+                      const seg = cliente.segmento ?? "b2b_ofertas";
+                      const segCfg = SEGMENTO_CONFIG[seg];
+                      return (
+                        <div
+                          key={cliente.id}
+                          draggable
+                          onDragStart={(e) => handleClienteDragStart(e, cliente.id)}
+                          onDragEnd={handleClienteDragEnd}
+                          onClick={() => setDetalheCliente(cliente)}
+                          className="bg-rise-surface border border-rise-line-2 rounded-xl p-4 cursor-pointer hover:border-rise-line-3 transition-all"
+                          style={{ opacity: isDragging ? 0.4 : 1 }}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1 min-w-0 pr-1.5">
+                              <h4 className="text-rise-fg font-semibold text-[13px] truncate leading-snug">{cliente.nome}</h4>
+                              {cliente.empresa && <p className="text-rise-fg-4 text-[11px] mt-0.5 truncate">{cliente.empresa}</p>}
+                            </div>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                              style={{ backgroundColor: `${segCfg.color}18`, color: segCfg.color }}>
+                              {segCfg.label}
+                            </span>
+                          </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-rise-raised">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: pr }} />
-                      <span className="text-[11px]" style={{ color: pr }}>
-                        {cliente.prioridade.charAt(0).toUpperCase() + cliente.prioridade.slice(1)}
-                      </span>
-                    </div>
-                    {cliente.persona && cliente.persona.length > 0 && (
-                      <div className="flex gap-1 flex-wrap justify-end">
-                        {cliente.persona.map((p) => (
-                          <span key={p} className="text-[10px] px-1.5 py-0.5 rounded bg-[#14E9BC]/10 text-[#14E9BC]">{p}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                          <div className="space-y-1 mb-2.5">
+                            {cliente.email && (
+                              <p className="text-rise-fg-3 text-[11px] flex items-center gap-1.5 truncate">
+                                <Mail size={10} />{cliente.email}
+                              </p>
+                            )}
+                            {cliente.telefone && (
+                              <p className="text-rise-fg-3 text-[11px] flex items-center gap-1.5">
+                                <Phone size={10} />{cliente.telefone}
+                              </p>
+                            )}
+                          </div>
 
-                  <div className="flex items-center gap-3 pt-2.5 text-[11px] text-rise-fg-4">
-                    {cliente.responsavel && (
-                      <span className="flex items-center gap-1">
-                        <span className="w-4 h-4 rounded-full bg-[#14E9BC]/15 flex items-center justify-center text-[#14E9BC] text-[9px] font-bold">
-                          {cliente.responsavel.nome.charAt(0)}
-                        </span>
-                        {cliente.responsavel.nome.split(" ")[0]}
-                      </span>
-                    )}
-                    {cliente.originador && (
-                      <span className="text-rise-fg-4">via {cliente.originador.nome.split(" ")[0]}</span>
-                    )}
+                          <div className="flex items-center justify-between pt-2.5 border-t border-rise-raised">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: pr }} />
+                              <span className="text-[11px]" style={{ color: pr }}>
+                                {cliente.prioridade.charAt(0).toUpperCase() + cliente.prioridade.slice(1)}
+                              </span>
+                            </div>
+                            {cliente.responsavel && (
+                              <span className="flex items-center gap-1 text-[11px] text-rise-fg-4">
+                                <span className="w-4 h-4 rounded-full bg-[#14E9BC]/15 flex items-center justify-center text-[#14E9BC] text-[9px] font-bold">
+                                  {cliente.responsavel.nome.charAt(0)}
+                                </span>
+                                {cliente.responsavel.nome.split(" ")[0]}
+                              </span>
+                            )}
+                          </div>
+
+                          {cliente.persona && cliente.persona.length > 0 && (
+                            <div className="flex gap-1 flex-wrap mt-2">
+                              {cliente.persona.map((p) => (
+                                <span key={p} className="text-[10px] px-1.5 py-0.5 rounded bg-[#14E9BC]/10 text-[#14E9BC]">{p}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
