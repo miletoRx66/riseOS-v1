@@ -58,7 +58,7 @@ function ColumnSummary({
 }) {
   const numDeals    = cards.length;
   const aumTotal    = cards.reduce((s, c) => s + (c.aum || 0), 0);
-  const aumDist     = cards.reduce((s, c) => s + (c.valor_distribuido || 0), 0);
+  const aumDist     = cards.reduce((s, c) => s + (c.aum || 0), 0);
   const forecast    = cards.reduce((s, c) => s + (c.forecast_anual || 0), 0);
   const aumLabel    = isDistribuicao ? "AuM distribuído"  : "AuM potencial";
   const aumValor    = isDistribuicao ? aumDist            : aumTotal;
@@ -660,7 +660,7 @@ export default function PipelineParceiros() {
     parceiros.filter((p) => p.status === "distribuicao_consolidada").reduce((s, p) => s + (p.valor_distribuido || 0), 0);
 
   const dealsDist        = parceiros.filter((p) => p.status === "distribuicao_consolidada");
-  const aumDistribuido   = dealsDist.reduce((s, p) => s + (p.valor_distribuido || 0), 0);
+  const aumDistribuido   = dealsDist.reduce((s, p) => s + (p.aum || 0), 0);
   const forecastDist     = dealsDist.reduce((s, p) => s + (p.forecast_anual || 0), 0);
 
   const pctLancadoVsPot  = aumPotencialTotal > 0
