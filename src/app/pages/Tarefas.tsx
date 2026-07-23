@@ -1,11 +1,17 @@
-import { useState, useEffect, ChangeEvent, DragEvent } from "react";
+import { useState, useEffect, useRef, ChangeEvent, DragEvent } from "react";
 import { Link } from "react-router";
-import { getTarefas, criarTarefa, type TarefaDB } from "../../lib/services/tarefas";
+import { getTarefas, criarTarefa, atualizarTarefa, type TarefaDB } from "../../lib/services/tarefas";
 import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
 import { TaskCard } from "../components/common/TaskCard";
 import { Plus, Filter, LayoutGrid, List, Upload, X, CheckCircle, AlertCircle, FileSpreadsheet, Search, User } from "lucide-react";
 import Papa from "papaparse";
 import { useAuth } from "../context/AuthContext";
+
+const KANBAN_COLUMNS = [
+  { status: "planejamento", label: "Planejamento", color: "#6B8AFF" },
+  { status: "em-andamento", label: "Em Andamento", color: "#28d939" },
+  { status: "concluido",    label: "Concluído",    color: "#bdbdbd" },
+] as const;
 
 interface CSVTarefa {
   titulo: string;
@@ -42,6 +48,10 @@ export default function Tarefas() {
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [importando, setImportando] = useState(false);
   const [importCount, setImportCount] = useState(0);
+
+  const draggingRef = useRef<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -283,6 +293,36 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
     alta: "Alta",
   };
 
+  function handleKanbanDragStart(e: DragEvent<HTMLDivElement>, id: string) {
+    draggingRef.current = id;
+    setDraggingId(id);
+    e.dataTransfer.effectAllowed = "move";
+  }
+  function handleKanbanDragEnd() {
+    setDraggingId(null);
+    setDragOverStatus(null);
+    draggingRef.current = null;
+  }
+  function handleKanbanDragOver(e: DragEvent<HTMLDivElement>, status: string) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverStatus(status);
+  }
+  async function handleKanbanDrop(e: DragEvent<HTMLDivElement>, novoStatus: string) {
+    e.preventDefault();
+    const id = draggingRef.current;
+    if (!id) return;
+    const tarefa = tarefas.find((t) => t.id === id);
+    if (!tarefa || tarefa.status === novoStatus) { handleKanbanDragEnd(); return; }
+    setTarefas((prev) => prev.map((t) => t.id === id ? { ...t, status: novoStatus } : t));
+    handleKanbanDragEnd();
+    try {
+      await atualizarTarefa(id, { status: novoStatus } as Partial<TarefaDB>);
+    } catch {
+      setTarefas((prev) => prev.map((t) => t.id === id ? { ...t, status: tarefa.status } : t));
+    }
+  }
+
   return (
     <div className="min-h-screen bg-rise-bg p-8">
       <div className="max-w-[1400px] mx-auto">
@@ -508,33 +548,91 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
           </div>
         </div>
 
-        {/* Tasks Grid */}
-        {filteredTasks.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredTasks.map((task) => {
-              const dept = departamentos.find((d) => d.id === task.departamento_id);
-              return (
-                <TaskCard
-                  key={task.id}
-                  id={task.id}
-                  titulo={task.titulo}
-                  departamento={dept?.nome ?? task.departamento_id}
-                  status={task.status}
-                  prioridade={task.prioridade}
-                  responsavel={task.responsavel?.nome ?? "—"}
-                  prazo={task.prazo ?? ""}
-                  descricao={task.descricao ?? undefined}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <div className="bg-rise-surface border border-rise-line rounded-lg p-12 text-center">
-            <p className="text-rise-fg-2 font-['Inter:Regular',sans-serif] text-[16px]">
-              Nenhuma tarefa encontrada com os filtros selecionados
-            </p>
-          </div>
-        )}
+        {/* Kanban Board */}
+        <div className="flex gap-4 overflow-x-auto pb-6 select-none">
+          {KANBAN_COLUMNS.map((col) => {
+            const colTasks = filteredTasks.filter((t) => t.status === col.status);
+            const isOver = dragOverStatus === col.status;
+            const isHighlighted = selectedStatus === col.status;
+            return (
+              <div
+                key={col.status}
+                className="flex-shrink-0 flex flex-col"
+                style={{ width: "340px" }}
+                onDragOver={(e) => handleKanbanDragOver(e, col.status)}
+                onDragLeave={() => setDragOverStatus(null)}
+                onDrop={(e) => handleKanbanDrop(e, col.status)}
+              >
+                {/* Column header */}
+                <div
+                  className="rounded-xl p-3.5 mb-3 border transition-colors"
+                  style={{
+                    backgroundColor: `${col.color}08`,
+                    borderColor: isOver || isHighlighted ? col.color : `${col.color}30`,
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: col.color }} />
+                      <span className="font-semibold text-[14px]" style={{ color: col.color }}>
+                        {col.label}
+                      </span>
+                    </div>
+                    <span
+                      className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: `${col.color}20`, color: col.color }}
+                    >
+                      {colTasks.length}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Drop zone */}
+                <div
+                  className={`flex-1 space-y-2.5 min-h-[200px] rounded-xl p-2 transition-colors ${
+                    isOver ? "bg-[#14E9BC]/5 ring-1 ring-[#14E9BC]/25" : ""
+                  }`}
+                >
+                  {colTasks.length > 0 ? (
+                    colTasks.map((task) => {
+                      const dept = departamentos.find((d) => d.id === task.departamento_id);
+                      return (
+                        <div
+                          key={task.id}
+                          draggable
+                          onDragStart={(e) => handleKanbanDragStart(e, task.id)}
+                          onDragEnd={handleKanbanDragEnd}
+                          className={`transition-all ${draggingId === task.id ? "opacity-40 scale-95" : ""}`}
+                        >
+                          <TaskCard
+                            id={task.id}
+                            titulo={task.titulo}
+                            departamento={dept?.nome ?? task.departamento_id}
+                            status={task.status}
+                            prioridade={task.prioridade}
+                            responsavel={task.responsavel?.nome ?? "—"}
+                            prazo={task.prazo ?? ""}
+                            descricao={task.descricao ?? undefined}
+                          />
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div
+                      className={`border border-dashed rounded-xl p-8 text-center transition-colors ${
+                        isOver ? "border-[#14E9BC]/40 bg-[#14E9BC]/5" : "border-rise-line-2"
+                      }`}
+                    >
+                      <p className="text-rise-fg-4 text-[13px]">
+                        {isOver ? "Soltar aqui" : "Nenhuma tarefa"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Modal de Importação */}
