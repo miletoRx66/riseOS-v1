@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { getTarefas, criarTarefa, atualizarTarefa, type TarefaDB } from "../../lib/services/tarefas";
 import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
 import { TaskCard } from "../components/common/TaskCard";
-import { Plus, Filter, LayoutGrid, List, Upload, X, CheckCircle, AlertCircle, FileSpreadsheet, Search, User } from "lucide-react";
+import { Plus, Filter, LayoutGrid, List, Upload, X, CheckCircle, AlertCircle, FileSpreadsheet, Search, User, Repeat } from "lucide-react";
 import Papa from "papaparse";
 import { useAuth } from "../context/AuthContext";
 
@@ -344,6 +344,13 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
               <LayoutGrid size={18} />
               Ver Kanban por Área
             </Link>
+            <Link
+              to="/tarefas/recorrencias"
+              className="bg-rise-raised border border-rise-line text-rise-fg px-4 py-2 rounded-lg font-['Inter:Medium',sans-serif] text-[14px] flex items-center gap-2 hover:bg-rise-subtle hover:border-[#14E9BC] transition-colors"
+            >
+              <Repeat size={18} />
+              Recorrências
+            </Link>
             <button
               onClick={handleOpenImportModal}
               className="bg-rise-raised border border-rise-line text-rise-fg px-5 py-2.5 rounded-lg font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] flex items-center gap-2 hover:bg-rise-subtle hover:border-[#14E9BC] transition-colors"
@@ -613,6 +620,7 @@ Configurar novo servidor,ops,em-andamento,alta,Carlos Lima,2026-02-20,Setup do s
                             responsavel={task.responsavel?.nome ?? "—"}
                             prazo={task.prazo ?? ""}
                             descricao={task.descricao ?? undefined}
+                            recorrente={!!task.recorrencia_id}
                           />
                         </div>
                       );

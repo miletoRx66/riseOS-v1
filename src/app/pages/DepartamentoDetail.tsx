@@ -313,6 +313,7 @@ export default function DepartamentoDetail() {
                     responsavel={task.responsavel?.nome ?? "—"}
                     prazo={task.prazo ?? ""}
                     descricao={task.descricao ?? undefined}
+                    recorrente={!!task.recorrencia_id}
                   />
                 ))}
               </div>

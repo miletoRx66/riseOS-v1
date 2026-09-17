@@ -212,6 +212,7 @@ export default function Dashboard() {
                       responsavel={task.responsavel?.nome ?? "—"}
                       prazo={task.prazo ?? ""}
                       descricao={task.descricao ?? undefined}
+                      recorrente={!!task.recorrencia_id}
                     />
                   );
                 })}

@@ -13,6 +13,7 @@ import TarefasKanban from "./pages/TarefasKanban";
 import TarefaDetail from "./pages/TarefaDetail";
 import NovaTarefa from "./pages/NovaTarefa";
 import EditarTarefa from "./pages/EditarTarefa";
+import TarefasRecorrencias from "./pages/TarefasRecorrencias";
 import OKRs from "./pages/OKRs";
 import OKRDetail from "./pages/OKRDetail";
 import Perfil from "./pages/Perfil";
@@ -37,6 +38,7 @@ import NotFound from "./pages/NotFound";
  * - /tarefas - Gestão de tarefas com filtros (protegido)
  * - /tarefas/kanban - Visualização em quadro Kanban (protegido)
  * - /tarefas/nova - Criar nova tarefa (protegido)
+ * - /tarefas/recorrencias - Gestão de recorrências de tarefas (protegido)
  * - /tarefas/:id - Detalhes de uma tarefa específica (protegido)
  * - /tarefas/:id/editar - Editar tarefa existente (protegido)
  * - /okrs - Gestão e orquestra de OKRs (protegido)
@@ -74,6 +76,7 @@ export const router = createBrowserRouter([
       { path: "tarefas", Component: Tarefas },
       { path: "tarefas/kanban", Component: TarefasKanban },
       { path: "tarefas/nova", Component: NovaTarefa },
+      { path: "tarefas/recorrencias", Component: TarefasRecorrencias },
       { path: "tarefas/:id", Component: TarefaDetail },
       { path: "tarefas/:id/editar", Component: EditarTarefa },
       { path: "okrs", Component: OKRs },

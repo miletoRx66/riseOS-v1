@@ -15,6 +15,7 @@ export interface TarefaDB {
   tipo: string | null;
   visibilidade: string;
   deletado: boolean;
+  recorrencia_id: string | null;
   criado_em: string;
   atualizado_em: string;
   // joins

@@ -1,4 +1,4 @@
-import { Calendar, User, AlertCircle } from "lucide-react";
+import { Calendar, User, AlertCircle, Repeat } from "lucide-react";
 import { Link } from "react-router";
 
 interface TaskCardProps {
@@ -10,6 +10,7 @@ interface TaskCardProps {
   responsavel: string;
   prazo: string;
   descricao?: string;
+  recorrente?: boolean;
 }
 
 const statusColors = {
@@ -32,7 +33,7 @@ const statusLabels = {
   "pausado": "Pausado",
 };
 
-export function TaskCard({ id, titulo, departamento, status, prioridade, responsavel, prazo, descricao }: TaskCardProps) {
+export function TaskCard({ id, titulo, departamento, status, prioridade, responsavel, prazo, descricao, recorrente }: TaskCardProps) {
   const statusColor = statusColors[status as keyof typeof statusColors] || "#6B8AFF";
   const prioridadeColor = prioridadeColors[prioridade as keyof typeof prioridadeColors] || "#6B8AFF";
   const statusLabel = statusLabels[status as keyof typeof statusLabels] || status;
@@ -48,8 +49,9 @@ export function TaskCard({ id, titulo, departamento, status, prioridade, respons
       <div className="bg-rise-surface border border-rise-line rounded-lg p-4 hover:border-[#14E9BC] transition-all cursor-pointer">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h4 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-rise-fg text-[16px] mb-2">
-              {titulo}
+            <h4 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-rise-fg text-[16px] mb-2 flex items-center gap-2">
+              <span>{titulo}</span>
+              {recorrente && <Repeat size={14} className="text-[#14E9BC] shrink-0" />}
             </h4>
             <div className="flex items-center gap-2">
               <span
