@@ -412,6 +412,11 @@ export default function DepartamentoFinanceiro() {
       if (nome.includes("Capex Senior"))                                  return "Capex Sr";
       if (nome.includes("Capex Sub"))                                     return "Capex Sub";
       if (nome.includes("BATS"))                                          return "BATS";
+      if (nome.includes("Rise CP") && nome.includes("Subordinada"))       return "Rise CP Sub";
+      if (nome.includes("Rise CP") && nome.includes("Senior"))            return "Rise CP Sr";
+      if (nome.includes("RFY - 18%"))                                     return "RFY 18%";
+      if (nome.includes("Rise Bitcoin Yield"))                            return "Bitcoin Yield";
+      if (nome.includes("Rise Impacto Social"))                           return "Impacto Social";
       const parts = nome.split(" ");
       return parts.length > 2 ? `${parts[0]} ${parts[parts.length - 1]}` : nome;
     };
