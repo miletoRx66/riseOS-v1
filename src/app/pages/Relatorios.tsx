@@ -31,10 +31,18 @@ export default function Relatorios() {
     getOkrs().then(setOkrs).catch(console.error);
   }, []);
 
+  const quarterAtual = () => {
+    const now = new Date();
+    const q = Math.floor(now.getMonth() / 3) + 1;
+    return `Q${q} ${now.getFullYear()}`;
+  };
+
+  const okrsQuarterAtual = okrs.filter((o) => o.periodo === quarterAtual());
+
   const handleExportar = () => {
     setExportando(true);
     setTimeout(() => {
-      exportarRelatorioGeral(departamentos, tarefas, okrs);
+      exportarRelatorioGeral(departamentos, tarefas, okrsQuarterAtual);
       setExportando(false);
     }, 500);
   };
