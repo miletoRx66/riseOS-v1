@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router";
 import { getTarefaById, type TarefaDB } from "../../lib/services/tarefas";
 import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
 import { criarComentario, type ComentarioDB } from "../../lib/services/comentarios";
-import { toggleSubtarefa, deletarTarefa } from "../../lib/services/tarefas";
+import { toggleSubtarefa, deletarTarefa, criarSubtarefas, excluirSubtarefa } from "../../lib/services/tarefas";
 import { useAuth } from "../context/AuthContext";
 import {
   ArrowLeft,
@@ -23,6 +23,7 @@ import {
   Eye,
   Reply,
   Loader2,
+  Plus,
 } from "lucide-react";
 
 export default function TarefaDetail() {
@@ -38,6 +39,9 @@ export default function TarefaDetail() {
   const [subtarefas, setSubtarefas] = useState<any[]>([]);
   const [togglingSubtarefa, setTogglingSubtarefa] = useState<string | null>(null);
   const [excluindo, setExcluindo] = useState(false);
+  const [novaSubtarefa, setNovaSubtarefa] = useState("");
+  const [adicionandoSubtarefa, setAdicionandoSubtarefa] = useState(false);
+  const [excluindoSubtarefa, setExcluindoSubtarefa] = useState<string | null>(null);
 
   const [novoComentario, setNovoComentario] = useState("");
   const [enviandoComentario, setEnviandoComentario] = useState(false);
@@ -209,6 +213,34 @@ export default function TarefaDetail() {
     }
   };
 
+  const handleAdicionarSubtarefa = async () => {
+    if (!id || !novaSubtarefa.trim()) return;
+    setAdicionandoSubtarefa(true);
+    try {
+      await criarSubtarefas(id, [{ titulo: novaSubtarefa.trim() }], subtarefas.length);
+      const t = await getTarefaById(id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setSubtarefas((t as any)?.subtarefas ?? []);
+      setNovaSubtarefa("");
+    } catch (err) {
+      console.error("Erro ao adicionar subtarefa:", err);
+    } finally {
+      setAdicionandoSubtarefa(false);
+    }
+  };
+
+  const handleExcluirSubtarefa = async (subtarefaId: string) => {
+    setExcluindoSubtarefa(subtarefaId);
+    try {
+      await excluirSubtarefa(subtarefaId);
+      setSubtarefas((prev: any[]) => prev.filter((s) => s.id !== subtarefaId));
+    } catch (err) {
+      console.error("Erro ao excluir subtarefa:", err);
+    } finally {
+      setExcluindoSubtarefa(null);
+    }
+  };
+
   const handleExcluirTarefa = async () => {
     if (!id || !window.confirm("Tem certeza que deseja excluir esta tarefa?")) return;
     setExcluindo(true);
@@ -361,41 +393,81 @@ export default function TarefaDetail() {
             )}
 
             {/* Subtarefas */}
-            {subtarefas.length > 0 && (
-              <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[18px]">
-                    Subtarefas
-                  </h2>
+            <div className="bg-rise-surface border border-rise-line rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[18px]">
+                  Subtarefas
+                </h2>
+                {subtarefas.length > 0 && (
                   <span className="text-rise-fg-2 text-[14px] font-['Inter:Regular',sans-serif]">
                     {subtarefas.filter((s: any) => s.concluida).length}/{subtarefas.length}
                   </span>
-                </div>
-                <div className="space-y-3">
+                )}
+              </div>
+
+              {subtarefas.length > 0 && (
+                <div className="space-y-3 mb-4">
                   {subtarefas.map((subtarefa: any) => (
-                    <button
+                    <div
                       key={subtarefa.id}
-                      onClick={() => handleToggleSubtarefa(subtarefa.id, subtarefa.concluida)}
-                      disabled={togglingSubtarefa === subtarefa.id}
-                      className="w-full flex items-start gap-3 p-3 bg-rise-raised rounded-lg hover:bg-rise-subtle transition-colors text-left disabled:opacity-60"
+                      className="w-full flex items-start gap-3 p-3 bg-rise-raised rounded-lg hover:bg-rise-subtle transition-colors"
                     >
-                      {subtarefa.concluida ? (
-                        <CheckCircle2 size={20} className="text-[#28d939] mt-0.5 flex-shrink-0" />
-                      ) : (
-                        <Circle size={20} className="text-rise-fg-4 mt-0.5 flex-shrink-0" />
-                      )}
-                      <span
-                        className={`font-['Inter:Regular',sans-serif] text-[14px] ${
-                          subtarefa.concluida ? "text-rise-fg-3 line-through" : "text-rise-fg"
-                        }`}
+                      <button
+                        onClick={() => handleToggleSubtarefa(subtarefa.id, subtarefa.concluida)}
+                        disabled={togglingSubtarefa === subtarefa.id}
+                        className="flex items-start gap-3 flex-1 text-left disabled:opacity-60"
                       >
-                        {subtarefa.titulo}
-                      </span>
-                    </button>
+                        {subtarefa.concluida ? (
+                          <CheckCircle2 size={20} className="text-[#28d939] mt-0.5 flex-shrink-0" />
+                        ) : (
+                          <Circle size={20} className="text-rise-fg-4 mt-0.5 flex-shrink-0" />
+                        )}
+                        <span
+                          className={`font-['Inter:Regular',sans-serif] text-[14px] ${
+                            subtarefa.concluida ? "text-rise-fg-3 line-through" : "text-rise-fg"
+                          }`}
+                        >
+                          {subtarefa.titulo}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => handleExcluirSubtarefa(subtarefa.id)}
+                        disabled={excluindoSubtarefa === subtarefa.id}
+                        className="text-rise-fg-3 hover:text-[#ff6b6b] transition-colors shrink-0 disabled:opacity-60"
+                        title="Excluir subtarefa"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   ))}
                 </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+                <input
+                  type="text"
+                  value={novaSubtarefa}
+                  onChange={(e) => setNovaSubtarefa(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAdicionarSubtarefa();
+                    }
+                  }}
+                  placeholder="Título da subtarefa"
+                  className="bg-rise-raised border border-rise-line rounded-lg px-4 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleAdicionarSubtarefa}
+                  disabled={adicionandoSubtarefa || !novaSubtarefa.trim()}
+                  className="bg-rise-raised border border-rise-line text-[#14E9BC] px-4 py-2 rounded-lg hover:bg-rise-subtle transition-colors flex items-center gap-2 font-['Inter:Medium',sans-serif] text-[14px] whitespace-nowrap disabled:opacity-60"
+                >
+                  <Plus size={16} />
+                  Adicionar
+                </button>
               </div>
-            )}
+            </div>
 
             {/* Comentários */}
             <div className="bg-rise-surface border border-rise-line rounded-lg p-6">

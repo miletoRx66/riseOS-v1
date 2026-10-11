@@ -135,6 +135,28 @@ export async function toggleSubtarefa(id: string, concluida: boolean): Promise<v
   if (error) throw error;
 }
 
+export async function criarSubtarefas(
+  tarefa_id: string,
+  subtarefas: Array<{ titulo: string; responsavel_id?: string }>,
+  ordemInicial = 0
+): Promise<void> {
+  if (subtarefas.length === 0) return;
+  const rows = subtarefas.map((s, i) => ({
+    tarefa_id,
+    titulo: s.titulo,
+    responsavel_id: s.responsavel_id || null,
+    ordem: ordemInicial + i + 1,
+  }));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from("subtarefas") as any).insert(rows);
+  if (error) throw error;
+}
+
+export async function excluirSubtarefa(id: string): Promise<void> {
+  const { error } = await supabase.from("subtarefas").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function getStatusConfig(departamento_id?: string): Promise<
   { id: string; label: string; cor: string; ordem: number; eh_final: boolean }[]
 > {

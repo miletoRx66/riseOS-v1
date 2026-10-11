@@ -1,12 +1,12 @@
 import React, { useState, useEffect, FormEvent } from "react";
 import { useNavigate, Link } from "react-router";
 import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
-import { criarTarefa, criarTarefaLinks } from "../../lib/services/tarefas";
+import { criarTarefa, criarTarefaLinks, criarSubtarefas } from "../../lib/services/tarefas";
 import { criarRecorrencia } from "../../lib/services/tarefaRecorrencias";
 import { getUsuarios, type UsuarioDB } from "../../lib/services/usuarios";
 import { useAuth } from "../context/AuthContext";
 import { TarefaLink } from "../types";
-import { ArrowLeft, Save, X, Plus, ExternalLink, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, X, Plus, ExternalLink, Trash2, CheckSquare } from "lucide-react";
 
 export default function NovaTarefa() {
   const navigate = useNavigate();
@@ -35,6 +35,9 @@ export default function NovaTarefa() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [links, setLinks] = useState<TarefaLink[]>([]);
   const [novoLink, setNovoLink] = useState({ titulo: "", url: "", tipo: "outro" as TarefaLink["tipo"] });
+
+  const [subtarefas, setSubtarefas] = useState<string[]>([]);
+  const [novaSubtarefa, setNovaSubtarefa] = useState("");
 
   const [repetir, setRepetir] = useState(false);
   const [recorrencia, setRecorrencia] = useState({
@@ -122,9 +125,12 @@ export default function NovaTarefa() {
         criado_por: usuario.id,
       });
 
-      // Salva os links no banco após criar a tarefa
+      // Salva os links e subtarefas no banco após criar a tarefa
       if (links.length > 0) {
         await criarTarefaLinks(tarefa.id, links);
+      }
+      if (subtarefas.length > 0) {
+        await criarSubtarefas(tarefa.id, subtarefas.map((titulo) => ({ titulo })));
       }
 
       navigate("/tarefas");
@@ -142,6 +148,16 @@ export default function NovaTarefa() {
 
   const handleRemoverLink = (id: string) => {
     setLinks((prev) => prev.filter((l) => l.id !== id));
+  };
+
+  const handleAdicionarSubtarefa = () => {
+    if (!novaSubtarefa.trim()) return;
+    setSubtarefas((prev) => [...prev, novaSubtarefa.trim()]);
+    setNovaSubtarefa("");
+  };
+
+  const handleRemoverSubtarefa = (index: number) => {
+    setSubtarefas((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleChange = (field: string, value: string) => {
@@ -574,6 +590,59 @@ export default function NovaTarefa() {
                   <button
                     type="button"
                     onClick={handleAdicionarLink}
+                    className="bg-rise-raised border border-rise-line text-[#14E9BC] px-4 py-2 rounded-lg hover:bg-rise-subtle transition-colors flex items-center gap-2 font-['Inter:Medium',sans-serif] text-[14px] whitespace-nowrap"
+                  >
+                    <Plus size={16} />
+                    Adicionar
+                  </button>
+                </div>
+              </div>
+              )}
+
+              {/* Subtarefas */}
+              {!repetir && (
+              <div>
+                <label className="block font-['Inter:Medium',sans-serif] text-rise-fg text-[14px] mb-2">
+                  Subtarefas
+                </label>
+
+                {subtarefas.length > 0 && (
+                  <div className="space-y-2 mb-3">
+                    {subtarefas.map((titulo, index) => (
+                      <div key={index} className="flex items-center gap-3 bg-rise-raised border border-rise-line rounded-lg px-4 py-2">
+                        <CheckSquare size={14} className="text-[#14E9BC] shrink-0" />
+                        <span className="text-rise-fg text-[13px] font-['Inter:Regular',sans-serif] flex-1">
+                          {titulo}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoverSubtarefa(index)}
+                          className="text-rise-fg-3 hover:text-[#ff6b6b] transition-colors shrink-0"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+                  <input
+                    type="text"
+                    value={novaSubtarefa}
+                    onChange={(e) => setNovaSubtarefa(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAdicionarSubtarefa();
+                      }
+                    }}
+                    placeholder="Título da subtarefa"
+                    className="bg-rise-raised border border-rise-line rounded-lg px-4 py-2 text-rise-fg font-['Inter:Regular',sans-serif] text-[14px] focus:border-[#14E9BC] focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAdicionarSubtarefa}
                     className="bg-rise-raised border border-rise-line text-[#14E9BC] px-4 py-2 rounded-lg hover:bg-rise-subtle transition-colors flex items-center gap-2 font-['Inter:Medium',sans-serif] text-[14px] whitespace-nowrap"
                   >
                     <Plus size={16} />
