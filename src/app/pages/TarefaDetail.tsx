@@ -26,6 +26,56 @@ import {
   Plus,
 } from "lucide-react";
 
+// Renderiza a descrição preservando quebras de linha e reconhecendo
+// seções numeradas ("1. Título") e itens de lista ("- item") como
+// estrutura visual, em vez de jogar tudo num parágrafo só.
+function DescricaoFormatada({ texto }: { texto: string }) {
+  const linhas = texto.split("\n");
+
+  return (
+    <div className="space-y-2">
+      {linhas.map((linha, index) => {
+        const trimmed = linha.trim();
+
+        if (!trimmed) {
+          return <div key={index} className="h-2" />;
+        }
+
+        if (/^\d+[.)]\s/.test(trimmed)) {
+          return (
+            <p
+              key={index}
+              className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[14px] mt-4 first:mt-0 break-words"
+            >
+              {trimmed}
+            </p>
+          );
+        }
+
+        if (trimmed.startsWith("- ")) {
+          return (
+            <div key={index} className="flex items-start gap-2 pl-2">
+              <span className="text-rise-fg-3 mt-1.5 text-[6px] shrink-0">●</span>
+              <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] leading-relaxed break-words">
+                {trimmed.slice(2)}
+              </p>
+            </div>
+          );
+        }
+
+        return (
+          <p
+            key={index}
+            className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] leading-relaxed break-words"
+          >
+            {trimmed}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function TarefaDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -332,9 +382,13 @@ export default function TarefaDetail() {
               <h2 className="font-['Inter:Semi_Bold',sans-serif] text-rise-fg text-[18px] mb-4">
                 Descrição
               </h2>
-              <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] leading-relaxed">
-                {tarefa.descricao || "Nenhuma descrição disponível."}
-              </p>
+              {tarefa.descricao ? (
+                <DescricaoFormatada texto={tarefa.descricao} />
+              ) : (
+                <p className="font-['Inter:Regular',sans-serif] text-rise-fg-2 text-[14px] leading-relaxed">
+                  Nenhuma descrição disponível.
+                </p>
+              )}
 
               {tarefa.tags && tarefa.tags.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-rise-line">
