@@ -4,6 +4,16 @@ import { kpisDepartamento } from "../data/mockData";
 import type { DepartamentoComStats } from "../../lib/services/departamentos";
 import type { TarefaDB } from "../../lib/services/tarefas";
 import type { OkrDB } from "../../lib/services/okrs";
+import {
+  PIPELINE_STATUS,
+  CLASSIFICACAO_LABEL,
+  fmtAum,
+  fmtForecast,
+  type PipelineParceiro,
+  type PipelineStatus,
+  type Classificacao,
+  type Impacto,
+} from "../../lib/services/pipeline";
 
 // Função auxiliar para adicionar header no PDF
 const addPDFHeader = (doc: jsPDF, title: string) => {
@@ -390,4 +400,249 @@ export const exportarRelatorioDepartamento = (
 
   addPDFFooter(doc);
   doc.save(`Relatorio_${dept.nome}_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`);
+};
+
+// Exportar Relatório de Pipeline Comercial
+// Todas as seções são calculadas a partir dos dados reais recebidos — nenhum
+// valor fixo/mock/aleatório. Onde o dado disponível é só uma aproximação
+// (ex: "dias sem atualização" como proxy de tempo parado, já que não existe
+// no banco um campo de data de mudança de status), isso fica explícito no PDF.
+export const exportarRelatorioPipeline = (parceiros: PipelineParceiro[]) => {
+  const doc = new jsPDF();
+
+  doc.setFillColor(10, 10, 10);
+  doc.rect(0, 0, 210, 297, "F");
+
+  let yPosition = addPDFHeader(doc, "Relatório de Pipeline Comercial");
+
+  const quebrarPagina = () => {
+    if (yPosition > 220) {
+      doc.addPage();
+      doc.setFillColor(10, 10, 10);
+      doc.rect(0, 0, 210, 297, "F");
+      yPosition = 20;
+    }
+  };
+
+  const tituloSecao = (titulo: string, cor: [number, number, number] = [20, 233, 188]) => {
+    quebrarPagina();
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(cor[0], cor[1], cor[2]);
+    doc.text(titulo, 20, yPosition);
+    yPosition += 10;
+  };
+
+  const tabelaPadrao = (head: string[][], body: (string | number)[][], headColor: [number, number, number] = [20, 233, 188]) => {
+    autoTable(doc, {
+      startY: yPosition,
+      head,
+      body,
+      theme: "grid",
+      styles: { fillColor: [26, 26, 26], textColor: [238, 238, 238], fontSize: 9, cellPadding: 4 },
+      headStyles: { fillColor: headColor, textColor: [0, 0, 0], fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [15, 15, 15] },
+    });
+    yPosition = (doc as any).lastAutoTable.finalY + 15;
+  };
+
+  const notaRodape = (texto: string) => {
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(140, 140, 140);
+    const linhas = doc.splitTextToSize(texto, 170);
+    doc.text(linhas, 20, yPosition);
+    yPosition += linhas.length * 4 + 10;
+  };
+
+  const statusFechados: PipelineStatus[] = ["lancado", "distribuicao_consolidada", "perdido"];
+  const hoje = new Date();
+
+  // ── KPIs Consolidados (mesma fórmula usada na tela do Kanban) ──────────────
+  const totalDeals = parceiros.length;
+  const aumPotencialTotal = parceiros.reduce((s, p) => s + (p.aum || 0), 0);
+  const aumEfetLancado =
+    parceiros.filter((p) => p.status === "lancado").reduce((s, p) => s + (p.aum || 0), 0) +
+    parceiros.filter((p) => p.status === "distribuicao_consolidada").reduce((s, p) => s + (p.valor_distribuido || 0), 0);
+  const dealsDist = parceiros.filter((p) => p.status === "distribuicao_consolidada");
+  const aumDistribuido = dealsDist.reduce((s, p) => s + (p.aum || 0), 0);
+  const forecastDist = dealsDist.reduce((s, p) => s + (p.forecast_anual || 0), 0);
+  const pctLancadoVsPot = aumPotencialTotal > 0 ? ((aumEfetLancado / aumPotencialTotal) * 100).toFixed(1) : "0";
+  const pctDistVsLancado = aumEfetLancado > 0 ? ((aumDistribuido / aumEfetLancado) * 100).toFixed(1) : "0";
+
+  tituloSecao("KPIs Consolidados");
+  tabelaPadrao(
+    [["Indicador", "Valor"]],
+    [
+      ["Número de deals", `${totalDeals}`],
+      ["AuM potencial total", fmtAum(aumPotencialTotal)],
+      ["AuM efetivamente lançado", fmtAum(aumEfetLancado)],
+      ["AuM distribuído", fmtAum(aumDistribuido)],
+      ["Forecast distribuição consolidada", fmtForecast(forecastDist)],
+      ["% lançado vs. potencial", `${pctLancadoVsPot}%`],
+      ["% distribuído vs. lançado", `${pctDistVsLancado}%`],
+    ]
+  );
+
+  // ── Funil por Status ─────────────────────────────────────────────────────
+  tituloSecao("Funil por Status");
+  const statusOrdem: PipelineStatus[] = ["conversa", "em_avanco", "em_listagem", "em_producao", "on_hold", "lancado", "distribuicao_consolidada", "perdido"];
+  const statusBody = statusOrdem
+    .map((st) => {
+      const deals = parceiros.filter((p) => p.status === st);
+      if (deals.length === 0) return null;
+      const aum = deals.reduce((s, p) => s + (p.aum || 0), 0);
+      const forecast = deals.reduce((s, p) => s + (p.forecast_anual || 0), 0);
+      return [PIPELINE_STATUS[st].label, `${deals.length}`, fmtAum(aum), fmtForecast(forecast)];
+    })
+    .filter((row): row is string[] => row !== null);
+  tabelaPadrao([["Status", "Deals", "AuM Potencial", "Forecast Anual"]], statusBody);
+
+  // ── Por Classificação ────────────────────────────────────────────────────
+  tituloSecao("Por Classificação");
+  const classificacoes: Classificacao[] = ["originador", "distribuidor", "infra_outros"];
+  tabelaPadrao(
+    [["Classificação", "Deals", "AuM Potencial"]],
+    classificacoes.map((c) => {
+      const deals = parceiros.filter((p) => p.classificacao === c);
+      return [CLASSIFICACAO_LABEL[c], `${deals.length}`, fmtAum(deals.reduce((s, p) => s + (p.aum || 0), 0))];
+    })
+  );
+
+  // ── Por Impacto ──────────────────────────────────────────────────────────
+  tituloSecao("Por Impacto");
+  const impactos: Impacto[] = ["alto", "medio", "baixo"];
+  const impactoLabel: Record<Impacto, string> = { alto: "Alto", medio: "Médio", baixo: "Baixo" };
+  tabelaPadrao(
+    [["Impacto", "Deals", "AuM Potencial"]],
+    impactos.map((i) => {
+      const deals = parceiros.filter((p) => p.impacto === i);
+      return [impactoLabel[i], `${deals.length}`, fmtAum(deals.reduce((s, p) => s + (p.aum || 0), 0))];
+    })
+  );
+
+  // ── Por Responsável ──────────────────────────────────────────────────────
+  tituloSecao("Por Responsável");
+  const porResp = new Map<string, { deals: number; aum: number }>();
+  parceiros.forEach((p) => {
+    const key = p.responsavel_nome?.trim() || "—";
+    const atual = porResp.get(key) ?? { deals: 0, aum: 0 };
+    atual.deals += 1;
+    atual.aum += p.aum || 0;
+    porResp.set(key, atual);
+  });
+  const respOrdenado = Array.from(porResp.entries()).sort((a, b) => b[1].aum - a[1].aum);
+  tabelaPadrao(
+    [["Responsável", "Deals", "AuM Potencial"]],
+    respOrdenado.slice(0, 12).map(([nome, v]) => [nome, `${v.deals}`, fmtAum(v.aum)])
+  );
+  notaRodape(
+    "* O campo de responsável é texto livre e pode conter variações de grafia ou mais de uma pessoa no mesmo registro — os números acima refletem o valor exato gravado em cada deal, sem normalização."
+  );
+
+  // ── Estimativas de Lançamento Vencidas ───────────────────────────────────
+  tituloSecao("Estimativas de Lançamento Vencidas", [236, 93, 94]);
+  const vencidos = parceiros
+    .filter((p) => p.estimativa_lancamento && !statusFechados.includes(p.status))
+    .map((p) => ({
+      ...p,
+      diasAtraso: Math.floor((hoje.getTime() - new Date(p.estimativa_lancamento as string).getTime()) / 86400000),
+    }))
+    .filter((p) => p.diasAtraso > 0)
+    .sort((a, b) => b.diasAtraso - a.diasAtraso);
+
+  if (vencidos.length > 0) {
+    tabelaPadrao(
+      [["Parceiro", "Status", "AuM", "Estimativa", "Dias de Atraso"]],
+      vencidos.slice(0, 20).map((p) => [
+        p.parceiro,
+        PIPELINE_STATUS[p.status].label,
+        fmtAum(p.aum),
+        new Date(p.estimativa_lancamento as string).toLocaleDateString("pt-BR"),
+        `${p.diasAtraso}`,
+      ]),
+      [236, 93, 94]
+    );
+  } else {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(189, 189, 189);
+    doc.text("Nenhum deal com estimativa de lançamento vencida.", 20, yPosition);
+    yPosition += 15;
+  }
+
+  // ── Deals sem Atualização Recente (proxy de deal parado) ────────────────
+  tituloSecao("Deals sem Atualização Recente", [245, 158, 11]);
+  const stale = parceiros
+    .filter((p) => !statusFechados.includes(p.status))
+    .map((p) => ({
+      ...p,
+      diasParado: Math.floor((hoje.getTime() - new Date(p.atualizado_em).getTime()) / 86400000),
+    }))
+    .sort((a, b) => b.diasParado - a.diasParado)
+    .slice(0, 10);
+  tabelaPadrao(
+    [["Parceiro", "Status", "AuM", "Dias sem Atualização"]],
+    stale.map((p) => [p.parceiro, PIPELINE_STATUS[p.status].label, fmtAum(p.aum), `${p.diasParado}`]),
+    [245, 158, 11]
+  );
+  notaRodape(
+    "* Baseado na última edição do registro (campo atualizado_em) — proxy do tempo parado, não um cálculo exato de tempo por coluna do Kanban, pois o banco não guarda o histórico de mudança de status."
+  );
+
+  // ── Gargalos Reportados (texto literal informado pelo time) ─────────────
+  const gargalos = parceiros.filter((p) => p.gargalo && p.gargalo.trim());
+  if (gargalos.length > 0) {
+    tituloSecao("Gargalos Reportados");
+    doc.setFontSize(9);
+    doc.setTextColor(238, 238, 238);
+    gargalos.forEach((p) => {
+      quebrarPagina();
+      doc.setFont("helvetica", "bold");
+      doc.text(`${p.parceiro}:`, 20, yPosition);
+      yPosition += 5;
+      doc.setFont("helvetica", "normal");
+      const linhas = doc.splitTextToSize(p.gargalo as string, 170);
+      doc.text(linhas, 20, yPosition);
+      yPosition += linhas.length * 5 + 7;
+    });
+  }
+
+  // ── Insights (100% calculados a partir dos dados acima, nada fixo) ──────
+  tituloSecao("Insights");
+  const comNda = parceiros.filter((p) => p.nda_assinado).length;
+  const pctNda = totalDeals > 0 ? ((comNda / totalDeals) * 100).toFixed(0) : "0";
+  const semNdaEmRisco = parceiros.filter((p) => !p.nda_assinado && (p.status === "em_producao" || p.status === "em_listagem"));
+  const topResp = respOrdenado[0];
+  const pctAumTopResp = topResp && aumPotencialTotal > 0 ? ((topResp[1].aum / aumPotencialTotal) * 100).toFixed(0) : null;
+
+  const insights: string[] = [
+    `• ${vencidos.length} de ${totalDeals} deals (${totalDeals > 0 ? ((vencidos.length / totalDeals) * 100).toFixed(0) : 0}%) estão com a estimativa de lançamento vencida sem terem sido lançados, distribuídos ou marcados como perdidos.`,
+    `• ${comNda}/${totalDeals} deals (${pctNda}%) têm NDA assinado.`,
+    `• Taxa de conversão do AuM potencial para efetivamente lançado: ${pctLancadoVsPot}%.`,
+  ];
+  if (semNdaEmRisco.length > 0) {
+    insights.push(
+      `• ${semNdaEmRisco.length} deal(s) já em estágio avançado (Em Produção/Em Listagem) ainda sem NDA assinado: ${semNdaEmRisco.map((p) => p.parceiro).join(", ")}.`
+    );
+  }
+  if (topResp && pctAumTopResp) {
+    insights.push(`• ${topResp[0]} concentra ${pctAumTopResp}% do AuM potencial do pipeline (${fmtAum(topResp[1].aum)} em ${topResp[1].deals} deal(s)).`);
+  }
+  if (stale.length > 0) {
+    insights.push(`• Deal há mais tempo sem atualização: "${stale[0].parceiro}" (${stale[0].diasParado} dias, status ${PIPELINE_STATUS[stale[0].status].label}).`);
+  }
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(238, 238, 238);
+  insights.forEach((insight) => {
+    quebrarPagina();
+    const linhas = doc.splitTextToSize(insight, 170);
+    doc.text(linhas, 20, yPosition);
+    yPosition += linhas.length * 5 + 5;
+  });
+
+  addPDFFooter(doc);
+  doc.save(`Relatorio_Pipeline_Comercial_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`);
 };

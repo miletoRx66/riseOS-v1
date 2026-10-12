@@ -6,6 +6,7 @@ import {
   type PipelineParceiro, type PipelineComentario, type PipelineStatus, type Classificacao, type Impacto,
 } from "../../lib/services/pipeline";
 import { formatBRLCompact } from "../../lib/format";
+import { exportarRelatorioPipeline } from "../utils/pdfGenerator";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import {
@@ -896,6 +897,13 @@ export default function PipelineParceiros() {
             </button>
           </div>
 
+          <button
+            onClick={() => exportarRelatorioPipeline(parceiros)}
+            disabled={parceiros.length === 0}
+            className="border border-rise-line text-rise-fg-2 px-4 py-2 rounded-lg font-semibold text-[13px] flex items-center gap-1.5 hover:bg-rise-subtle hover:border-[#14E9BC] hover:text-[#14E9BC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FileText size={15} /> Gerar Relatório
+          </button>
           <button
             onClick={() => setModalDist(true)}
             className="border border-[#04d95f]/40 text-[#04d95f] px-4 py-2 rounded-lg font-semibold text-[13px] flex items-center gap-1.5 hover:bg-[#04d95f]/10 transition-colors"
