@@ -4,7 +4,7 @@ import { getOkrs, criarOkr, criarKeyResult, deletarOkr, atualizarProgresso, type
 import { getDepartamentos, type DepartamentoDB } from "../../lib/services/departamentos";
 import { getUsuarios, type UsuarioDB } from "../../lib/services/usuarios";
 import { useAuth } from "../context/AuthContext";
-import { Target, TrendingUp, Calendar, User, Plus, Filter, X, Trash2, LayoutList, CalendarDays, LayoutGrid, ChevronDown, ChevronUp } from "lucide-react";
+import { Target, TrendingUp, Calendar, User, Plus, Filter, X, Trash2, LayoutList, CalendarDays, LayoutGrid, ChevronDown, ChevronUp, ListPlus } from "lucide-react";
 
 interface KeyResult {
   id: string;
@@ -139,6 +139,50 @@ export default function OKRs() {
 
   const [editingKr, setEditingKr] = useState<{ okrId: string; krId: string; valor: number } | null>(null);
   const [salvandoKr, setSalvandoKr] = useState(false);
+
+  const [managingKrFor, setManagingKrFor] = useState<string | null>(null);
+  const [novoKr, setNovoKr] = useState({
+    descricao: "",
+    metrica: "",
+    valor_inicial: "0",
+    valor_meta: "",
+    unidade: "",
+  });
+  const [salvandoNovoKr, setSalvandoNovoKr] = useState(false);
+
+  const handleAbrirGestaoKr = (e: MouseEvent, okrId: string) => {
+    e.stopPropagation();
+    setExpandedOKRs((prev) => new Set(prev).add(okrId));
+    setManagingKrFor((prev) => (prev === okrId ? null : okrId));
+    setNovoKr({ descricao: "", metrica: "", valor_inicial: "0", valor_meta: "", unidade: "" });
+  };
+
+  const handleAdicionarKeyResult = async (okrId: string) => {
+    if (!novoKr.descricao.trim() || !novoKr.valor_meta) return;
+    setSalvandoNovoKr(true);
+    try {
+      const kr = await criarKeyResult({
+        okr_id: okrId,
+        descricao: novoKr.descricao.trim(),
+        metrica: novoKr.metrica || undefined,
+        valor_inicial: Number(novoKr.valor_inicial) || 0,
+        valor_meta: Number(novoKr.valor_meta),
+        unidade: novoKr.unidade || undefined,
+      });
+      setOkrs((prev) => prev.map((o) => {
+        if (o.id !== okrId) return o;
+        const krs = [...(o.key_results ?? []), kr];
+        const progressoOkr = Math.round(krs.reduce((acc, k) => acc + k.progresso, 0) / krs.length);
+        return { ...o, key_results: krs, progresso: progressoOkr };
+      }));
+      setNovoKr({ descricao: "", metrica: "", valor_inicial: "0", valor_meta: "", unidade: "" });
+      setManagingKrFor(null);
+    } catch (err) {
+      console.error("Erro ao adicionar key result:", err);
+    } finally {
+      setSalvandoNovoKr(false);
+    }
+  };
 
   const handleSalvarProgresso = async (okrId: string, krId: string, valorMeta: number) => {
     if (!editingKr) return;
@@ -416,6 +460,13 @@ export default function OKRs() {
                       </p>
                     </div>
                     <button
+                      onClick={(e) => handleAbrirGestaoKr(e, okr.id)}
+                      className="text-rise-fg-2 hover:text-[#14E9BC] transition-colors p-1"
+                      title="Editar Gestão do OKR"
+                    >
+                      <ListPlus size={18} />
+                    </button>
+                    <button
                       onClick={(e) => handleExcluirOkr(e, okr.id)}
                       className="text-rise-fg-2 hover:text-[#ec5d5e] transition-colors p-1"
                       title="Excluir OKR"
@@ -529,6 +580,67 @@ export default function OKRs() {
                           );
                         })}
                       </div>
+
+                      {managingKrFor === okr.id && (
+                        <div className="mt-4 p-4 bg-rise-raised border border-rise-line rounded-lg space-y-3">
+                          <p className="text-rise-fg text-[13px] font-['Inter:Medium',sans-serif]">
+                            Novo Key Result
+                          </p>
+                          <input
+                            type="text"
+                            value={novoKr.descricao}
+                            onChange={(e) => setNovoKr((prev) => ({ ...prev, descricao: e.target.value }))}
+                            placeholder="Ex: QTD de gestoras homologadas em produção"
+                            className="w-full bg-rise-surface border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                          />
+                          <div className="grid grid-cols-3 gap-3">
+                            <input
+                              type="number"
+                              value={novoKr.valor_inicial}
+                              onChange={(e) => setNovoKr((prev) => ({ ...prev, valor_inicial: e.target.value }))}
+                              placeholder="Valor inicial"
+                              className="bg-rise-surface border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                            />
+                            <input
+                              type="number"
+                              value={novoKr.valor_meta}
+                              onChange={(e) => setNovoKr((prev) => ({ ...prev, valor_meta: e.target.value }))}
+                              placeholder="Meta *"
+                              className="bg-rise-surface border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                            />
+                            <input
+                              type="text"
+                              value={novoKr.unidade}
+                              onChange={(e) => setNovoKr((prev) => ({ ...prev, unidade: e.target.value }))}
+                              placeholder="Unidade (ex: gestoras)"
+                              className="bg-rise-surface border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                            />
+                          </div>
+                          <input
+                            type="text"
+                            value={novoKr.metrica}
+                            onChange={(e) => setNovoKr((prev) => ({ ...prev, metrica: e.target.value }))}
+                            placeholder="Métrica (opcional)"
+                            className="w-full bg-rise-surface border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[13px] focus:border-[#14E9BC] focus:outline-none"
+                          />
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleAdicionarKeyResult(okr.id)}
+                              disabled={salvandoNovoKr || !novoKr.descricao.trim() || !novoKr.valor_meta}
+                              className="bg-[#14E9BC] text-[#000] px-4 py-2 rounded-lg text-[13px] font-['Inter:Semi_Bold',sans-serif] font-semibold hover:bg-[#12d4a8] transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                              <Plus size={14} />
+                              {salvandoNovoKr ? "Adicionando..." : "Adicionar Key Result"}
+                            </button>
+                            <button
+                              onClick={() => setManagingKrFor(null)}
+                              className="text-rise-fg-2 hover:text-rise-fg px-3 py-2 text-[13px] transition-colors"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                   </div>
