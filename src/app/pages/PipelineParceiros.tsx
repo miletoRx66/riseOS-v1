@@ -2,15 +2,18 @@ import { useState, useEffect, useRef } from "react";
 import {
   getParceiros, criarParceiro, atualizarParceiro, deletarParceiro,
   getComentariosParceiro, criarComentarioParceiro, atualizarDistribuicao,
-  PIPELINE_STATUS, CLASSIFICACAO_LABEL, IMPACTO_COLOR, fmtAum, fmtForecast,
+  PIPELINE_STATUS, CLASSIFICACAO_LABEL, IMPACTO_COLOR, TRILHA_CONFIG, MODULO_INFRA, fmtAum, fmtForecast,
   type PipelineParceiro, type PipelineComentario, type PipelineStatus, type Classificacao, type Impacto,
+  type Trilha, type TipoInteracao, type ModuloInfra,
 } from "../../lib/services/pipeline";
+import { FeedInteracoes } from "../components/comercial/FeedInteracoes";
+import { ContatosParceiro } from "../components/comercial/ContatosParceiro";
 import { formatBRLCompact } from "../../lib/format";
 import { exportarRelatorioPipeline } from "../utils/pdfGenerator";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import {
-  Plus, X, Filter, Loader2, Send, ChevronRight, Edit2, Trash2,
+  Plus, X, Filter, Loader2, ChevronRight, Edit2, Trash2, ShieldAlert, UserRound,
   TrendingUp, DollarSign, Target, Users, Calendar, CheckCircle,
   AlertCircle, Clock, LayoutGrid, List, MessageCircle, FileText,
   CheckSquare,
@@ -35,7 +38,93 @@ const FORM_INICIAL = {
   data_inicial: "", estimativa_lancamento: "", proximos_passos: "",
   gargalo: "", impacto: "alto" as Impacto, forecast_anual: "", fee_parceiro: "",
   despesas: "", forecast_ytd: "", observacoes: "", ordem: 0,
+  trilha: "infraestrutura" as Trilha,
+  modulos_infra: [] as ModuloInfra[],
+  administradora_apex: true, usa_software_rise: true,
+  contrato_assinado: false, api_em_uso: false,
 };
+
+// ── Sub-componente: Módulos de Infraestrutura (seleção múltipla) ─────────────
+
+function CamposModulos({
+  form, setForm,
+}: {
+  form: typeof FORM_INICIAL;
+  setForm: (f: typeof FORM_INICIAL) => void;
+}) {
+  if (form.trilha !== "infraestrutura") return null;
+  return (
+    <div>
+      <label className="text-rise-fg-4 text-[12px] mb-2 block">
+        Módulos contratados <span className="text-rise-fg-4">(múltipla escolha)</span>
+      </label>
+      <div className="grid grid-cols-2 gap-2">
+        {(Object.entries(MODULO_INFRA) as [ModuloInfra, { label: string; color: string }][]).map(([v, cfg]) => {
+          const ativo = form.modulos_infra.includes(v);
+          return (
+            <button key={v} type="button"
+              onClick={() => setForm({
+                ...form,
+                modulos_infra: ativo ? form.modulos_infra.filter((m) => m !== v) : [...form.modulos_infra, v],
+              })}
+              className={`px-3 py-2 rounded-lg text-[12px] font-semibold border text-left transition-all ${
+                ativo ? "" : "bg-rise-bg border-rise-line text-rise-fg-3 hover:border-rise-fg-4"
+              }`}
+              style={ativo ? { background: `${cfg.color}15`, borderColor: `${cfg.color}50`, color: cfg.color } : undefined}>
+              {ativo && <span className="mr-1">✓</span>}{cfg.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Sub-componente: Conformidade (Apex + trava contratual) ───────────────────
+
+function CamposConformidade({
+  form, setForm,
+}: {
+  form: typeof FORM_INICIAL;
+  setForm: (f: typeof FORM_INICIAL) => void;
+}) {
+  return (
+    <div className="bg-rise-bg border border-rise-line-2 rounded-xl p-4 space-y-2.5">
+      <p className="text-rise-fg-4 text-[11px] font-semibold uppercase tracking-wide">Conformidade</p>
+      {form.trilha === "infraestrutura" && (
+        <>
+          <label className="flex items-center gap-2 text-rise-fg-2 text-[13px]">
+            <input type="checkbox" checked={form.administradora_apex} className="accent-[#14E9BC]"
+              // Apex exige RiseOS: marcar Apex marca o software junto
+              onChange={(e) => setForm({ ...form, administradora_apex: e.target.checked, usa_software_rise: e.target.checked || form.usa_software_rise })} />
+            Administradora padrão: Apex Group
+          </label>
+          <label className="flex items-center gap-2 text-rise-fg-2 text-[13px]">
+            <input type="checkbox" checked={form.usa_software_rise} disabled={form.administradora_apex} className="accent-[#14E9BC]"
+              onChange={(e) => setForm({ ...form, usa_software_rise: e.target.checked })} />
+            Uso do software RiseOS
+            {form.administradora_apex && <span className="text-rise-fg-4 text-[11px]">(obrigatório com Apex)</span>}
+          </label>
+        </>
+      )}
+      <label className="flex items-center gap-2 text-rise-fg-2 text-[13px]">
+        <input type="checkbox" checked={form.api_em_uso} className="accent-[#14E9BC]"
+          onChange={(e) => setForm({ ...form, api_em_uso: e.target.checked })} />
+        Consome API da Rise em produção
+      </label>
+      <label className="flex items-center gap-2 text-rise-fg-2 text-[13px]">
+        <input type="checkbox" checked={form.contrato_assinado} className="accent-[#14E9BC]"
+          onChange={(e) => setForm({ ...form, contrato_assinado: e.target.checked })} />
+        Contrato de licença/parceria assinado
+      </label>
+      {form.api_em_uso && !form.contrato_assinado && (
+        <p className="text-[#ec5d5e] text-[12px] flex items-center gap-1.5 pt-1">
+          <ShieldAlert size={13} /> O card ficará em Bloqueio Contratual até o contrato ser assinado.
+        </p>
+      )}
+    </div>
+  );
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -113,8 +202,13 @@ function KanbanCard({
       className={`bg-rise-surface border rounded-xl p-4 cursor-pointer transition-all select-none ${
         dragging ? "opacity-40 scale-95" : "hover:border-rise-line-3 hover:bg-rise-surface"
       }`}
-      style={{ borderColor: "#2a2a2a" }}
+      style={{ borderColor: p.bloqueio_contratual ? "#ec5d5e" : "#2a2a2a" }}
     >
+      {p.bloqueio_contratual && (
+        <div className="flex items-center gap-1.5 bg-[#ec5d5e]/15 text-[#ec5d5e] text-[10px] font-bold uppercase tracking-wide rounded-md px-2 py-1 mb-2">
+          <ShieldAlert size={11} /> Bloqueio Contratual
+        </div>
+      )}
       {/* Topo: parceiro + classificação */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <div>
@@ -140,6 +234,18 @@ function KanbanCard({
 
       {/* Produto */}
       <p className="text-rise-fg-3 text-[12px] mb-3 line-clamp-2 leading-relaxed">{p.produto}</p>
+
+      {/* Módulos de Infraestrutura */}
+      {p.trilha === "infraestrutura" && p.modulos_infra?.length > 0 && (
+        <div className="flex gap-1 flex-wrap mb-3">
+          {p.modulos_infra.map((m) => (
+            <span key={m} className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
+              style={{ background: `${MODULO_INFRA[m].color}18`, color: MODULO_INFRA[m].color }}>
+              {MODULO_INFRA[m].label.replace("Módulo de ", "")}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Métricas */}
       <div className="flex items-center justify-between text-[11px] mb-3">
@@ -209,8 +315,10 @@ function ModalDetalhe({
     produto: parceiro.produto,
     classificacao: parceiro.classificacao,
     responsavel_nome: parceiro.responsavel_nome ?? "",
+    originador: parceiro.originador ?? "",
     nda_assinado: parceiro.nda_assinado,
     aum: String(parceiro.aum || ""),
+    valor_distribuido: String(parceiro.valor_distribuido ?? ""),
     status: parceiro.status,
     data_inicial: parceiro.data_inicial ?? "",
     estimativa_lancamento: parceiro.estimativa_lancamento ?? "",
@@ -223,12 +331,16 @@ function ModalDetalhe({
     forecast_ytd: String(parceiro.forecast_ytd || ""),
     observacoes: parceiro.observacoes ?? "",
     ordem: parceiro.ordem,
+    trilha: parceiro.trilha,
+    modulos_infra: parceiro.modulos_infra ?? [],
+    administradora_apex: parceiro.administradora_apex,
+    usa_software_rise: parceiro.usa_software_rise,
+    contrato_assinado: parceiro.contrato_assinado,
+    api_em_uso: parceiro.api_em_uso,
   });
   const [salvando, setSalvando] = useState(false);
   const [comentarios, setComentarios] = useState<PipelineComentario[]>([]);
-  const [novoComentario, setNovoComentario] = useState("");
-  const [enviando, setEnviando] = useState(false);
-  const [tabDetalhe, setTabDetalhe] = useState<"info" | "passos" | "comentarios">("info");
+  const [tabDetalhe, setTabDetalhe] = useState<"info" | "passos" | "contatos" | "comentarios">("info");
 
   useEffect(() => {
     getComentariosParceiro(parceiro.id).then(setComentarios).catch(console.error);
@@ -255,21 +367,23 @@ function ModalDetalhe({
         despesas: parseFloat(form.despesas) || 0,
         forecast_ytd: parseFloat(form.forecast_ytd) || 0,
         observacoes: form.observacoes || null,
+        trilha: form.trilha,
+        modulos_infra: form.modulos_infra,
+        administradora_apex: form.administradora_apex,
+        usa_software_rise: form.usa_software_rise,
+        contrato_assinado: form.contrato_assinado,
+        api_em_uso: form.api_em_uso,
       };
       await atualizarParceiro(parceiro.id, updates);
-      onSalvar({ ...parceiro, ...updates });
+      onSalvar({ ...parceiro, ...updates, bloqueio_contratual: form.api_em_uso && !form.contrato_assinado });
       setEditando(false);
     } finally { setSalvando(false); }
   }
 
-  async function handleEnviarComentario() {
-    if (!novoComentario.trim() || !usuario) return;
-    setEnviando(true);
-    try {
-      const novo = await criarComentarioParceiro(parceiro.id, usuario.id, novoComentario.trim());
-      setComentarios((prev) => [...prev, novo]);
-      setNovoComentario("");
-    } finally { setEnviando(false); }
+  async function handleEnviarComentario(conteudo: string, tipo: TipoInteracao) {
+    if (!usuario) return;
+    const novo = await criarComentarioParceiro(parceiro.id, usuario.id, conteudo, tipo);
+    setComentarios((prev) => [...prev, novo]);
   }
 
   const st = PIPELINE_STATUS[parceiro.status];
@@ -333,7 +447,8 @@ function ModalDetalhe({
           {([
             ["info",        "Informações",     <FileText size={13} />],
             ["passos",      "Próximos Passos", <CheckSquare size={13} />],
-            ["comentarios", "Comentários",     <MessageCircle size={13} />],
+            ["contatos",    "Pontos Focais",   <UserRound size={13} />],
+            ["comentarios", "Linha do Tempo",  <MessageCircle size={13} />],
           ] as const).map(([v, label, icon]) => (
             <button
               key={v}
@@ -459,11 +574,20 @@ function ModalDetalhe({
                 <textarea rows={2} value={form.observacoes} onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
                   className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC] resize-none" />
               </div>
+              <div>
+                <label className="text-rise-fg-4 text-[12px] mb-1 block">Frente de negócio</label>
+                <select value={form.trilha} onChange={(e) => setForm({ ...form, trilha: e.target.value as Trilha })}
+                  className="w-full bg-rise-bg border border-rise-line rounded-lg px-3 py-2 text-rise-fg text-[14px] outline-none focus:border-[#14E9BC]">
+                  {Object.entries(TRILHA_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                </select>
+              </div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="nda_edit" checked={form.nda_assinado} onChange={(e) => setForm({ ...form, nda_assinado: e.target.checked })}
                   className="accent-[#14E9BC]" />
                 <label htmlFor="nda_edit" className="text-rise-fg-2 text-[13px]">NDA Assinado</label>
               </div>
+              <CamposModulos form={form} setForm={setForm} />
+              <CamposConformidade form={form} setForm={setForm} />
               <div className="flex gap-3 pt-2">
                 <button onClick={handleSalvar} disabled={salvando}
                   className="flex-1 bg-[#14E9BC] text-[#000] py-2.5 rounded-lg font-semibold text-[14px] hover:bg-[#12d4a8] transition-colors disabled:opacity-50">
@@ -478,6 +602,17 @@ function ModalDetalhe({
           ) : tabDetalhe === "info" ? (
             /* Vista de informações */
             <div className="space-y-5">
+              {parceiro.bloqueio_contratual && (
+                <div className="bg-[#ec5d5e]/10 border border-[#ec5d5e]/40 rounded-xl p-4 flex items-start gap-3">
+                  <ShieldAlert size={18} className="text-[#ec5d5e] flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[#ec5d5e] text-[13px] font-bold">Bloqueio Contratual</p>
+                    <p className="text-rise-fg-2 text-[12px] mt-0.5">
+                      Este parceiro consome a API da Rise em produção sem contrato de licença/parceria assinado.
+                    </p>
+                  </div>
+                </div>
+              )}
               {/* KPIs financeiros */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
@@ -498,6 +633,17 @@ function ModalDetalhe({
                 <Row label="Responsável" value={parceiro.responsavel_nome} />
                 <Row label="Classificação" value={CLASSIFICACAO_LABEL[parceiro.classificacao]} />
                 <Row label="NDA" value={parceiro.nda_assinado ? "✓ Assinado" : "Não assinado"} />
+                <Row label="Contrato" value={parceiro.contrato_assinado ? "✓ Assinado" : "Não assinado"}
+                  valueColor={parceiro.bloqueio_contratual ? "#ec5d5e" : undefined} />
+                <Row label="API em produção" value={parceiro.api_em_uso ? "Sim" : "Não"} />
+                {parceiro.trilha === "infraestrutura" && (
+                  <Row label="Módulos"
+                    value={parceiro.modulos_infra?.length ? parceiro.modulos_infra.map((m) => MODULO_INFRA[m].label.replace("Módulo de ", "")).join(" · ") : "A classificar"} />
+                )}
+                {parceiro.trilha === "infraestrutura" && (
+                  <Row label="Esteira Apex"
+                    value={parceiro.administradora_apex ? "Apex Group + RiseOS" : parceiro.usa_software_rise ? "Sem Apex · usa RiseOS" : "Sem Apex · sem RiseOS"} />
+                )}
                 <Row label="Impacto" value={parceiro.impacto.charAt(0).toUpperCase() + parceiro.impacto.slice(1)} valueColor={IMPACTO_COLOR[parceiro.impacto]} />
                 <Row label="Data Inicial" value={fmtData(parceiro.data_inicial)} />
                 <Row label="Estimativa Lançamento" value={fmtData(parceiro.estimativa_lancamento)} />
@@ -550,58 +696,15 @@ function ModalDetalhe({
                 </div>
               )}
             </div>
+          ) : tabDetalhe === "contatos" ? (
+            <ContatosParceiro parceiroId={parceiro.id} />
           ) : (
-            /* Comentários */
-            <div className="space-y-4">
-              {comentarios.length === 0 && (
-                <div className="text-center py-8 text-rise-fg-4">
-                  <MessageCircle size={28} className="mx-auto mb-2 opacity-30" />
-                  <p>Nenhum comentário ainda</p>
-                </div>
-              )}
-              {comentarios.map((c) => (
-                <div key={c.id} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-rise-raised flex items-center justify-center text-[12px] font-bold text-rise-fg-3 flex-shrink-0">
-                    {c.usuario?.nome ? c.usuario.nome[0].toUpperCase() : "?"}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-rise-fg-2 text-[13px] font-semibold">{c.usuario?.nome ?? "Usuário"}</span>
-                      <span className="text-rise-fg-4 text-[11px]">
-                        {new Date(c.criado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    </div>
-                    <div className="bg-rise-bg border border-rise-line-2 rounded-xl px-4 py-3">
-                      <p className="text-rise-fg-2 text-[13px] leading-relaxed whitespace-pre-wrap">{c.conteudo}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {/* Input novo comentário */}
-              <div className="flex gap-3 pt-2 border-t border-rise-line-2">
-                <div className="w-8 h-8 rounded-full bg-rise-raised flex items-center justify-center text-[12px] font-bold text-rise-fg-3 flex-shrink-0">
-                  {usuario?.nome ? usuario.nome[0].toUpperCase() : "?"}
-                </div>
-                <div className="flex-1 flex gap-2">
-                  <textarea
-                    rows={2}
-                    value={novoComentario}
-                    onChange={(e) => setNovoComentario(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEnviarComentario(); }}}
-                    placeholder="Escreva uma atualização sobre este parceiro..."
-                    className="flex-1 bg-rise-bg border border-rise-line-2 rounded-xl px-4 py-3 text-rise-fg text-[13px] outline-none focus:border-[#14E9BC] resize-none"
-                  />
-                  <button
-                    onClick={handleEnviarComentario}
-                    disabled={!novoComentario.trim() || enviando}
-                    className="px-4 bg-[#14E9BC] text-[#000] rounded-xl font-semibold disabled:opacity-40 hover:bg-[#12d4a8] transition-colors self-end h-10"
-                  >
-                    {enviando ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
-                  </button>
-                </div>
-              </div>
-            </div>
+            <FeedInteracoes
+              itens={comentarios}
+              usuarioNome={usuario?.nome}
+              placeholder="Registre uma conversa ou atualização sobre este parceiro..."
+              onEnviar={handleEnviarComentario}
+            />
           )}
         </div>
       </div>
@@ -620,7 +723,7 @@ function Row({ label, value, valueColor }: { label: string; value: string | null
 
 // ── Componente principal ──────────────────────────────────────────────────────
 
-export default function PipelineParceiros() {
+export default function PipelineParceiros({ trilha }: { trilha: Trilha }) {
   const { usuario } = useAuth();
   const { toast } = useToast();
   const [parceiros, setParceiros] = useState<PipelineParceiro[]>([]);
@@ -630,11 +733,13 @@ export default function PipelineParceiros() {
   const [filtroImpacto, setFiltroImpacto] = useState("todos");
   const [filtroResp, setFiltroResp] = useState("todos");
   const [filtroClass, setFiltroClass] = useState("todos");
+  // Infraestrutura: sub-aba por módulo ("sem" = parceiros ainda sem módulo)
+  const [moduloAtivo, setModuloAtivo] = useState<"todos" | "sem" | ModuloInfra>("todos");
 
   const [modalNovo, setModalNovo] = useState(false);
   const [detalhe, setDetalhe] = useState<PipelineParceiro | null>(null);
   const [salvandoNovo, setSalvandoNovo] = useState(false);
-  const [formNovo, setFormNovo] = useState<typeof FORM_INICIAL>({ ...FORM_INICIAL });
+  const [formNovo, setFormNovo] = useState<typeof FORM_INICIAL>({ ...FORM_INICIAL, trilha });
 
   const [modalDist, setModalDist] = useState(false);
   const [distParceiroId, setDistParceiroId] = useState("");
@@ -648,19 +753,33 @@ export default function PipelineParceiros() {
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
 
   useEffect(() => {
-    getParceiros().then(setParceiros).catch(console.error).finally(() => setLoading(false));
-  }, []);
+    setLoading(true);
+    setModuloAtivo("todos");
+    setFormNovo({ ...FORM_INICIAL, trilha });
+    getParceiros({ trilha }).then(setParceiros).catch(console.error).finally(() => setLoading(false));
+  }, [trilha]);
+
+  const bloqueados = parceiros.filter((p) => p.bloqueio_contratual);
+
+  function noModulo(p: PipelineParceiro, m: typeof moduloAtivo) {
+    if (m === "todos") return true;
+    if (m === "sem") return !p.modulos_infra?.length;
+    return p.modulos_infra?.includes(m) ?? false;
+  }
+
+  // Base de KPIs, kanban e relatório: a frente inteira ou o módulo selecionado
+  const base = trilha === "infraestrutura" ? parceiros.filter((p) => noModulo(p, moduloAtivo)) : parceiros;
 
   // ── KPIs ─────────────────────────────────────────────────────────────────────
 
-  const totalParceiros   = parceiros.length;
-  const aumPotencialTotal = parceiros.reduce((s, p) => s + (p.aum || 0), 0);
+  const totalParceiros   = base.length;
+  const aumPotencialTotal = base.reduce((s, p) => s + (p.aum || 0), 0);
 
   const aumEfetLancado =
-    parceiros.filter((p) => p.status === "lancado").reduce((s, p) => s + (p.aum || 0), 0) +
-    parceiros.filter((p) => p.status === "distribuicao_consolidada").reduce((s, p) => s + (p.valor_distribuido || 0), 0);
+    base.filter((p) => p.status === "lancado").reduce((s, p) => s + (p.aum || 0), 0) +
+    base.filter((p) => p.status === "distribuicao_consolidada").reduce((s, p) => s + (p.valor_distribuido || 0), 0);
 
-  const dealsDist        = parceiros.filter((p) => p.status === "distribuicao_consolidada");
+  const dealsDist        = base.filter((p) => p.status === "distribuicao_consolidada");
   const aumDistribuido   = dealsDist.reduce((s, p) => s + (p.aum || 0), 0);
   const forecastDist     = dealsDist.reduce((s, p) => s + (p.forecast_anual || 0), 0);
 
@@ -669,7 +788,7 @@ export default function PipelineParceiros() {
   const pctDistVsLancado = aumEfetLancado > 0
     ? ((aumDistribuido / aumEfetLancado) * 100).toFixed(1) : "0";
 
-  const responsaveis = [...new Set(parceiros.map((p) => p.responsavel_nome).filter(Boolean))] as string[];
+  const responsaveis = [...new Set(base.map((p) => p.responsavel_nome).filter(Boolean))] as string[];
 
   // ── Atualizar distribuição ────────────────────────────────────────────────────
 
@@ -689,7 +808,7 @@ export default function PipelineParceiros() {
 
   // ── Filtros ───────────────────────────────────────────────────────────────────
 
-  const parceirosVisiveis = parceiros.filter((p) => {
+  const parceirosVisiveis = base.filter((p) => {
     if (filtroImpacto !== "todos" && p.impacto !== filtroImpacto) return false;
     if (filtroResp !== "todos" && p.responsavel_nome !== filtroResp) return false;
     if (filtroClass !== "todos" && p.classificacao !== filtroClass) return false;
@@ -770,10 +889,16 @@ export default function PipelineParceiros() {
         forecast_ytd: parseFloat(formNovo.forecast_ytd) || 0,
         observacoes: formNovo.observacoes || null,
         ordem: parceiros.length,
+        trilha: formNovo.trilha,
+        modulos_infra: formNovo.trilha === "infraestrutura" ? formNovo.modulos_infra : [],
+        administradora_apex: formNovo.administradora_apex,
+        usa_software_rise: formNovo.usa_software_rise,
+        contrato_assinado: formNovo.contrato_assinado,
+        api_em_uso: formNovo.api_em_uso,
       });
-      setParceiros((prev) => [novo, ...prev]);
+      if (novo.trilha === trilha) setParceiros((prev) => [novo, ...prev]);
       setModalNovo(false);
-      setFormNovo({ ...FORM_INICIAL });
+      setFormNovo({ ...FORM_INICIAL, trilha });
     } finally { setSalvandoNovo(false); }
   }
 
@@ -787,6 +912,13 @@ export default function PipelineParceiros() {
   // ── Atualizar local ───────────────────────────────────────────────────────────
 
   function handleSalvarLocal(p: PipelineParceiro) {
+    // Mudou de frente: sai desta aba
+    if (p.trilha !== trilha) {
+      setParceiros((prev) => prev.filter((x) => x.id !== p.id));
+      setDetalhe(null);
+      toast(`${p.parceiro} movido para ${TRILHA_CONFIG[p.trilha].label}`, "success");
+      return;
+    }
     setParceiros((prev) => prev.map((x) => x.id === p.id ? p : x));
     if (detalhe?.id === p.id) setDetalhe(p);
   }
@@ -795,6 +927,51 @@ export default function PipelineParceiros() {
 
   return (
     <div>
+      {bloqueados.length > 0 && (
+        <div className="bg-[#ec5d5e]/10 border border-[#ec5d5e]/40 rounded-xl px-4 py-3 mb-5 flex items-center gap-3 flex-wrap">
+          <ShieldAlert size={18} className="text-[#ec5d5e] flex-shrink-0" />
+          <p className="text-rise-fg-2 text-[13px]">
+            <span className="text-[#ec5d5e] font-bold">
+              {bloqueados.length} {bloqueados.length === 1 ? "parceiro usa" : "parceiros usam"} a API sem contrato assinado:
+            </span>{" "}
+            {bloqueados.map((p, i) => (
+              <button key={p.id} onClick={() => setDetalhe(p)} className="underline hover:text-[#ec5d5e]">
+                {p.parceiro}{i < bloqueados.length - 1 ? ", " : ""}
+              </button>
+            ))}
+          </p>
+        </div>
+      )}
+
+      {/* Módulos de Infraestrutura */}
+      {trilha === "infraestrutura" && (
+        <div className="flex items-center gap-1 mb-5 flex-wrap">
+          {(["todos", "administracao", "gestao", "pagamento", "distribuicao", "sem"] as const).map((m) => {
+            const cfg = m === "todos" || m === "sem" ? null : MODULO_INFRA[m];
+            const count = parceiros.filter((p) => noModulo(p, m)).length;
+            const isActive = moduloAtivo === m;
+            return (
+              <button key={m} onClick={() => setModuloAtivo(m)}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all border ${
+                  isActive ? "border-current" : "border-transparent text-rise-fg-4 hover:text-rise-fg-2 hover:bg-rise-raised"
+                }`}
+                style={isActive ? {
+                  backgroundColor: cfg ? `${cfg.color}15` : "var(--rise-raised)",
+                  color: cfg ? cfg.color : "var(--rise-fg)",
+                  borderColor: cfg ? `${cfg.color}40` : "var(--rise-line)",
+                } : undefined}>
+                {m === "todos" ? "Todos os módulos" : m === "sem" ? "A classificar" : cfg!.label}
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: isActive ? (cfg ? `${cfg.color}25` : "var(--rise-line)") : "var(--rise-raised)",
+                    color: isActive ? (cfg ? cfg.color : "var(--rise-fg)") : "var(--rise-fg-4)",
+                  }}>{count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         {/* 1 — Número de deals */}
@@ -898,8 +1075,8 @@ export default function PipelineParceiros() {
           </div>
 
           <button
-            onClick={() => exportarRelatorioPipeline(parceiros)}
-            disabled={parceiros.length === 0}
+            onClick={() => exportarRelatorioPipeline(base)}
+            disabled={base.length === 0}
             className="border border-rise-line text-rise-fg-2 px-4 py-2 rounded-lg font-semibold text-[13px] flex items-center gap-1.5 hover:bg-rise-subtle hover:border-[#14E9BC] hover:text-[#14E9BC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FileText size={15} /> Gerar Relatório
@@ -911,7 +1088,12 @@ export default function PipelineParceiros() {
             <TrendingUp size={15} /> Atualizar Distribuição
           </button>
           <button
-            onClick={() => setModalNovo(true)}
+            onClick={() => {
+              if (trilha === "infraestrutura" && moduloAtivo !== "todos" && moduloAtivo !== "sem") {
+                setFormNovo((f) => ({ ...f, modulos_infra: [moduloAtivo] }));
+              }
+              setModalNovo(true);
+            }}
             className="bg-[#14E9BC] text-[#000] px-4 py-2 rounded-lg font-semibold text-[13px] flex items-center gap-1.5 hover:bg-[#12d4a8] transition-colors"
           >
             <Plus size={15} /> Novo Parceiro
@@ -1008,7 +1190,12 @@ export default function PipelineParceiros() {
                     onClick={() => setDetalhe(p)}
                     className="border-b border-[#111] hover:bg-rise-surface cursor-pointer transition-colors"
                   >
-                    <td className="px-4 py-3 font-semibold text-rise-fg">{p.parceiro}</td>
+                    <td className="px-4 py-3 font-semibold text-rise-fg">
+                      <span className="flex items-center gap-1.5">
+                        {p.bloqueio_contratual && <span title="Bloqueio Contratual"><ShieldAlert size={13} className="text-[#ec5d5e]" /></span>}
+                        {p.parceiro}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-rise-fg-3 max-w-[200px] truncate">{p.produto}</td>
                     <td className="px-4 py-3">
                       <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
@@ -1143,7 +1330,10 @@ export default function PipelineParceiros() {
         >
           <div className="bg-rise-surface border border-rise-line-2 rounded-2xl w-full max-w-[600px] max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-rise-line-2">
-              <h2 className="font-bold text-rise-fg text-[18px]">Novo Parceiro</h2>
+              <div>
+                <h2 className="font-bold text-rise-fg text-[18px]">Novo Parceiro</h2>
+                <p className="text-rise-fg-4 text-[12px] mt-0.5">{TRILHA_CONFIG[trilha].label}</p>
+              </div>
               <button onClick={() => setModalNovo(false)} className="text-rise-fg-4 hover:text-rise-fg"><X size={18} /></button>
             </div>
             <div className="p-6 space-y-4">
@@ -1229,6 +1419,8 @@ export default function PipelineParceiros() {
                   className="accent-[#14E9BC]" />
                 <label htmlFor="nda_novo" className="text-rise-fg-2 text-[13px]">NDA Assinado</label>
               </div>
+              <CamposModulos form={formNovo} setForm={setFormNovo} />
+              <CamposConformidade form={formNovo} setForm={setFormNovo} />
               <div className="flex gap-3 pt-2">
                 <button onClick={handleCriar} disabled={salvandoNovo || !formNovo.parceiro.trim()}
                   className="flex-1 bg-[#14E9BC] text-[#000] py-2.5 rounded-lg font-semibold text-[14px] hover:bg-[#12d4a8] transition-colors disabled:opacity-50">

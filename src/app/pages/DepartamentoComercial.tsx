@@ -3,17 +3,20 @@ import {
   getClientes, criarCliente, atualizarCliente,
   getOperacoes, criarOperacao, atualizarOperacao,
   getComentarios, criarComentario, fmtValor,
-  SEGMENTO_CONFIG, OP_STATUS_CONFIG, OP_FLOW,
-  type CRMCliente, type CRMOperacao, type CRMComentario,
-  type CRMSegmento, type CRMOpStatus,
+  getNotasCliente, criarNotaCliente,
+  CATEGORIA_ASSESSOR, OP_STATUS_CONFIG, OP_FLOW,
+  type CRMCliente, type CRMOperacao, type CRMComentario, type CRMClienteNota,
+  type CategoriaAssessor, type CRMOpStatus,
 } from "../../lib/services/crm";
+import { TRILHA_CONFIG, type Trilha, type TipoInteracao } from "../../lib/services/pipeline";
+import { FeedInteracoes } from "../components/comercial/FeedInteracoes";
 import { formatBRL } from "../../lib/format";
 import { getUsuarios, type UsuarioDB } from "../../lib/services/usuarios";
 import { useAuth } from "../context/AuthContext";
 import {
-  Users, TrendingUp, Plus, X, Filter,
-  Loader2, Building2, Phone, Mail,
-  ChevronRight, Calendar, Tag, User, MessageCircle, Send, Network,
+  Users, TrendingUp, Plus, X,
+  Loader2, Phone, Mail, Landmark, Coins, Network,
+  ChevronRight, Calendar, Tag, MessageCircle, Send,
   PauseCircle, XCircle, PlayCircle, AlertTriangle,
 } from "lucide-react";
 import PipelineParceiros from "./PipelineParceiros";
@@ -94,14 +97,16 @@ function DistributionProgress({
 
 export default function DepartamentoComercial() {
   const { usuario } = useAuth();
-  const [tab, setTab] = useState<"clientes" | "pipeline">("clientes");
+  const [tab, setTab] = useState<Trilha>("infraestrutura");
+  // Aba Assessores: carteira de assessores (CRM) ou pipeline de distribuição
+  const [visaoAssessores, setVisaoAssessores] = useState<"carteira" | "distribuicao">("carteira");
 
   const [clientes, setClientes]     = useState<CRMCliente[]>([]);
   const [operacoes, setOperacoes]   = useState<CRMOperacao[]>([]);
   const [usuarios, setUsuarios]     = useState<UsuarioDB[]>([]);
   const [loading, setLoading]       = useState(true);
 
-  const [segmentoAtivo, setSegmentoAtivo] = useState<"todos" | CRMSegmento>("todos");
+  const [categoriaAtiva, setCategoriaAtiva] = useState<"todos" | "sem" | CategoriaAssessor>("todos");
   const [filtroStatus, setFiltroStatus]   = useState("todos");
 
   const [modalCliente, setModalCliente]     = useState(false);
@@ -109,11 +114,6 @@ export default function DepartamentoComercial() {
   const [detalheCliente, setDetalheCliente] = useState<CRMCliente | null>(null);
   const [detalheOp, setDetalheOp]           = useState<CRMOperacao | null>(null);
   const [salvando, setSalvando]             = useState(false);
-
-  // drag-and-drop operações
-  const draggingOpRef                   = useRef<string | null>(null);
-  const [draggingOpId, setDraggingOpId] = useState<string | null>(null);
-  const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
 
   // drag-and-drop clientes (kanban)
   const draggingClienteRef                         = useRef<string | null>(null);
@@ -125,10 +125,13 @@ export default function DepartamentoComercial() {
   const [novoComentario, setNovoComentario]     = useState("");
   const [enviandoComentario, setEnviandoComentario] = useState(false);
 
+  // feed de relacionamento do assessor
+  const [notasCliente, setNotasCliente] = useState<CRMClienteNota[]>([]);
+
   const [formCliente, setFormCliente] = useState({
     nome: "", email: "", telefone: "", empresa: "",
     tipo: "pj" as CRMCliente["tipo"],
-    segmento: "b2b_ofertas" as CRMSegmento,
+    categoria_assessor: "" as CategoriaAssessor | "",
     status: "lead" as CRMCliente["status"],
     responsavel_id: "", originador_id: "",
     persona: [] as string[],
@@ -163,6 +166,29 @@ export default function DepartamentoComercial() {
     getComentarios(detalheOp.id).then(setComentarios).catch(console.error);
   }, [detalheOp?.id]);
 
+  useEffect(() => {
+    if (!detalheCliente) { setNotasCliente([]); return; }
+    getNotasCliente(detalheCliente.id).then(setNotasCliente).catch(console.error);
+  }, [detalheCliente?.id]);
+
+  async function handleEnviarNota(conteudo: string, tipo: TipoInteracao) {
+    if (!detalheCliente || !usuario) return;
+    const nova = await criarNotaCliente(detalheCliente.id, usuario.id, conteudo, tipo);
+    setNotasCliente((prev) => [...prev, nova]);
+  }
+
+  async function handleCategoria(cliente: CRMCliente, categoria: CategoriaAssessor | null) {
+    setClientes((prev) => prev.map((c) => c.id === cliente.id ? { ...c, categoria_assessor: categoria } : c));
+    setDetalheCliente((d) => d?.id === cliente.id ? { ...d, categoria_assessor: categoria } : d);
+    try {
+      await atualizarCliente(cliente.id, { categoria_assessor: categoria });
+    } catch (err) {
+      console.error(err);
+      setClientes((prev) => prev.map((c) => c.id === cliente.id ? { ...c, categoria_assessor: cliente.categoria_assessor } : c));
+      setDetalheCliente((d) => d?.id === cliente.id ? { ...d, categoria_assessor: cliente.categoria_assessor } : d);
+    }
+  }
+
   async function handleEnviarComentario() {
     if (!novoComentario.trim() || !detalheOp || !usuario) return;
     setEnviandoComentario(true);
@@ -189,14 +215,11 @@ export default function DepartamentoComercial() {
   // ── Filtered lists ───────────────────────────────────────────────
 
   const clientesVisiveis = clientes.filter((c: CRMCliente) => {
-    if (segmentoAtivo !== "todos" && (c.segmento ?? "b2b_ofertas") !== segmentoAtivo) return false;
+    if (categoriaAtiva === "sem" && c.categoria_assessor) return false;
+    if (categoriaAtiva !== "todos" && categoriaAtiva !== "sem" && c.categoria_assessor !== categoriaAtiva) return false;
     if (filtroStatus !== "todos" && c.status !== filtroStatus) return false;
     return true;
   });
-
-  const opFiltradas = operacoes.filter((o) =>
-    filtroStatus === "todos" ? true : o.status === filtroStatus
-  );
 
   // ── Handlers ────────────────────────────────────────────────────
 
@@ -210,7 +233,8 @@ export default function DepartamentoComercial() {
         telefone: formCliente.telefone || null,
         empresa: formCliente.empresa || null,
         tipo: formCliente.tipo,
-        segmento: formCliente.segmento,
+        segmento: null,
+        categoria_assessor: formCliente.categoria_assessor || null,
         status: formCliente.status,
         responsavel_id: formCliente.responsavel_id || null,
         originador_id: formCliente.originador_id || null,
@@ -221,7 +245,7 @@ export default function DepartamentoComercial() {
         notas: formCliente.notas || null,
       });
       setModalCliente(false);
-      setFormCliente({ nome: "", email: "", telefone: "", empresa: "", tipo: "pj", segmento: "b2b_ofertas", status: "lead", responsavel_id: "", originador_id: "", persona: [], prioridade: "media", prazo: "", notas: "" });
+      setFormCliente({ nome: "", email: "", telefone: "", empresa: "", tipo: "pj", categoria_assessor: "", status: "lead", responsavel_id: "", originador_id: "", persona: [], prioridade: "media", prazo: "", notas: "" });
       await reloadAll();
     } finally { setSalvando(false); }
   }
@@ -255,44 +279,6 @@ export default function DepartamentoComercial() {
   }
 
   // ── Drag handlers ────────────────────────────────────────────────
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function handleOpDragStart(e: any, opId: string) {
-    draggingOpRef.current = opId;
-    setDraggingOpId(opId);
-    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
-  }
-
-  function handleOpDragEnd() {
-    setDraggingOpId(null);
-    setDragOverStatus(null);
-    draggingOpRef.current = null;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function handleOpDragOver(e: any, status: string) {
-    e.preventDefault();
-    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    setDragOverStatus(status);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async function handleOpDrop(e: any, novoStatus: CRMOpStatus) {
-    e.preventDefault();
-    const id = draggingOpRef.current;
-    if (!id) return;
-    const op = operacoes.find((o) => o.id === id);
-    if (!op || op.status === novoStatus) { handleOpDragEnd(); return; }
-
-    setOperacoes((prev) => prev.map((o) => o.id === id ? { ...o, status: novoStatus } : o));
-    handleOpDragEnd();
-    try {
-      await atualizarOperacao(id, { status: novoStatus });
-      if (detalheOp?.id === id) setDetalheOp((d) => d ? { ...d, status: novoStatus } : d);
-    } catch {
-      setOperacoes((prev) => prev.map((o) => o.id === id ? { ...o, status: op.status } : o));
-    }
-  }
 
   async function handleAvancarOp(op: CRMOperacao) {
     const idx = OP_FLOW.indexOf(op.status);
@@ -389,13 +375,13 @@ export default function DepartamentoComercial() {
               </div>
             </div>
           </div>
-          {tab === "clientes" && (
+          {tab === "assessores" && visaoAssessores === "carteira" && (
             <button
               onClick={() => setModalCliente(true)}
               className="bg-[#14E9BC] text-[#000] px-5 py-2.5 rounded-lg font-semibold text-[14px] flex items-center gap-2 hover:bg-[#12d4a8] transition-colors mt-1"
             >
               <Plus size={18} />
-              Novo Investidor
+              Novo Assessor
             </button>
           )}
         </div>
@@ -403,17 +389,18 @@ export default function DepartamentoComercial() {
         {/* Tabs principais */}
         <div className="flex gap-0 mb-5 border-b border-rise-line-2">
           {([
-            ["clientes",  "Investidores",      <Users size={14} />,   clientes.length],
-            ["pipeline",  "Pipeline Parceiros", <Network size={14} />, null],
-          ] as const).map(([t, label, icon, count]) => (
-            <button key={t} onClick={() => { setTab(t as typeof tab); setFiltroStatus("todos"); setSegmentoAtivo("todos"); }}
+            ["infraestrutura", <Landmark size={14} />, null],
+            ["assessores",     <Users size={14} />,    clientes.length],
+            ["fidc_like",      <Coins size={14} />,    null],
+          ] as const).map(([t, icon, count]) => (
+            <button key={t} onClick={() => { setTab(t); setFiltroStatus("todos"); setCategoriaAtiva("todos"); }}
               className={`flex items-center gap-1.5 px-5 py-2.5 text-[13px] font-semibold transition-all border-b-2 -mb-px ${
                 tab === t
                   ? "border-[#14E9BC] text-[#14E9BC]"
                   : "border-transparent text-rise-fg-4 hover:text-rise-fg-2"
               }`}>
               {icon}
-              {label}
+              {TRILHA_CONFIG[t].label}
               {count !== null && (
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-0.5 ${
                   tab === t ? "bg-[#14E9BC]/20 text-[#14E9BC]" : "bg-rise-raised text-rise-fg-4"
@@ -423,50 +410,69 @@ export default function DepartamentoComercial() {
           ))}
         </div>
 
-        {/* Sub-tabs de segmento (Investidores) */}
-        {tab === "clientes" && (
-          <div className="flex items-center gap-1 mb-4 flex-wrap">
-            {(["todos", "b2b_ofertas", "b2b_infra", "b2c"] as const).map((seg) => {
-              const cfg = seg === "todos" ? null : SEGMENTO_CONFIG[seg];
-              const count = seg === "todos"
-                ? clientes.length
-                : clientes.filter((c) => (c.segmento ?? "b2b_ofertas") === seg).length;
-              const isActive = segmentoAtivo === seg;
-              return (
-                <button
-                  key={seg}
-                  onClick={() => { setSegmentoAtivo(seg); setFiltroStatus("todos"); }}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all border ${
-                    isActive ? "border-current" : "border-transparent text-rise-fg-4 hover:text-rise-fg-2 hover:bg-rise-raised"
-                  }`}
-                  style={isActive ? {
-                    backgroundColor: cfg ? `${cfg.color}15` : "var(--rise-raised)",
-                    color: cfg ? cfg.color : "var(--rise-fg)",
-                    borderColor: cfg ? `${cfg.color}40` : "var(--rise-line)",
-                  } : undefined}
-                >
-                  {seg === "todos" ? "Todos" : cfg!.label}
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                    style={{
-                      backgroundColor: isActive ? (cfg ? `${cfg.color}25` : "var(--rise-line)") : "var(--rise-raised)",
-                      color: isActive ? (cfg ? cfg.color : "var(--rise-fg)") : "var(--rise-fg-4)",
-                    }}>{count}</span>
+        {/* Aba Assessores: visão + categorias */}
+        {tab === "assessores" && (
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <div className="flex gap-1 bg-rise-surface border border-rise-line rounded-lg p-1">
+              {([
+                ["carteira",     "Carteira de assessores", <Users size={13} />],
+                ["distribuicao", "Pipeline de distribuição", <Network size={13} />],
+              ] as const).map(([v, label, icon]) => (
+                <button key={v} onClick={() => setVisaoAssessores(v)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold transition-colors ${
+                    visaoAssessores === v ? "bg-rise-subtle text-[#14E9BC]" : "text-rise-fg-4 hover:text-rise-fg-2"
+                  }`}>
+                  {icon}{label}
                 </button>
-              );
-            })}
+              ))}
+            </div>
+
+            {visaoAssessores === "carteira" && (
+              <div className="flex items-center gap-1 flex-wrap">
+                {(["todos", "nativo", "comprometido", "potencial", "sem"] as const).map((cat) => {
+                  const cfg = cat === "todos" || cat === "sem" ? null : CATEGORIA_ASSESSOR[cat];
+                  const count = cat === "todos" ? clientes.length
+                    : cat === "sem" ? clientes.filter((c) => !c.categoria_assessor).length
+                    : clientes.filter((c) => c.categoria_assessor === cat).length;
+                  const isActive = categoriaAtiva === cat;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => { setCategoriaAtiva(cat); setFiltroStatus("todos"); }}
+                      title={cfg?.descricao}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all border ${
+                        isActive ? "border-current" : "border-transparent text-rise-fg-4 hover:text-rise-fg-2 hover:bg-rise-raised"
+                      }`}
+                      style={isActive ? {
+                        backgroundColor: cfg ? `${cfg.color}15` : "var(--rise-raised)",
+                        color: cfg ? cfg.color : "var(--rise-fg)",
+                        borderColor: cfg ? `${cfg.color}40` : "var(--rise-line)",
+                      } : undefined}
+                    >
+                      {cat === "todos" ? "Todos" : cat === "sem" ? "A classificar" : cfg!.label}
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                        style={{
+                          backgroundColor: isActive ? (cfg ? `${cfg.color}25` : "var(--rise-line)") : "var(--rise-raised)",
+                          color: isActive ? (cfg ? cfg.color : "var(--rise-fg)") : "var(--rise-fg-4)",
+                        }}>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
         {/* Content */}
-        {tab === "pipeline" ? (
-          <PipelineParceiros />
+        {tab !== "assessores" || visaoAssessores === "distribuicao" ? (
+          <PipelineParceiros trilha={tab} />
         ) : loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 size={24} className="text-[#14E9BC] animate-spin" />
           </div>
-        ) : tab === "clientes" ? (
+        ) : (
 
-          /* ── Investidores Kanban ── */
+          /* ── Carteira de assessores (Kanban) ── */
           <div className="flex gap-4 overflow-x-auto pb-4 select-none">
             {Object.entries(CLIENTE_STATUS).map(([statusKey, stCfg]) => {
               const colClientes = clientesVisiveis.filter((c) => c.status === statusKey);
@@ -504,13 +510,12 @@ export default function DepartamentoComercial() {
                         className="border border-dashed rounded-xl p-5 text-center transition-all"
                         style={{ borderColor: isOver ? stCfg.color : "var(--rise-line-2)", backgroundColor: isOver ? `${stCfg.color}08` : "transparent" }}
                       >
-                        <p className="text-rise-fg-4 text-[12px]">{isOver ? "Soltar aqui" : "Sem investidores"}</p>
+                        <p className="text-rise-fg-4 text-[12px]">{isOver ? "Soltar aqui" : "Sem assessores"}</p>
                       </div>
                     ) : colClientes.map((cliente: CRMCliente) => {
                       const isDragging = draggingClienteId === cliente.id;
                       const pr = PRIORIDADE_COLOR[cliente.prioridade as keyof typeof PRIORIDADE_COLOR] ?? "#555";
-                      const seg = cliente.segmento ?? "b2b_ofertas";
-                      const segCfg = SEGMENTO_CONFIG[seg];
+                      const catCfg = cliente.categoria_assessor ? CATEGORIA_ASSESSOR[cliente.categoria_assessor] : null;
                       return (
                         <div
                           key={cliente.id}
@@ -527,8 +532,10 @@ export default function DepartamentoComercial() {
                               {cliente.empresa && <p className="text-rise-fg-4 text-[11px] mt-0.5 truncate">{cliente.empresa}</p>}
                             </div>
                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
-                              style={{ backgroundColor: `${segCfg.color}18`, color: segCfg.color }}>
-                              {segCfg.label}
+                              style={catCfg
+                                ? { backgroundColor: `${catCfg.color}18`, color: catCfg.color }
+                                : { backgroundColor: "var(--rise-raised)", color: "var(--rise-fg-4)" }}>
+                              {catCfg?.label ?? "A classificar"}
                             </span>
                           </div>
 
@@ -578,155 +585,37 @@ export default function DepartamentoComercial() {
             })}
           </div>
 
-        ) : (
-
-          /* ── Operações board (drag-and-drop) ── */
-          <div className="flex gap-4 overflow-x-auto pb-4 select-none">
-            {Object.entries(OP_STATUS_CONFIG).map(([statusKey, stCfg]) => {
-              const items = opFiltradas.filter((o) => o.status === statusKey);
-              const totalVE = items.reduce((s, o) => s + opVE(o), 0);
-              const isOver = dragOverStatus === statusKey;
-              return (
-                <div
-                  key={statusKey}
-                  className="flex-shrink-0 transition-all"
-                  style={{ width: "270px" }}
-                  onDragOver={(e) => handleOpDragOver(e, statusKey)}
-                  onDragLeave={() => setDragOverStatus(null)}
-                  onDrop={(e) => handleOpDrop(e, statusKey as CRMOpStatus)}
-                >
-                  {/* Column header */}
-                  <div
-                    className="rounded-xl p-3 mb-3 border transition-all"
-                    style={{
-                      borderColor: isOver ? stCfg.color : `${stCfg.color}30`,
-                      backgroundColor: isOver ? `${stCfg.color}18` : `${stCfg.color}08`,
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[13px]" style={{ color: stCfg.color }}>{stCfg.label}</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: `${stCfg.color}20`, color: stCfg.color }}>
-                        {items.length}
-                      </span>
-                    </div>
-                    {totalVE > 0 && (
-                      <p className="text-[11px] mt-1" style={{ color: `${stCfg.color}99` }}>{fmtValor(totalVE)}</p>
-                    )}
-                  </div>
-
-                  {/* Cards */}
-                  <div className="space-y-2.5 min-h-[60px]">
-                    {items.length === 0 ? (
-                      <div
-                        className="border border-dashed rounded-xl p-5 text-center transition-all"
-                        style={{ borderColor: isOver ? stCfg.color : "var(--rise-line-2)", backgroundColor: isOver ? `${stCfg.color}08` : "transparent" }}
-                      >
-                        <p className="text-rise-fg-4 text-[12px]">{isOver ? "Soltar aqui" : "Sem operações"}</p>
-                      </div>
-                    ) : items.map((op) => {
-                      const isDragging = draggingOpId === op.id;
-                      const prioColor = PRIORIDADE_COLOR[op.prioridade] ?? "#555";
-                      const ve = opVE(op);
-                      const vd = opVD(op);
-                      const followupVencido = isFollowupVencido(op.proximo_followup);
-                      return (
-                        <div
-                          key={op.id}
-                          draggable
-                          onDragStart={(e) => handleOpDragStart(e, op.id)}
-                          onDragEnd={handleOpDragEnd}
-                          onClick={() => setDetalheOp(op)}
-                          className="bg-rise-surface border border-rise-line-2 rounded-xl p-4 cursor-pointer hover:border-rise-line-3 transition-all"
-                          style={{ opacity: isDragging ? 0.4 : 1 }}
-                        >
-                          <div className="flex items-start gap-2 mb-1.5">
-                            <span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: prioColor }} />
-                            <h4 className="text-rise-fg text-[13px] font-semibold line-clamp-2 leading-snug">{op.titulo}</h4>
-                          </div>
-
-                          {op.tipo && (
-                            <p className="text-rise-fg-4 text-[11px] mb-1.5 flex items-center gap-1">
-                              <Tag size={9} />{op.tipo}
-                            </p>
-                          )}
-
-                          {op.cliente && (
-                            <p className="text-rise-fg-4 text-[11px] mb-2 flex items-center gap-1">
-                              <Building2 size={9} />{op.cliente.nome}
-                            </p>
-                          )}
-
-                          {/* Progress bar */}
-                          {ve > 0 && <DistributionProgress estruturado={ve} distribuido={vd} size="sm" />}
-
-                          {/* Follow-up */}
-                          {op.proximo_followup && (
-                            <p className={`text-[11px] mb-1 flex items-center gap-1 ${followupVencido ? "text-[#ec5d5e]" : "text-rise-fg-4"}`}>
-                              {followupVencido
-                                ? <AlertTriangle size={9} />
-                                : <Calendar size={9} />
-                              }
-                              {followupVencido ? "Vencido: " : ""}
-                              {new Date(op.proximo_followup).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
-                            </p>
-                          )}
-
-                          <div className="flex items-center justify-between pt-2 border-t border-rise-raised">
-                            <div className="flex items-center gap-2 text-[11px] text-rise-fg-3">
-                              {op.responsavel ? (
-                                <span className="flex items-center gap-1">
-                                  <span className="w-5 h-5 rounded-full bg-[#6B8AFF]/15 flex items-center justify-center text-[#6B8AFF] text-[9px] font-bold">
-                                    {op.responsavel.nome.charAt(0).toUpperCase()}
-                                  </span>
-                                  <span className="text-[#999]">{op.responsavel.nome.split(" ")[0]}</span>
-                                </span>
-                              ) : (
-                                <span className="flex items-center gap-1 text-rise-fg-4">
-                                  <User size={11} />Sem resp.
-                                </span>
-                              )}
-                            </div>
-                            {ve > 0 && (
-                              <span className="text-[#28d939] text-[11px] font-semibold">{fmtValor(ve)}</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         )}
       </div>
 
-      {/* ══ Modal: Novo Investidor ══ */}
+      {/* ══ Modal: Novo Assessor ══ */}
       {modalCliente && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-rise-surface border border-rise-line rounded-2xl p-6 w-full max-w-[560px] max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-rise-fg text-[18px] font-semibold">Novo Investidor / Lead</h2>
+              <h2 className="text-rise-fg text-[18px] font-semibold">Novo Assessor / Escritório</h2>
               <button onClick={() => setModalCliente(false)} className="text-rise-fg-4 hover:text-rise-fg"><X size={20} /></button>
             </div>
 
             <div className="space-y-4">
-              {/* Segmento */}
+              {/* Categoria */}
               <div>
-                <label className="text-rise-fg-2 text-[12px] mb-2 block">Segmento</label>
+                <label className="text-rise-fg-2 text-[12px] mb-2 block">Categoria do assessor</label>
                 <div className="flex gap-2">
-                  {(Object.entries(SEGMENTO_CONFIG) as [CRMSegmento, { label: string; color: string }][]).map(([v, cfg]) => (
-                    <button key={v} type="button"
-                      onClick={() => setFormCliente((f) => ({ ...f, segmento: v }))}
+                  {(Object.entries(CATEGORIA_ASSESSOR) as [CategoriaAssessor, { label: string; color: string; descricao: string }][]).map(([v, cfg]) => (
+                    <button key={v} type="button" title={cfg.descricao}
+                      onClick={() => setFormCliente((f) => ({ ...f, categoria_assessor: f.categoria_assessor === v ? "" : v }))}
                       className={`flex-1 py-2 rounded-lg text-[12px] font-semibold border transition-all ${
-                        formCliente.segmento === v ? "border-current" : "bg-rise-raised border-rise-line text-rise-fg-3 hover:border-rise-fg-4"
+                        formCliente.categoria_assessor === v ? "border-current" : "bg-rise-raised border-rise-line text-rise-fg-3 hover:border-rise-fg-4"
                       }`}
-                      style={formCliente.segmento === v ? { backgroundColor: `${cfg.color}15`, borderColor: `${cfg.color}50`, color: cfg.color } : undefined}>
+                      style={formCliente.categoria_assessor === v ? { backgroundColor: `${cfg.color}15`, borderColor: `${cfg.color}50`, color: cfg.color } : undefined}>
                       {cfg.label}
                     </button>
                   ))}
                 </div>
+                <p className="text-rise-fg-4 text-[11px] mt-1.5">
+                  {formCliente.categoria_assessor ? CATEGORIA_ASSESSOR[formCliente.categoria_assessor].descricao : "Opcional: pode ser definida depois."}
+                </p>
               </div>
 
               {/* Tipo */}
@@ -824,7 +713,7 @@ export default function DepartamentoComercial() {
                 <div className="col-span-2">
                   <label className="text-rise-fg-2 text-[12px] mb-1.5 block">Notas</label>
                   <textarea value={formCliente.notas} onChange={(e) => setFormCliente((f) => ({ ...f, notas: e.target.value }))}
-                    rows={2} placeholder="Observações sobre o cliente..."
+                    rows={2} placeholder="Observações sobre o assessor..."
                     className="w-full bg-rise-raised border border-rise-line rounded-lg px-4 py-2.5 text-rise-fg text-[13px] resize-none focus:border-[#14E9BC] focus:outline-none" />
                 </div>
               </div>
@@ -1189,7 +1078,7 @@ export default function DepartamentoComercial() {
       {/* ══ Modal: Detalhe Cliente ══ */}
       {detalheCliente && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-rise-surface border border-rise-line rounded-2xl p-6 w-full max-w-[480px]">
+          <div className="bg-rise-surface border border-rise-line rounded-2xl p-6 w-full max-w-[640px] max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between mb-5">
               <div>
                 <h2 className="text-rise-fg text-[18px] font-semibold">{detalheCliente.nome}</h2>
@@ -1201,7 +1090,6 @@ export default function DepartamentoComercial() {
             <div className="grid grid-cols-2 gap-3 mb-5">
               {[
                 { label: "Status",       value: CLIENTE_STATUS[detalheCliente.status]?.label, color: CLIENTE_STATUS[detalheCliente.status]?.color },
-                { label: "Segmento",     value: SEGMENTO_CONFIG[detalheCliente.segmento ?? "b2b_ofertas"].label, color: SEGMENTO_CONFIG[detalheCliente.segmento ?? "b2b_ofertas"].color },
                 { label: "Responsável",  value: detalheCliente.responsavel?.nome ?? "—",      color: "#eee" },
                 { label: "Originador",   value: detalheCliente.originador?.nome ?? "—",       color: "#bdbdbd" },
               ].map((row) => (
@@ -1210,6 +1098,29 @@ export default function DepartamentoComercial() {
                   <p className="font-semibold text-[13px]" style={{ color: row.color }}>{row.value}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Categoria do assessor */}
+            <div className="mb-5">
+              <p className="text-rise-fg-4 text-[11px] mb-2">Categoria do assessor</p>
+              <div className="flex gap-2">
+                {(Object.entries(CATEGORIA_ASSESSOR) as [CategoriaAssessor, { label: string; color: string; descricao: string }][]).map(([v, cfg]) => {
+                  const ativo = detalheCliente.categoria_assessor === v;
+                  return (
+                    <button key={v} type="button" title={cfg.descricao}
+                      onClick={() => handleCategoria(detalheCliente, ativo ? null : v)}
+                      className={`flex-1 py-2 rounded-lg text-[12px] font-semibold border transition-all ${
+                        ativo ? "border-current" : "bg-rise-raised border-rise-line text-rise-fg-3 hover:border-rise-fg-4"
+                      }`}
+                      style={ativo ? { backgroundColor: `${cfg.color}15`, borderColor: `${cfg.color}50`, color: cfg.color } : undefined}>
+                      {cfg.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-rise-fg-4 text-[11px] mt-1.5">
+                {detalheCliente.categoria_assessor ? CATEGORIA_ASSESSOR[detalheCliente.categoria_assessor].descricao : "Ainda não classificado."}
+              </p>
             </div>
 
             {detalheCliente.notas && (
@@ -1264,6 +1175,20 @@ export default function DepartamentoComercial() {
                 </div>
               );
             })()}
+
+            {/* Feed de relacionamento */}
+            <div className="border-t border-rise-line-2 pt-5 mt-5">
+              <div className="flex items-center gap-2 mb-4">
+                <MessageCircle size={14} className="text-rise-fg-4" />
+                <span className="text-rise-fg-2 text-[13px] font-semibold">Saúde do relacionamento</span>
+              </div>
+              <FeedInteracoes
+                itens={notasCliente}
+                usuarioNome={usuario?.nome}
+                placeholder="Engajamento, alinhamento, pendências operacionais..."
+                onEnviar={handleEnviarNota}
+              />
+            </div>
           </div>
         </div>
       )}

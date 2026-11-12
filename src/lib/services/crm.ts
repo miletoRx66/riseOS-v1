@@ -1,5 +1,6 @@
 import { supabase } from "../supabase";
 import { formatBRLCompact } from "../format";
+import type { TipoInteracao } from "./pipeline";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = (table: string) => supabase.from(table) as any;
@@ -12,6 +13,15 @@ export const SEGMENTO_CONFIG: Record<CRMSegmento, { label: string; color: string
   b2c:         { label: "B2C",         color: "#f59e0b" },
 };
 
+// Classificação qualitativa dos assessores (PRD Comercial & CRM, Módulo 2)
+export type CategoriaAssessor = "nativo" | "comprometido" | "potencial";
+
+export const CATEGORIA_ASSESSOR: Record<CategoriaAssessor, { label: string; color: string; descricao: string }> = {
+  nativo:       { label: "Nativo",       color: "#14E9BC", descricao: "Opera exclusivamente dentro da esteira Rise" },
+  comprometido: { label: "Comprometido", color: "#6B8AFF", descricao: "Possui carteira alocada e fluxo contínuo" },
+  potencial:    { label: "Potencial",    color: "#f59e0b", descricao: "Em fase de ativação ou mapeamento de base" },
+};
+
 export interface CRMCliente {
   id: string;
   nome: string;
@@ -19,7 +29,9 @@ export interface CRMCliente {
   telefone: string | null;
   empresa: string | null;
   tipo: "pj" | "pf";
+  /** Legado (B2B/B2C), substituído por categoria_assessor. Não é mais exibido. */
   segmento: CRMSegmento | null;
+  categoria_assessor: CategoriaAssessor | null;
   status: "lead" | "prospecto" | "qualificado" | "ativo" | "inativo";
   responsavel_id: string | null;
   originador_id: string | null;
@@ -81,6 +93,16 @@ export interface CRMComentario {
   id: string;
   operacao_id: string;
   usuario_id: string;
+  conteudo: string;
+  criado_em: string;
+  usuario?: { id: string; nome: string; avatar_url: string | null } | null;
+}
+
+export interface CRMClienteNota {
+  id: string;
+  cliente_id: string;
+  usuario_id: string;
+  tipo: TipoInteracao;
   conteudo: string;
   criado_em: string;
   usuario?: { id: string; nome: string; avatar_url: string | null } | null;
@@ -166,6 +188,29 @@ export async function criarComentario(
 ): Promise<CRMComentario> {
   const { data, error } = await db("crm_operacao_comentarios")
     .insert({ operacao_id: operacaoId, usuario_id: usuarioId, conteudo })
+    .select("*, usuario:profiles!usuario_id(id,nome,avatar_url)")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getNotasCliente(clienteId: string): Promise<CRMClienteNota[]> {
+  const { data, error } = await db("crm_cliente_notas")
+    .select("*, usuario:profiles!usuario_id(id,nome,avatar_url)")
+    .eq("cliente_id", clienteId)
+    .order("criado_em", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function criarNotaCliente(
+  clienteId: string,
+  usuarioId: string,
+  conteudo: string,
+  tipo: TipoInteracao = "nota",
+): Promise<CRMClienteNota> {
+  const { data, error } = await db("crm_cliente_notas")
+    .insert({ cliente_id: clienteId, usuario_id: usuarioId, conteudo, tipo })
     .select("*, usuario:profiles!usuario_id(id,nome,avatar_url)")
     .single();
   if (error) throw error;
