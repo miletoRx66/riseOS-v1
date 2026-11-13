@@ -13,7 +13,7 @@ import { exportarRelatorioPipeline } from "../utils/pdfGenerator";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import {
-  Plus, X, Filter, Loader2, ChevronRight, Edit2, Trash2, ShieldAlert, UserRound,
+  Plus, X, Filter, Loader2, ChevronRight, Edit2, Trash2, UserRound,
   TrendingUp, DollarSign, Target, Users, Calendar, CheckCircle,
   AlertCircle, Clock, LayoutGrid, List, MessageCircle, FileText,
   CheckSquare,
@@ -117,9 +117,9 @@ function CamposConformidade({
           onChange={(e) => setForm({ ...form, contrato_assinado: e.target.checked })} />
         Contrato de licença/parceria assinado
       </label>
-      {form.api_em_uso && !form.contrato_assinado && (
-        <p className="text-[#ec5d5e] text-[12px] flex items-center gap-1.5 pt-1">
-          <ShieldAlert size={13} /> O card ficará em Bloqueio Contratual até o contrato ser assinado.
+      {!form.contrato_assinado && (
+        <p className="text-rise-fg-4 text-[12px] pt-1">
+          Sem contrato assinado: o card exibirá a etiqueta "Sem contrato".
         </p>
       )}
     </div>
@@ -202,13 +202,8 @@ function KanbanCard({
       className={`bg-rise-surface border rounded-xl p-4 cursor-pointer transition-all select-none ${
         dragging ? "opacity-40 scale-95" : "hover:border-rise-line-3 hover:bg-rise-surface"
       }`}
-      style={{ borderColor: p.bloqueio_contratual ? "#ec5d5e" : "#2a2a2a" }}
+      style={{ borderColor: "#2a2a2a" }}
     >
-      {p.bloqueio_contratual && (
-        <div className="flex items-center gap-1.5 bg-[#ec5d5e]/15 text-[#ec5d5e] text-[10px] font-bold uppercase tracking-wide rounded-md px-2 py-1 mb-2">
-          <ShieldAlert size={11} /> Bloqueio Contratual
-        </div>
-      )}
       {/* Topo: parceiro + classificação */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <div>
@@ -281,6 +276,12 @@ function KanbanCard({
           {p.nda_assinado && (
             <span className="text-[#28d939] text-[10px] font-semibold flex items-center gap-0.5">
               <CheckCircle size={10} /> NDA
+            </span>
+          )}
+          {!p.contrato_assinado && (
+            <span className="text-rise-fg-4 text-[10px] flex items-center gap-0.5"
+              title={p.api_em_uso ? "Consome a API sem contrato assinado" : "Sem contrato assinado"}>
+              <Clock size={9} /> {p.api_em_uso ? "API · sem contrato" : "Sem contrato"}
             </span>
           )}
           {p.estimativa_lancamento && (
@@ -602,17 +603,6 @@ function ModalDetalhe({
           ) : tabDetalhe === "info" ? (
             /* Vista de informações */
             <div className="space-y-5">
-              {parceiro.bloqueio_contratual && (
-                <div className="bg-[#ec5d5e]/10 border border-[#ec5d5e]/40 rounded-xl p-4 flex items-start gap-3">
-                  <ShieldAlert size={18} className="text-[#ec5d5e] flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[#ec5d5e] text-[13px] font-bold">Bloqueio Contratual</p>
-                    <p className="text-rise-fg-2 text-[12px] mt-0.5">
-                      Este parceiro consome a API da Rise em produção sem contrato de licença/parceria assinado.
-                    </p>
-                  </div>
-                </div>
-              )}
               {/* KPIs financeiros */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
@@ -634,7 +624,7 @@ function ModalDetalhe({
                 <Row label="Classificação" value={CLASSIFICACAO_LABEL[parceiro.classificacao]} />
                 <Row label="NDA" value={parceiro.nda_assinado ? "✓ Assinado" : "Não assinado"} />
                 <Row label="Contrato" value={parceiro.contrato_assinado ? "✓ Assinado" : "Não assinado"}
-                  valueColor={parceiro.bloqueio_contratual ? "#ec5d5e" : undefined} />
+                  valueColor={parceiro.contrato_assinado ? undefined : "#f59e0b"} />
                 <Row label="API em produção" value={parceiro.api_em_uso ? "Sim" : "Não"} />
                 {parceiro.trilha === "infraestrutura" && (
                   <Row label="Módulos"
@@ -732,6 +722,7 @@ export default function PipelineParceiros({ trilha }: { trilha: Trilha }) {
   const [view, setView] = useState<"kanban" | "lista">("kanban");
   const [filtroImpacto, setFiltroImpacto] = useState("todos");
   const [filtroResp, setFiltroResp] = useState("todos");
+  const [soSemContrato, setSoSemContrato] = useState(false);
   const [filtroClass, setFiltroClass] = useState("todos");
   // Infraestrutura: sub-aba por módulo ("sem" = parceiros ainda sem módulo)
   const [moduloAtivo, setModuloAtivo] = useState<"todos" | "sem" | ModuloInfra>("todos");
@@ -759,7 +750,6 @@ export default function PipelineParceiros({ trilha }: { trilha: Trilha }) {
     getParceiros({ trilha }).then(setParceiros).catch(console.error).finally(() => setLoading(false));
   }, [trilha]);
 
-  const bloqueados = parceiros.filter((p) => p.bloqueio_contratual);
 
   function noModulo(p: PipelineParceiro, m: typeof moduloAtivo) {
     if (m === "todos") return true;
@@ -811,6 +801,7 @@ export default function PipelineParceiros({ trilha }: { trilha: Trilha }) {
   const parceirosVisiveis = base.filter((p) => {
     if (filtroImpacto !== "todos" && p.impacto !== filtroImpacto) return false;
     if (filtroResp !== "todos" && p.responsavel_nome !== filtroResp) return false;
+    if (soSemContrato && p.contrato_assinado) return false;
     if (filtroClass !== "todos" && p.classificacao !== filtroClass) return false;
     return true;
   });
@@ -927,22 +918,6 @@ export default function PipelineParceiros({ trilha }: { trilha: Trilha }) {
 
   return (
     <div>
-      {bloqueados.length > 0 && (
-        <div className="bg-[#ec5d5e]/10 border border-[#ec5d5e]/40 rounded-xl px-4 py-3 mb-5 flex items-center gap-3 flex-wrap">
-          <ShieldAlert size={18} className="text-[#ec5d5e] flex-shrink-0" />
-          <p className="text-rise-fg-2 text-[13px]">
-            <span className="text-[#ec5d5e] font-bold">
-              {bloqueados.length} {bloqueados.length === 1 ? "parceiro usa" : "parceiros usam"} a API sem contrato assinado:
-            </span>{" "}
-            {bloqueados.map((p, i) => (
-              <button key={p.id} onClick={() => setDetalhe(p)} className="underline hover:text-[#ec5d5e]">
-                {p.parceiro}{i < bloqueados.length - 1 ? ", " : ""}
-              </button>
-            ))}
-          </p>
-        </div>
-      )}
-
       {/* Módulos de Infraestrutura */}
       {trilha === "infraestrutura" && (
         <div className="flex items-center gap-1 mb-5 flex-wrap">
@@ -1059,6 +1034,12 @@ export default function PipelineParceiros({ trilha }: { trilha: Trilha }) {
             <option value="todos">Todos responsáveis</option>
             {responsaveis.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
+
+          {/* Contrato */}
+          <button onClick={() => setSoSemContrato((v) => !v)}
+            className={`px-3 py-1 rounded-lg text-[12px] font-medium transition-colors ${soSemContrato ? "bg-[#f59e0b]/15 border border-[#f59e0b]/40 text-[#f59e0b]" : "text-rise-fg-3 hover:text-rise-fg-2"}`}>
+            Sem contrato ({base.filter((p) => !p.contrato_assinado).length})
+          </button>
         </div>
 
         <div className="flex items-center gap-2">
@@ -1176,7 +1157,7 @@ export default function PipelineParceiros({ trilha }: { trilha: Trilha }) {
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-rise-line-2">
-                {["Parceiro", "Produto", "Classif.", "Responsável", "AuM", "Forecast", "Status", "Lançamento", "Impacto", "NDA"].map((h) => (
+                {["Parceiro", "Produto", "Classif.", "Responsável", "AuM", "Forecast", "Status", "Lançamento", "Impacto", "NDA", "Contrato"].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-rise-fg-4 font-semibold text-[11px] uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -1192,7 +1173,6 @@ export default function PipelineParceiros({ trilha }: { trilha: Trilha }) {
                   >
                     <td className="px-4 py-3 font-semibold text-rise-fg">
                       <span className="flex items-center gap-1.5">
-                        {p.bloqueio_contratual && <span title="Bloqueio Contratual"><ShieldAlert size={13} className="text-[#ec5d5e]" /></span>}
                         {p.parceiro}
                       </span>
                     </td>
@@ -1222,6 +1202,11 @@ export default function PipelineParceiros({ trilha }: { trilha: Trilha }) {
                       {p.nda_assinado
                         ? <CheckCircle size={14} className="text-[#28d939]" />
                         : <Clock size={14} className="text-rise-fg-4" />}
+                    </td>
+                    <td className="px-4 py-3">
+                      {p.contrato_assinado
+                        ? <CheckCircle size={14} className="text-[#28d939]" />
+                        : <span title={p.api_em_uso ? "Consome a API sem contrato" : "Sem contrato"}><Clock size={14} className="text-rise-fg-4" /></span>}
                     </td>
                   </tr>
                 );
